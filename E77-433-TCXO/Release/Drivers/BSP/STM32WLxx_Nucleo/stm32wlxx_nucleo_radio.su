@@ -1,0 +1,7 @@
+../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.c:46:9:BSP_RADIO_Init	48	static
+../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.c:82:9:BSP_RADIO_DeInit	8	static
+../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.c:106:9:BSP_RADIO_ConfigRFSwitch	8	static
+../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.c:152:9:BSP_RADIO_GetTxConfig	0	static
+../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.c:164:9:BSP_RADIO_IsTCXO	0	static
+../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.c:176:9:BSP_RADIO_IsDCDC	0	static
+../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.c:187:9:BSP_RADIO_GetRFOMaxPowerConfig	0	static

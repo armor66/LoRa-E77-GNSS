@@ -1,0 +1,3 @@
+buttons.c:39:6:enable_buttons_interrupts	1
+buttons.c:53:6:disable_buttons_interrupts	1
+buttons.c:68:9:scan_button	11

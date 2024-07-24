@@ -1,0 +1,8 @@
+usart_if.c:95:25:vcom_Init	1
+usart_if.c:109:25:vcom_DeInit	1
+usart_if.c:132:6:vcom_Trace	1
+usart_if.c:143:25:vcom_Trace_DMA	1
+usart_if.c:155:25:vcom_ReceiveInit	3
+usart_if.c:191:6:vcom_Resume	3
+usart_if.c:212:6:HAL_UART_TxCpltCallback	2
+usart_if.c:227:6:HAL_UART_RxCpltCallback	4

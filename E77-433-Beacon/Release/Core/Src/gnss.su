@@ -1,0 +1,11 @@
+../Core/Src/gnss.c:31:28:get_trekpoints	0	static
+../Core/Src/gnss.c:44:9:UBLOX_verify_checksum	20	static
+../Core/Src/gnss.c:107:6:serialPrint	0	static
+../Core/Src/gnss.c:115:6:restart_uart	0	static
+../Core/Src/gnss.c:149:6:configure_gps	64	static
+../Core/Src/gnss.c:126:6:init_gnss	8	static
+../Core/Src/gnss.c:291:6:calc_trekpoint_position	96	static
+../Core/Src/gnss.c:321:6:find_nearest_trekpoint	64	static,ignoring_inline_asm
+../Core/Src/gnss.c:349:8:is_point_ahead	0	static
+../Core/Src/gnss.c:371:6:draw_trekpoints	56	static
+../Core/Src/gnss.c:389:6:manage_trekpoints	64	static
