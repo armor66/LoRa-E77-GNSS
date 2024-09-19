@@ -68,6 +68,4 @@ sed -i "s/^.*TREKPOINTS_TOTAL.*$/$(cat num.h)/" gnss.h
 sed -i "s/^.*latitude_array.*$/$(cat lat.h)/" gnss.h
 sed -i "s/^.*longitude_array.*$/$(cat lon.h)/" gnss.h
 
-cat lat.h lon.h > gps.h
-cat lat.h lon.h >> gps.h
 rm lat.h lon.h num.h
