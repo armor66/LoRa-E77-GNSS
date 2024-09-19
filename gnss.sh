@@ -1,8 +1,25 @@
 #!/bin/bash
 
+if [ -z "$1" ]; then
+	read -e -p "Enter filename, use tab for completion: " file
+else
+	file="$1"
+fi
+
+if [ -z "$file" ]; then
+	sed -i "s/^.*TREKPOINTS_TOTAL.*$/#define TREKPOINTS_TOTAL (1)/" gnss.h
+	sed -i "s/^.*latitude_array.*$/static const float latitude_array[]={0}/" gnss.h
+	sed -i "s/^.*longitude_array.*$/static const float longitude_array[]={0}/" gnss.h
+	echo "No gnss file supplied"
+	echo "No trackpoints to follow"
+	exit 0
+fi
+
+#[ -f "$file" ] || exit 1
+
 #сохранить содержимое в "" после lat= и lon=
-sed -n 's/.*lat="\([^"]*\)".*/\1/gp' 10km.gpx > lat.h
-sed -n 's/.*lon="\([^"]*\)".*/\1/gp' 10km.gpx > lon.h
+sed -n 's/.*lat="\([^"]*\)".*/\1/gp' $file > lat.h
+sed -n 's/.*lon="\([^"]*\)".*/\1/gp' $file > lon.h
 
 #убрать точки
 #sed -i 's/[.]//g' lat.h
@@ -51,6 +68,6 @@ sed -i "s/^.*TREKPOINTS_TOTAL.*$/$(cat num.h)/" gnss.h
 sed -i "s/^.*latitude_array.*$/$(cat lat.h)/" gnss.h
 sed -i "s/^.*longitude_array.*$/$(cat lon.h)/" gnss.h
 
-#cat lat.h lon.h > gps.h
-#cat lat.h lon.h >> gps.h
+cat lat.h lon.h > gps.h
+cat lat.h lon.h >> gps.h
 rm lat.h lon.h num.h

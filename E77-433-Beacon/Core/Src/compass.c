@@ -197,11 +197,11 @@ void calibrate_compass(void)
 			ST7735_WriteString(0, (row+6)*11, &Line[row+4][0], Font_7x10, MAGENTA,BLACK);
 		}
 
-		if (!(GPIOA->IDR & BTN_2_Pin))	//OK for save
+		if (!(GPIOA->IDR & BTN_2_Pin) && sys_ok == 1)	//OK for save
 	    {
 	    	break;
 	    }
-		if (!(GPIOA->IDR & BTN_3_Pin))	//ECS for restart
+		if (!(GPIOA->IDR & BTN_3_Pin) && sys_ok == 1)	//ECS for restart
     	{
     		goto restart_cal;
     	}

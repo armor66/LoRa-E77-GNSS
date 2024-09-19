@@ -8,6 +8,6 @@
 ../Core/Src/compass.c:51:9:limit_to	0	static
 ../Core/Src/compass.c:89:6:calibrate_compass	880	static,ignoring_inline_asm
 ../Core/Src/compass.c:58:6:init_compass	8	static
-../Core/Src/compass.c:242:9:read_north	40	static
-../Core/Src/compass.c:270:9:is_north_ready	0	static
-../Core/Src/compass.c:276:9:reset_north	0	static
+../Core/Src/compass.c:248:9:read_north	40	static
+../Core/Src/compass.c:276:9:is_north_ready	0	static
+../Core/Src/compass.c:282:9:reset_north	0	static

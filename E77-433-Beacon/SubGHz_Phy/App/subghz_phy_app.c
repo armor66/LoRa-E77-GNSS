@@ -25,6 +25,7 @@
 #include "radio.h"
 
 /* USER CODE BEGIN Includes */
+#include "iwdg.h"
 #include "stm32_systime.h"
 #include "stm32_timer.h"
 #include "stm32_seq.h"
@@ -45,6 +46,8 @@
 
 #include "gnss.h"
 #include "gpio.h"		//#include "main.h"		//***main_flags_struct
+#include "radio_driver.h"
+
 struct main_flags_struct main_flags = {0};
 /* USER CODE END Includes */
 
@@ -60,18 +63,18 @@ struct main_flags_struct main_flags = {0};
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-uint8_t devices_max;
 uint8_t pps_counter = 0;
-uint32_t pps_flag = 0;
+uint8_t pps_flag = 0;
+uint8_t time_slot = 0;
+uint8_t long_beep_ones = 0;
+//uint8_t time_slot_timer_ovf = 0;		//added to main flags
 //uint8_t gps_speed = 0;
 //int16_t gps_heading = 0;
 uint16_t no_PPS_gap1 = 2705;			// RX1 to PPS gap = 677after receive NODE_ID1 779mS = 30mS + (5slots + Processing) * 150mS
 uint16_t no_PPS_gap2 = 1705;			//368
 uint16_t no_PPS_gap3 = 705;			//68
 uint16_t endRX_2_TX = 0;
-//uint8_t time_slot_timer_ovf = 0;		//added to main flags
-uint8_t time_slot = 0;
-uint8_t long_beep_ones = 0;
+
 //uint8_t *p_update_interval_values;
 /* USER CODE END PD */
 
@@ -110,8 +113,6 @@ bool isChannelFree = true;
 uint8_t button_code = 0;
 uint8_t processing_button = 0;
 
-//uint8_t *p_freq_region_values_phy;
-//uint8_t *p_coding_rate_values_phy;
 uint8_t *p_tx_power_values_phy;
 
 char Lines[24][32];
@@ -119,6 +120,7 @@ int8_t rssi_by_channel[2][FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST + 1];
 int8_t scanRadioFlag = 0;
 int8_t channel_ind = 0;
 void scan_channels(void);
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -160,14 +162,9 @@ struct devices_struct **pp_devices_phy;
 void SubghzApp_Init(void)
 {
   /* USER CODE BEGIN SubghzApp_Init_1 */
-//	p_freq_region_values_phy = get_freq_region_values();
-//	p_coding_rate_values_phy = get_coding_rate_values();
 	p_tx_power_values_phy = get_tx_power_values();
-
 	p_settings_phy = get_settings();
 	pp_devices_phy = get_devices();
-
-	devices_max = p_settings_phy->devices_on_air;
 
 	SYS_InitMeasurement();
   /* USER CODE END SubghzApp_Init_1 */
@@ -187,12 +184,12 @@ void SubghzApp_Init(void)
       Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_phy[p_settings_phy->tx_power_opt], 0, LORA_BANDWIDTH,			//MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
     		  p_settings_phy->spreading_factor, p_settings_phy->coding_rate_opt,				//LORA_SPREADING_FACTOR, LORA_CODINGRATE,
                         LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
-                        true, 0, 0, LORA_IQ_INVERSION_ON, TX_TIMEOUT_VALUE);
+                        true, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);
 
       Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_phy->spreading_factor,		//MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
     		  p_settings_phy->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH,
                         LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
-						BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_INVERSION_ON, true);				//0, true, 0, 0, LORA_IQ_INVERSION_ON, true);
+						BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, true);				//0, true, 0, 0, LORA_IQ_INVERSION_ON, true);
 
       Radio.SetMaxPayloadLength(MODEM_LORA, BUFFER_AIR_SIZE);
 
@@ -245,13 +242,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			pp_devices_phy[p_settings_phy->device_number]->display_status = 0;		//for TPS7330 Vthresold=2.64V
 			if(pp_devices_phy[p_settings_phy->device_number]->batt_voltage < 30) {	//for TPS7333 Vthresold=2.87V(287-270=17) 0==270(2.70V) (actually ~2.95V)
 				longBeepsBlocking(1);												//long beep to prevent silent "RESET"
-//				led_w_on();
 				HAL_Delay(50);
 				release_power();
 			}
 		}
 
-	if (PVTbuffer[16]%devices_max == 0)	//запускать таймер раз в три секунды
+	if(PVTbuffer[16]%p_settings_phy->devices_on_air == 0)// || (p_settings_phy->spreading_factor == 12))	//start timer ones of 3, 4 or 5 seconds
 	{
 		HAL_TIM_Base_Stop_IT(&htim1);
 		pps_flag = 1;			//todo if fix valid	(PVTbuffer[21+6] & 0x01)
@@ -261,18 +257,36 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		__HAL_TIM_CLEAR_FLAG(&htim1, TIM_SR_UIF);		// очищаем флаг
 		HAL_TIM_Base_Start_IT(&htim1);					// start time slot timer right after PPS
 	}
-//	clear_gps_data(time_slot + 1);		//just before receive PVT (before TIM1 case 1 slot incremented)
+
 	uartIdx = 0;
 	USART2->RDR;				//!!!очистка регистра чтением!!!иначе прерывание сработает сразу
 	USART2->CR1 = 0x00000000;	//иначе работает только после resetа
 	USART2->CR1 = USART_CR1_UE;
 	USART2->CR1 |= USART_CR1_TE | USART_CR1_RE | USART_CR1_RXNEIE_RXFNEIE;	//1: USART interrupt generated whenever ORE = 1 or RXFNE = 1 in the USART_ISR register
-	led_red_on();
-	led_green_on();
+
+//	if((p_settings_phy->spreading_factor < 12) || !time_slot)
+//	{
+	if(p_settings_phy->device_number == (time_slot + 1)) clear_fix_data(time_slot + 1);	//before uart handling finished
+	if(p_settings_phy->spreading_factor == 12 && p_settings_phy->device_number == 2) clear_fix_data(2);	//for beacon №2 only to transmit
+		led_red_on();
+		led_green_on();
+//	}
 //avoid extra beeps
 	led_w_off();
 	main_flags.short_beeps = 0;
+//	HAL_IWDG_Refresh(&hiwdg);	moved to main.c while(1)
 		break;
+
+	case BUZZ_IN_Pin:
+//			EXTI->IMR1 |= EXTI_IMR1_IM2;			//interrupt enabled
+		if(!(GPIOB->IDR & BUZZ_IN_Pin))		//falling edge
+		{
+			int8_t beep_slot;
+			(p_settings_phy->device_number == 1)? (beep_slot = 2): (beep_slot = 1);
+			pp_devices_phy[beep_slot]->beeper_flag = 1;
+//			EXTI->IMR1 &= ~EXTI_IMR1_IM2;			//interrupt disabled
+				}
+	break;
 
     default:
     	break;
@@ -329,11 +343,7 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 	   		{
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;
 //	   			uartIdx = 0;
-	   			memset(&PVTbuffer, 0, PVTsize);
-//	   			for(uint8_t i = 0; i < PVTsize; i++)
-//	   				{
-//	   				PVTbuffer[i] = 0;
-//	   				}
+	   			memset(&PVTbuffer, 0, PVTsize);			//for(uint8_t i = 0; i < PVTsize; i++) { PVTbuffer[i] = 0; }
 	   		}
 	   		else if (uartIdx >= 83)	//83 = 77(pDOP) + 6 (uartIdx >= PVTsize)
 	   		{
@@ -345,14 +355,30 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 		}
 	}
 }
-//									| PVT|Slot1 OnRxDone time <642mS		+358mS|Slot2 OnTxDone time <627mS		  | PVT|Slot3					   | draw menu|
-//									|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
-//   								0 50 100mS	                             1000 1100mS							  2000 2100								 3000
-const uint8_t timeslot_pattern[] = {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,//4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,6 };
-//									| PVT|Slot3					   | draw menu|PVT|Slot4					| draw menu|PVT|Slot5					 | draw menu|
-//									|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
-//									2000 2100mS								 3000 3100mS							  4000 4100mS							   5000mS
-									4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,6 };
+uint8_t pattern_index;
+const uint8_t timeslot_pattern[2][103] =
+//	| PVT|Slot1 OnRxDone time <642mS		+358mS|Slot2 OnTxDone time <627mS		  | PVT|Slot3					   | draw menu|
+//	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
+//	0 50 100mS	                             1000 1100mS							  2000 2100								 3000
+{{0,0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,//4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,6 };
+//	| PVT|Slot3					   | draw menu|PVT|Slot4					| draw menu|PVT|Slot5					 | draw menu|
+//	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
+//	2000 2100mS								 3000 3100mS							  4000 4100mS							   5000mS
+	4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,6 },
+//	SF = 12, CR1(4/5), Packet duration in air = 1155.1
+//  | PVT|Slot1 		OnRxDone time		<1200mS		  |draw menu| |Slot2 			OnRxDone time		<1200mS	   |draw menu|
+//	|----|-----------------------------------|------------|---------|-----------------|------------------------------|---------|
+//	0 50 100mS	                             1000		 1300mS						  2000				    	  	2750	   3000
+ {0,0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0, 0,0,0,0,3,4,5,4,7,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,8,0,0,0,0,0,0,0,0,0,3,4,5,4,7,6 }};
+//	|----|---------------------------|--------------------|-----------|----------------------------|-------------------|-------|
+//	0 50 100mS	                    +700     			+1200mS	     1600				  	      +700				 +1200	   3000
+//{0,0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,3,4,5,4,1,2,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,6 }};
+// {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,8,0,0,0,0,0, 0,0,0,0,3,4,7,4,1,2,0,0,0,0,0,0,0,0,0,0, 8,0,0,0,0,0,0,0,0,0,0,0,0,3,4,7,4,0,0,6 };
+//in case 8 (end of rx packet from device №3, IQ inverted)
+//might do long_beep 500mS or some stuff, depends on received flags
+//todo add option to choose what beacon to address, therefore in what slot to transmit (4 flags, 2 for each beacon)
+//todo inverse LORA_IQ_INVERSION in Radio.SetTxConfig and Radio.SetRxConfig for module and beacons respectively
+//todo for beacons set Radio.SetRxConfig BUFFER_AIR_SIZE = 3
 
 int8_t find_nearest_trekpoint_flag = 0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -365,84 +391,90 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 		if (pps_flag)
 		{
-			switch (timeslot_pattern[main_flags.time_slot_timer_ovf])
+			(p_settings_phy->spreading_factor == 12)? (pattern_index = 1): (pattern_index = 0);
+			switch (timeslot_pattern[pattern_index][main_flags.time_slot_timer_ovf])
 			{
 			case 0:			//do nothing
 				break;
 
 			case 1:			//50mS
 				time_slot++;
-				if(!pp_devices_phy[p_settings_phy->device_number]->valid_fix_flag)
+				//clear what should be received or not in this slot after draw menu has finished
+				if(p_settings_phy->device_number != time_slot) clear_fix_data(time_slot);
+				if(p_settings_phy->spreading_factor == 12)
 				{
-					main_flags.fix_valid--;
+					//set TX iq_inversion = 0 so that module №3 can receive data
+					if(p_settings_phy->device_number == time_slot)	//transmit LORA_IQ_NORMAL
+					{
+						Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_phy[p_settings_phy->tx_power_opt], 0,
+						LORA_BANDWIDTH,	p_settings_phy->spreading_factor, p_settings_phy->coding_rate_opt,
+						LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);
+					}
+					//set RX iq_inversion = 1 to not receive from other beacon but receive from module №3
+					if(p_settings_phy->device_number != time_slot)	//receive LORA_IQ_INVERTED
+					{
+						Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_phy->spreading_factor,
+						p_settings_phy->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH, LORA_SYMBOL_TIMEOUT,
+						LORA_FIX_LENGTH_PAYLOAD_ON,	3, true, 0, 0, LORA_IQ_INVERTED, true);		//BUFFER_AIR_SIZE = 3
+					}
+
 				}
-				clear_fix_data(time_slot);		//moved to PPS IRQ guess it erase some uart rx data
-//				pp_devices_phy[time_slot]->p_dop = 999;
-//				memset(bufNode[time_slot], 0, BUFFER_AIR_SIZE);
 				break;
 
 			case 2:			//100mS
-				if(time_slot != p_settings_phy->device_number)
-				{
-					if(pp_devices_phy[time_slot]->beeper_flag || main_flags.long_beep)
+				if(time_slot == p_settings_phy->device_number)
+				{	//if this device doesn't get gnss fix via uart 100mS after PPS, delay for full pattern time
+					if(!pp_devices_phy[p_settings_phy->device_number]->valid_fix_flag)	main_flags.fix_valid--;
+					if(main_flags.fix_valid)	//do not transmit if no GNSS FIX
 					{
-						led_w_on();
-						main_flags.long_beep = 0;	//do not repeat
-						long_beep_ones = 1;			//to finish on case 3 after starts here only
-					}
-					Radio.Rx(0);					//RX_TIMEOUT_VALUE = 5mS (50mS can occur freeze)
-				}
-				else if(time_slot == p_settings_phy->device_number)
-				{
-//do not transmit before GPS FIX	if(pp_devices_phy[p_settings_phy->device_number]->valid_fix_flag)
-					if(main_flags.fix_valid > 0)
-					{
-						main_flags.permit_actions = 0;
-						transmit_data();		//State = TX_START;
-						if(pp_devices_phy[p_settings_phy->device_number]->display_status) {
+						if(pp_devices_phy[p_settings_phy->device_number]->display_status)
+						{
 							endRX_2_TX = __HAL_TIM_GET_COUNTER(&htim17);				//save interval from RX-end to TX-start
 							HAL_TIM_Base_Stop(&htim17);
 						}
+						main_flags.permit_actions = 0;
+						transmit_data();		//State = TX_START;
 					}else main_flags.fix_valid = 0;		//just to avoid negative values
+				}
+				else //if(time_slot != p_settings_phy->device_number)
+				{	//manage (pp_devices_phy[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
+					if(p_settings_phy->spreading_factor != 12)	// on SF12 (main_flags.beeper_flag_received) managed on case 8
+					{
+						if(pp_devices_phy[time_slot]->beeper_flag)
+						{
+						led_w_on();
+						buzz_on();
+						pp_devices_phy[time_slot]->beeper_flag = 0;
+//						main_flags.beeper_flag_received = 0;
+						long_beep_ones = 1;	//set here to finish on case 3 after starts here only
+						}
+					}
+					Radio.Rx(0);	//start to receive
 				}
 				led_red_off();		//occurrence case 2
 				break;
 
-			case 3:			//check if remote devices on the air, draw menu items
-				if(time_slot != p_settings_phy->device_number)	//for receiver slot only
+			case 8:	//on the alien slot only (paranoid, should be ignored)
+//				if((time_slot != p_settings_phy->device_number) && (main_flags.beeper_flag_received))
+				if(pp_devices_phy[time_slot]->beeper_flag)
 				{
-					if(pp_devices_phy[p_settings_phy->device_number]->valid_fix_flag &&	//host gps data is valid (implemented in rx_to_devices())
-					pp_devices_phy[time_slot]->beacon_traced &&							//timeout_threshold is set & valid data has received once
-					!pp_devices_phy[time_slot]->valid_fix_flag)							//not valid data received now
-					{
-						check_traced(time_slot);										//lrns.c decrement beacon_traced
-						if(pp_devices_phy[time_slot]->beacon_flag) shortBeeps(1);		//do beeps if beacon traced
-						if(pp_devices_phy[time_slot]->beacon_lost)						//if beacon_traced became zero
-						{
-							memory_points_save();		//save beacon trace if it was traced and no validFixFlag[time_slot] for timeout_threshold
-							shortBeeps(3);				//if beacon_traced became zero
-							main_flags.long_beep = 1;	//to start beeps on next case 2
-						}
-					}
+					led_w_on();
+					buzz_on();
+					if(GPIOB->IDR & BUZZ_IN_Pin) pp_devices_phy[time_slot]->beeper_flag = 0; //if BUZZ_IN_Pin released
+					long_beep_ones = 1;
 				}
-				if(find_nearest_trekpoint_flag)
-				{
-					__disable_irq();
-					find_nearest_trekpoint();
-				}
-				while(find_nearest_trekpoint_flag);		//__enable_irq(); after that
-				read_north();
+				break;
 
-				if(long_beep_ones)	//if has been set on case 2 previously
+			case 3:		//check if remote devices on the air, draw menu items
+				if(long_beep_ones)	//(main_flags.beeper_flag_received) || 		//used on case 2 or case 8 previously
 				{
 					led_w_off();
-					long_beep_ones = 0;
+					buzz_off();
+//					main_flags.beeper_flag_received = 0;	//from case 8
+					long_beep_ones = 0;						//from case 2
 				}
-//				main_flags.time_stamp = HAL_GetTick();
-//				if(main_flags.short_beeps) led_w_on();
 				main_flags.short_beeps? led_w_on(): (main_flags.update_screen = 1);
 				main_flags.permit_actions = 1;		//process buttons here after
-//				main_flags.update_screen = 1;
 				break;
 
 			case 4:
@@ -561,7 +593,7 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 	bufferRx[BUFFER_AIR_SIZE] = (int8_t)rssi;				//BufferAirSize + 1
 	bufferRx[BUFFER_AIR_SIZE + 1] = LoraSnr_FskCfo;	//BufferAirSize + 2
 	//if received time slot == device number and it fix is valid
-	if(((bufferRx[0] & 0x07) == time_slot) && ((bufferRx[14] & 0x10) >> 4))
+	if(((bufferRx[0] & 0x07) == time_slot) && ((bufferRx[1] & 0x10) >> 4))
 	{	//todo replace it all for:
 		//&& ((bufferRx[14] & 0x10) >> 4)) rx_to_devices(time_slot); where (uint8_t *buffer = bufferRx;)
 		rx_to_devices(time_slot); //where (uint8_t *buffer = bufferRx;)
@@ -594,9 +626,11 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 		case 4:
 		//		ptrNode3rx = bufferRx;
 			memcpy(bufNode[4], &bufferRx, BUFFER_RX);
+			break;
 		case 5:
 		//		ptrNode3rx = bufferRx;
 			memcpy(bufNode[5], &bufferRx, BUFFER_RX);
+			break;
 		default:
 			break;
 		}
@@ -660,49 +694,61 @@ static void OnRxError(void)
 //void Sensor_Process(void)
 void transmit_data(void)
 {
+	int8_t beeper_flag_to_transmit;
+	int8_t daylight_hour;
+
+	(pp_devices_phy[p_settings_phy->device_number]->beeper_flag)? (beeper_flag_to_transmit = 1): (beeper_flag_to_transmit = 0);
+
    	  bufferTx[0] =	(IS_BEACON << 7) +
     		  (pp_devices_phy[p_settings_phy->device_number]->emergency_flag << 6) +
 			  (pp_devices_phy[p_settings_phy->device_number]->alarm_flag << 5) +
 			  (pp_devices_phy[p_settings_phy->device_number]->gather_flag << 4) +
-			  (pp_devices_phy[p_settings_phy->device_number]->beeper_flag << 3) +	//todo?move it to main_flags_struct for this device only?
-			  p_settings_phy->device_number;
-	  bufferTx[1] = ((PVTbuffer[13] & 0x1F) << 3) +		//дни	  mask 0b00011111
-			  	  	  ((PVTbuffer[14] & 0x1C) >> 2);	//часы	  mask 0b00011100
-	  bufferTx[2] = ((PVTbuffer[14] & 0x03) << 6) +		//часы	  mask 0b00000011
-			  	  	  	  (PVTbuffer[15] & 0x3F);		//минуты  mask 0b00111111
-	  bufferTx[3] = ((PVTbuffer[16] & 0x3F) << 2);		//секунды mask 0b00111111
+			  (beeper_flag_to_transmit << 3) + p_settings_phy->device_number;
 
-	  bufferTx[4] = PVTbuffer[30];	//(uint8_t) ((UBLOX_Handle.lon >> 24) & 0xFF);		//*** longitude
-	  bufferTx[5] = PVTbuffer[31];	//(uint8_t) ((UBLOX_Handle.lon >> 16) & 0xFF);
-	  bufferTx[6] = PVTbuffer[32];	//(uint8_t) ((UBLOX_Handle.lon >> 8) & 0xFF);
-	  bufferTx[7] = PVTbuffer[33];	//(uint8_t) ((UBLOX_Handle.lon >> 0) & 0xFF);
+   	  (pp_devices_phy[p_settings_phy->device_number]->gps_speed > GPS_SPEED_THRS)? (bufferTx[1] |= 1 << 7): (bufferTx[1] &= ~(1 << 7));	//if device is moving
+   	  bufferTx[1] = ((PVTbuffer[20+6] & 0x03) << 5) +				//fix type, 2 bits only to transmit	//mask 0b0000 0011
+   			  	  	 ((PVTbuffer[21+6] & 0x01) << 4) +				//fix valid, bit0 only				//mask 0b0000 0001
+   					 (pp_devices_phy[p_settings_phy->device_number]->batt_voltage/10 & 0x0F);			//mask 0b0000 1111 (0-:150 -> 0-:-15)s
+   	  bufferTx[2] = (pp_devices_phy[p_settings_phy->device_number]->p_dop/10 & 0xFF);					//pDop/10 (0...25.5)
 
-	  bufferTx[8] = PVTbuffer[34];	//(uint8_t) ((UBLOX_Handle.lat >> 24) & 0xFF);		//*** latitude
-	  bufferTx[9] = PVTbuffer[35];	//(uint8_t) ((UBLOX_Handle.lat >> 16) & 0xFF);
-	  bufferTx[10] = PVTbuffer[36];	//(uint8_t) ((UBLOX_Handle.lat >> 8) & 0xFF);
-	  bufferTx[11] = PVTbuffer[37];	//(uint8_t) ((UBLOX_Handle.lat >> 0) & 0xFF);
-	  if(pp_devices_phy[p_settings_phy->device_number]->gps_speed > GPS_SPEED_THRS)
-		  {
-		  bufferTx[3] = 0x01;		//device is moving
-	  	  bufferTx[12] = pp_devices_phy[p_settings_phy->device_number]->gps_speed;
-	  	  bufferTx[13] = ((pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0x1FE) >> 1);	//mask 0b1111 1111 0
-	  	  bufferTx[14] = ((pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0x01) << 7);	//mask 0b00000001
-		  }
-	  bufferTx[14] = ((PVTbuffer[20+6] & 0x03) << 5) +				//fix type, 2 bits only to transmit	//mask 0b0000 0011
-			  	  	 ((PVTbuffer[21+6] & 0x01) << 4) +				//fix valid, bit0 only				//mask 0b0000 0001
-					 (pp_devices_phy[p_settings_phy->device_number]->batt_voltage/10 & 0x0F);			//mask 0b0000 1111 (0-:150 -> 0-:-15)s
+	  bufferTx[3] = PVTbuffer[30];	//(uint8_t) ((UBLOX_Handle.lon >> 24) & 0xFF);		//*** longitude
+	  bufferTx[4] = PVTbuffer[31];	//(uint8_t) ((UBLOX_Handle.lon >> 16) & 0xFF);
+	  bufferTx[5] = PVTbuffer[32];	//(uint8_t) ((UBLOX_Handle.lon >> 8) & 0xFF);
+	  bufferTx[6] = PVTbuffer[33];	//(uint8_t) ((UBLOX_Handle.lon >> 0) & 0xFF);
 
-	  bufferTx[15] = (pp_devices_phy[p_settings_phy->device_number]->p_dop/10 & 0xFF);					//pDop/10 (0...25.5)
-	  /* TX data over the air */
-//	  if (isChannelFree)						//todo do some check before reach transmit slot
-//	  {
-//	    Radio.SetChannel(RF_FREQUENCY);
-//	    HAL_Delay(Radio.GetWakeupTime() + TCXO_WORKAROUND_TIME_MARGIN);
-	    Radio.Send(bufferTx, BUFFER_AIR_SIZE); 	// to be filled by attendee BufferAirSize
+	  bufferTx[7] = PVTbuffer[34];	//(uint8_t) ((UBLOX_Handle.lat >> 24) & 0xFF);		//*** latitude
+	  bufferTx[8] = PVTbuffer[35];	//(uint8_t) ((UBLOX_Handle.lat >> 16) & 0xFF);
+	  bufferTx[9] = PVTbuffer[36];	//(uint8_t) ((UBLOX_Handle.lat >> 8) & 0xFF);
+	  bufferTx[10] = PVTbuffer[37];	//(uint8_t) ((UBLOX_Handle.lat >> 0) & 0xFF);
+
+//	  bufferTx[11] = ((PVTbuffer[13] & 0x1F) << 3) +		//дни	  mask 0b00011111
+//	  	  	  	     ((PVTbuffer[14] & 0x1C) >> 2);	//часы	  mask 0b00011100
+//	  bufferTx[12] = ((PVTbuffer[14] & 0x03) << 6) +		//часы	  mask 0b00000011
+//	   	  	  	      (PVTbuffer[15] & 0x3F);		//минуты  mask 0b00111111
+//	  bufferTx[13] = ((PVTbuffer[16] & 0x3F) << 2);		//секунды mask 0b00111111
+
+	  daylight_hour = PVTbuffer[14] + p_settings_phy->time_zone_hour;
+	  if(daylight_hour > 24) daylight_hour = daylight_hour - 24;
+	  (daylight_hour > 8)? (daylight_hour = daylight_hour - 8): (daylight_hour = 0);	//9-:_23
+	  bufferTx[11] = (daylight_hour << 4) +				//часы	  mask 0b00011111	  0-:-15
+	  	   	  	  	 ((PVTbuffer[15] & 0x3F) >> 2);		//минуты  mask 0b00111111
+	  bufferTx[12] = ((PVTbuffer[15] & 0x03) << 6) +	//минуты  mask 0b00000011
+	  	  	  	      (PVTbuffer[16] & 0x3F);			//секунды mask 0b00111111
+
+//	  if(pp_devices_phy[p_settings_phy->device_number]->gps_speed > GPS_SPEED_THRS)
+//		  {
+//		  bufferTx[3] = 0x01;		//device is moving
+//	  	  bufferTx[12] = pp_devices_phy[p_settings_phy->device_number]->gps_speed;
+//	  	  bufferTx[13] = ((pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0x1FE) >> 1);	//mask 0b1111 1111 0
+//	  	  bufferTx[14] = ((pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0x01) << 7);	//mask 0b00000001
+//		  }
+
+	  Radio.Send(bufferTx, BUFFER_AIR_SIZE); 	// to be filled by attendee BufferAirSize
 }
 
 void scan_channels(void)
 {
+	led_blue_off();		//just to off after start
 	HAL_TIM_Base_Stop_IT(&htim1);
 	  __HAL_TIM_SET_COUNTER(&htim1, 0);
 	  __HAL_TIM_CLEAR_FLAG(&htim1, TIM_SR_UIF); // очищаем флаг

@@ -145,6 +145,7 @@ void power_long(void);
 //void actions_down(void);
 void actions_ok(void);
 void actions_esc(void);
+void draw_restore_defaults(void);
 void set_brightness(void);
 //ALL MENUS HERE
 enum
@@ -179,7 +180,8 @@ enum
 	M_SET_TIMEOUT,
 	M_SET_FENCE,
 
-	M_ACTIONS
+	M_ACTIONS,
+	M_CONFIRM_RESTORING
 };
 
 //ALL MENU ITEMS HERE (for each menu separately)
@@ -214,7 +216,7 @@ enum
 	M_ACTIONS_I_ALARM,
 	M_ACTIONS_I_GATHER,
 	M_ACTIONS_I_ERASE_POINTS,
-	M_ACTIONS_I_RESET_ALL,
+	M_ACTIONS_I_SET_DEFAULTS,
 	M_ACTIONS_I_BEEPER,
 	M_ACTIONS_I_FLWTREK,						//last item
 	M_ACTIONS_I_LAST = M_ACTIONS_I_FLWTREK		//copy last item here
@@ -347,7 +349,7 @@ const struct
 	{M_SET_FENCE,				BTN_OK,                 set_fence_ok},
 	{M_SET_FENCE,				BTN_ESC,            	set_fence_esc},
 	{M_CONFIRM_SETTINGS,		BTN_OK,					confirm_settings_reboot},
-	{M_CONFIRM_SETTINGS,		BTN_ESC,				confirm_settings_restore},
+//	{M_CONFIRM_SETTINGS,		BTN_ESC,				confirm_settings_restore},
 
 	{M_MAIN,					BTN_PWR_LONG,			power_long},
 	{M_NAVIGATION,				BTN_PWR_LONG,			power_long},
@@ -360,6 +362,8 @@ const struct
 	{M_ACTIONS,					BTN_PWR_LONG,			power_long},
 	{M_ACTIONS,					BTN_OK,					actions_ok},
 	{M_ACTIONS,					BTN_ESC,				actions_esc},
+
+	{M_CONFIRM_RESTORING,		BTN_OK,					confirm_settings_restore},
     {0, 0, 0}   //end marker
 };
 
@@ -402,6 +406,9 @@ const struct
 	{M_SETTINGS,				M_SETTINGS_I_TIMEZONE,				M_SET_TIMEZONE},
 	{M_SETTINGS,				M_SETTINGS_I_TIMEOUT,				M_SET_TIMEOUT},
 	{M_SETTINGS,				M_SETTINGS_I_FENCE,					M_SET_FENCE},
+//	in actions_ok() implementation:
+//	{M_ACTIONS,					M_ACTIONS_I_DEL_POINTS,				M_CONFIRM_ERASING},
+//	{M_ACTIONS,					M_ACTIONS_I_SET_DEFAULTS,			M_CONFIRM_RESTORING},
     {0, 0, 0}   //end marker
 };
 
@@ -427,6 +434,7 @@ const struct
 	{M_POINTS_SUBMENU_DEVICES,	M_POINTS},
 
     {M_SETTINGS,                M_CONFIRM_SETTINGS},	//M_MAIN},
+	{M_CONFIRM_SETTINGS,		M_SETTINGS},
     {M_SET_DEVICE_NUMBER,       M_SETTINGS},
 	{M_SET_SPREADING_FACTOR,	M_SETTINGS},
 //	{M_SET_FREQ_REGION,			M_SETTINGS},
@@ -436,6 +444,8 @@ const struct
 	{M_SET_TIMEZONE,	        M_SETTINGS},
 	{M_SET_TIMEOUT,				M_SETTINGS},
 	{M_SET_FENCE,				M_SETTINGS},
+
+	{M_CONFIRM_RESTORING,		M_ACTIONS},
     {0, 0}      //end marker
 };
 
@@ -492,6 +502,7 @@ const struct
 	{M_CONFIRM_SETTINGS,		draw_confirm_settings},
 
 	{M_ACTIONS,					draw_actions},
+	{M_CONFIRM_RESTORING,		draw_restore_defaults},
     {0, 0}      //end mark	er
 };
 
@@ -1333,7 +1344,8 @@ void draw_this_device(void)
 
 		sprintf(&Line[8][0], "Latit : %ld", pp_devices_menu[this_device]->latitude.as_integer);	//((int32_t)(PVTbuffer[37]<<24)+(PVTbuffer[36]<<16)+(PVTbuffer[35]<<8)+PVTbuffer[34]));
 		sprintf(&Line[9][0], "Longit: %ld", pp_devices_menu[this_device]->longitude.as_integer);	//((int32_t)(PVTbuffer[33]<<24)+(PVTbuffer[32]<<16)+(PVTbuffer[31]<<8)+PVTbuffer[30]));
-		sprintf(&Line[10][0], "HeightEli:  %04dm", ((PVTbuffer[35+6]<<24)+(PVTbuffer[34+6]<<16)+(PVTbuffer[33+6]<<8)+PVTbuffer[32+6])/1000);
+		sprintf(&Line[10][0], "Beep Flag:");//  %d", main_flags.beeper_flag_received);
+//		sprintf(&Line[10][0], "HeightEli:  %04dm", ((PVTbuffer[35+6]<<24)+(PVTbuffer[34+6]<<16)+(PVTbuffer[33+6]<<8)+PVTbuffer[32+6])/1000);
 		sprintf(&Line[11][0], "HeightMSL:  %04dm", ((PVTbuffer[39+6]<<24)+(PVTbuffer[38+6]<<16)+(PVTbuffer[37+6]<<8)+PVTbuffer[36+6])/1000);
 		sprintf(&Line[12][0], "Speed:   %03d km/h", pp_devices_menu[this_device]->gps_speed);
 
@@ -1355,7 +1367,7 @@ void draw_devices(void)	//int8_t menu)
 {
 	if(current_device == this_device) draw_this_device();
 	else {
-	uint8_t *buffer = bufNode[current_device];
+//	uint8_t *buffer = bufNode[current_device];
 
 	if(pp_devices_menu[current_device]->device_num == current_device)		//data has received
 	{
@@ -1371,11 +1383,13 @@ void draw_devices(void)	//int8_t menu)
 	sprintf(&Line[2][0], " %5s pDop:%2d.%d", fixType[pp_devices_menu[current_device]->fix_type_opt],
 			pp_devices_menu[current_device]->p_dop/10, pp_devices_menu[current_device]->p_dop%10);
 //fixType only 2 bits used to transmit, pDop/10 (0...25.5)	buffer[15]/10, buffer[15]%10);
-	sprintf(&Line[3][0], "Date%02d/%02d %02d:%02d:%02d", ((buffer[1] & 0xF8) >> 3),					//дни	  mask 0b1111100
-			 	 	 	 	 	 	 	 	 	 	 	 	 	 	  PVTbuffer[6+6],					//текущий месяц
-							   ((buffer[1] & 0x07) << 2) + ((buffer[2] & 0xC0) >> 6),					//часы	  mask 0b11000000
-																  (buffer[2] & 0x3F),					//минуты  mask 0b00111111
-														  ((buffer[3] & 0xFC) >> 2));					//секунды mask 0b11111100
+	sprintf(&Line[3][0], "Date../09 %02d:%02d:%02d", pp_devices_menu[current_device]->time_hours,
+			pp_devices_menu[current_device]->time_minutes, pp_devices_menu[current_device]->time_seconds);
+//															((buffer[11] & 0xF8) >> 3),					//дни	  mask 0b1111100
+//			 	 	 	 	 	 	 	 	 	 	 	 	 	 	  PVTbuffer[6+6],					//текущий месяц
+//							   ((buffer[11] & 0x07) << 2) + ((buffer[12] & 0xC0) >> 6),					//часы	  mask 0b11000000
+//																  (buffer[2] & 0x3F),					//минуты  mask 0b00111111
+//														  ((buffer[13] & 0xFC) >> 2));					//секунды mask 0b11111100
 	sprintf(&Line[4][0], "Latit : %ld", pp_devices_menu[current_device]->latitude.as_integer);	//((int32_t)(buffer[10]<<24)+(buffer[9]<<16)+(buffer[8]<<8)+buffer[7]));
 	sprintf(&Line[5][0], "Longit: %ld", pp_devices_menu[current_device]->longitude.as_integer);	//((int32_t)(buffer[6]<<24)+(buffer[5]<<16)+(buffer[4]<<8)+buffer[3]));
 
@@ -1658,12 +1672,14 @@ void draw_device_submenu(void)
 		sprintf(&Line[5][0], "  TO SAVE");
 		ST7735_WriteString(0, 54, &Line[3][0], Font_11x18, CYAN,BLACK);
 		ST7735_WriteString(0, 81, &Line[5][0], Font_11x18, CYAN,BLACK);
+//		HAL_Delay(300);
+		shortBeepsBlocking(3);
+		ST7735_FillScreen(BLACK);
+		current_menu = M_DEVICES;
 	}
 }
 void draw_set_points(void)
 {
-	ST7735_SetRotation(0);
-
 		sprintf(&Line[0][1], " Save %d as:", current_device);
 		ST7735_WriteString(0, -1, &Line[0][1], Font_11x18, CYAN,BLACK);
 
@@ -1837,6 +1853,8 @@ void draw_set_settings(void)
 	{
 	    if (settings_copy_menu.spreading_factor != p_settings_menu->spreading_factor)
 	    {
+	    	(settings_copy_menu.spreading_factor == 12)? serialPrint(set_pertriple_period, sizeof(set_pertriple_period)):
+	    												 serialPrint(set_persecond_period, sizeof(set_persecond_period));
 	        flag_settings_changed = 1;
 	    	settings_save(&settings_copy_menu);
 	    	settings_load();
@@ -2066,9 +2084,10 @@ void draw_confirm_settings(void)
 	    sprintf(&Line[7][0], " Press ESC  ");
 	    ST7735_WriteString(0, 8*11, &Line[7][0], Font_11x18, YELLOW,BLACK);
 
-	    sprintf(&Line[8][0], " RESTORE DEFAULTS ");
-	    sprintf(&Line[9][0], "AND RESET COMPASS ");
-	    for (uint8_t k = 8; k < 10; k++) {
+	    sprintf(&Line[8][0], " RECHECK SETTINGS ");
+//	    sprintf(&Line[8][0], " RESTORE DEFAULTS ");
+//	    sprintf(&Line[9][0], "AND RESET COMPASS ");
+	    for (uint8_t k = 8; k < 9; k++) {
 	    	ST7735_WriteString(0, (k+2)*11, &Line[k][0], Font_7x10, GREEN,BLACK);
 	    }
     }else {
@@ -2118,7 +2137,15 @@ void draw_actions(void)
 	(pp_devices_menu[this_device]->gather_flag)?    sprintf(&Line[3][0], " Gather  on"): sprintf(&Line[3][0], " Gather ---");
 	sprintf(&Line[4][0], " Del points");
 	sprintf(&Line[5][0], " SetDefault");
-	(pp_devices_menu[this_device]->beeper_flag)?    sprintf(&Line[6][0], " Beeper  on"): sprintf(&Line[6][0], " Beeper off");
+//	(pp_devices_menu[this_device]->beeper_flag)?    sprintf(&Line[6][0], " Beeper  on"): sprintf(&Line[6][0], " Beeper off");
+	if(pp_devices_menu[this_device]->beeper_flag == 0) sprintf(&Line[6][0], " Beeper off");
+	else if(p_settings_menu->spreading_factor == 12)
+    {//SF12 only: invert flags to transmit in the slot, beacon can get: slot1 for beacon2, slot2 for beacon1
+		if(pp_devices_menu[this_device]->beeper_flag == 2) sprintf(&Line[6][0], " Beeper1 on");
+		else if(pp_devices_menu[this_device]->beeper_flag == 1) sprintf(&Line[6][0], " Beeper2 on");
+	}
+	else sprintf(&Line[6][0], " Beeper  on");
+
 	(pp_devices_menu[this_device]->flwtrek_flag)?   sprintf(&Line[7][0], " FlwTrek on"): sprintf(&Line[7][0], " FlwTrekOff");
 
 	row = get_current_item();
@@ -2184,21 +2211,31 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 			memory_points_erase();
 			memory_points_load();
 			break;
-		case M_ACTIONS_I_RESET_ALL:
-//			settings_save(&settings_copy_menu);
-			row = 3;
-			sprintf(&Line[row][1], "Restoring..");
-			ST7735_SetRotation(0);
-			ST7735_WriteString(0, row*18, &Line[row][1], Font_11x18, YELLOW,BLACK);
-
-			settings_save_default();
-			HAL_Delay(1000);
-			NVIC_SystemReset();
+		case M_ACTIONS_I_SET_DEFAULTS:
+			current_menu = M_CONFIRM_RESTORING;
+////			settings_save(&settings_copy_menu);
+//			row = 3;
+//			sprintf(&Line[row][1], "Restoring..");
+//			ST7735_SetRotation(0);
+//			ST7735_WriteString(0, row*18, &Line[row][1], Font_11x18, YELLOW,BLACK);
+//
+//			settings_save_default();
+//			HAL_Delay(1000);
+//			NVIC_SystemReset();
 			break;
-		case M_ACTIONS_I_BEEPER:	//toggle_trigger();
-			(pp_devices_menu[this_device]->beeper_flag == 0)?
-					(pp_devices_menu[this_device]->beeper_flag = 1):
-					(pp_devices_menu[this_device]->beeper_flag = 0);
+		case M_ACTIONS_I_BEEPER:	//SF12 only: invert flags to transmit in the slot, beacon can get: slot1 for beacon2, slot2 for beacon1
+			if(p_settings_menu->spreading_factor == 12)
+			{
+				if(pp_devices_menu[this_device]->beeper_flag == 0) pp_devices_menu[this_device]->beeper_flag = 2;		//0x10
+				else if(pp_devices_menu[this_device]->beeper_flag == 2) pp_devices_menu[this_device]->beeper_flag = 1;	//0x01
+				else pp_devices_menu[this_device]->beeper_flag = 0;														//0x00
+			}
+			else
+			{
+				(pp_devices_menu[this_device]->beeper_flag == 0)?
+						(pp_devices_menu[this_device]->beeper_flag = 1):
+						(pp_devices_menu[this_device]->beeper_flag = 0);
+			}
 			break;
 		case M_ACTIONS_I_FLWTREK:	//initial set in init_gnss() of gnss.c
 			(pp_devices_menu[this_device]->flwtrek_flag == 0)?
@@ -2217,4 +2254,30 @@ void actions_esc(void)
 	reset_current_item_in_menu(M_ACTIONS);
 	current_menu = return_from_power_menu;
 	//draw_current_menu();
+}
+
+void draw_restore_defaults(void)
+{
+    	sprintf(&Line[1][0], "   TO RESTORE    ");
+    	sprintf(&Line[2][0], "    DEFAULT      ");
+   		sprintf(&Line[3][0], "    SETTINGS     ");
+    	for (uint8_t k = 1; k < 4; k++) {
+    		ST7735_WriteString(0, k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
+    	}
+
+    	sprintf(&Line[4][0], " Press OK  ");
+    	ST7735_WriteString(0, 4*11, &Line[4][0], Font_11x18, YELLOW,BLACK);
+
+    	sprintf(&Line[5][0], " APPLY AND REBOOT ");
+	    sprintf(&Line[6][0], "            ");
+	   	for (uint8_t k = 5; k < 7; k++) {
+	    	ST7735_WriteString(0, 11+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
+	   	}
+
+	    sprintf(&Line[7][0], " Press ESC ");
+	    ST7735_WriteString(0, 8*11, &Line[7][0], Font_11x18, YELLOW,BLACK);
+	    sprintf(&Line[8][0], "CALL MENU ACTIONS ");
+	    for (uint8_t k = 8; k < 9; k++) {
+	    	ST7735_WriteString(0, (k+2)*11, &Line[k][0], Font_7x10, GREEN,BLACK);
+	    }
 }

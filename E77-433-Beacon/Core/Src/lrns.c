@@ -123,33 +123,37 @@ void rx_to_devices(uint8_t device_number)
 //	uint8_t *buffer = bufNode[device_number];
 	uint8_t *buffer = bufferRx;
 
-	devices[device_number].longitude.as_array[0] = buffer[4];
-	devices[device_number].longitude.as_array[1] = buffer[5];
-	devices[device_number].longitude.as_array[2] = buffer[6];
-	devices[device_number].longitude.as_array[3] = buffer[7];
-
-	devices[device_number].latitude.as_array[0] = buffer[8];
-	devices[device_number].latitude.as_array[1] = buffer[9];
-	devices[device_number].latitude.as_array[2] = buffer[10];
-	devices[device_number].latitude.as_array[3] = buffer[11];
-
-//	devices[device_number].gps_heading =
-	devices[device_number].fix_type_opt = (buffer[14] & 0x60) >> 5;			//only 2 bits used to transmit
-	devices[device_number].valid_fix_flag = ((buffer[14] & 0x10) >> 4);		//bit0 only
-	devices[device_number].p_dop = buffer[15];								//0...25.5
-
-	devices[device_number].batt_voltage = (buffer[14] & 0x0F)+27;			//in decimal volts
-	devices[device_number].rssi = buffer[BUFFER_AIR_SIZE];
-	devices[device_number].snr = buffer[BUFFER_AIR_SIZE + 1];
 	devices[device_number].beacon_flag = buffer[0] >> 7;
 	devices[device_number].emergency_flag = (buffer[0] & 0x40) >> 6;
 	devices[device_number].alarm_flag = (buffer[0] & 0x20) >> 5;
 	devices[device_number].gather_flag = (buffer[0] & 0x10) >> 4;
 	devices[device_number].beeper_flag = (buffer[0] & 0x8) >> 3;
+//	main_flags.beeper_flag_received = (buffer[0] & 0x8) >> 3;
 	devices[device_number].device_num = buffer[0] & 0x07;
-//	if((buffer[0] & 0x8) >> 3) (devices[device_number].beeper_flag = 1);		//beeper_flag received
 
-//	if(buffer[0] & 0x80)			//if is beacon (ignore it)
+//	devices[device_number].is_moving =
+	devices[device_number].fix_type_opt = (buffer[1] & 0x60) >> 5;			//only 2 bits used to transmit
+	devices[device_number].valid_fix_flag = ((buffer[1] & 0x10) >> 4);		//bit0 only
+	devices[device_number].batt_voltage = (buffer[1] & 0x0F)+27;			//in decimal volts
+	devices[device_number].p_dop = buffer[2];								//0...25.5
+
+	devices[device_number].longitude.as_array[0] = buffer[3];
+	devices[device_number].longitude.as_array[1] = buffer[4];
+	devices[device_number].longitude.as_array[2] = buffer[5];
+	devices[device_number].longitude.as_array[3] = buffer[6];
+
+	devices[device_number].latitude.as_array[0] = buffer[7];
+	devices[device_number].latitude.as_array[1] = buffer[8];
+	devices[device_number].latitude.as_array[2] = buffer[9];
+	devices[device_number].latitude.as_array[3] = buffer[10];
+
+	devices[device_number].time_hours = (buffer[11] >> 4) + 8;
+	devices[device_number].time_minutes = (((buffer[11] & 0xF) << 2) + ((buffer[12] & 0xC0) >> 6));
+	devices[device_number].time_seconds = (buffer[12] & 0x3F);
+
+	devices[device_number].rssi = buffer[BUFFER_AIR_SIZE];
+	devices[device_number].snr = buffer[BUFFER_AIR_SIZE + 1];
+
 	if(pp_devices[p_settings_lrns->device_number]->valid_fix_flag)
 	{							// ignore 7 point groups to get 7, 8, 9 ,10, 11 - 5 device groups
 		int8_t group_start_index = (MEMORY_POINT_GROUPS + device_number - 1) * MEMORY_SUBPOINTS;
@@ -176,7 +180,7 @@ void rx_to_devices(uint8_t device_number)
 			pp_points_lrns[0 + device_number]->latitude.as_integer = devices[device_number].latitude.as_integer;
 			pp_points_lrns[0 + device_number]->longitude.as_integer = devices[device_number].longitude.as_integer;
 			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
-			shortBeeps(device_number);				//emergency_flag received
+			if(!pp_devices[p_settings_lrns->device_number]->display_status) shortBeeps(device_number);				//emergency_flag received
 		}
 		if(devices[device_number].alarm_flag)
 		{	//Alarms group = 0, sub point 1
@@ -208,62 +212,6 @@ void clear_fix_data(uint8_t device_number)
 	devices[device_number].valid_fix_flag = 0;			//bit0 only
 	devices[device_number].p_dop = 0;
 }
-/*
-void fill_air_packet(uint32_t current_uptime)
-{
-	p_air_packet_tx[PACKET_NUM_ID_POS] = 			(this_device << BYTE_NUM_POS) | (devices[this_device].device_num);	   //transmit dev id as A-Z, but with 0x41 ('A') shift resulting in 0-25 dec
-	devices[this_device].timestamp =				current_uptime;
-
-	p_air_packet_tx[PACKET_FLAGS_POS] = 			devices[this_device].alarm_flag;
-
-	p_air_packet_tx[PACKET_LATITUDE_POS] = 			devices[this_device].latitude.as_array[0];
-	p_air_packet_tx[PACKET_LATITUDE_POS + 1] = 		devices[this_device].latitude.as_array[1];
-	p_air_packet_tx[PACKET_LATITUDE_POS + 2] = 		devices[this_device].latitude.as_array[2];
-	p_air_packet_tx[PACKET_LATITUDE_POS + 3] = 		devices[this_device].latitude.as_array[3];
-
-	p_air_packet_tx[PACKET_LONGITUDE_POS] = 		devices[this_device].longitude.as_array[0];
-	p_air_packet_tx[PACKET_LONGITUDE_POS + 1] = 	devices[this_device].longitude.as_array[1];
-	p_air_packet_tx[PACKET_LONGITUDE_POS + 2] = 	devices[this_device].longitude.as_array[2];
-	p_air_packet_tx[PACKET_LONGITUDE_POS + 3] = 	devices[this_device].longitude.as_array[3];
-}
-
-void parse_air_packet(uint32_t current_uptime)
-{
-	uint8_t rx_device = (p_air_packet_rx[PACKET_NUM_ID_POS] & PACKET_NUM_MASK) >> BYTE_NUM_POS; //extract device number from received packet
-
-	devices[rx_device].exist_flag 				=	1;
-	devices[rx_device].device_num				=	(p_air_packet_rx[PACKET_NUM_ID_POS] & PACKET_ID_MASK);	//restore 0x41 shift
-	devices[rx_device].timestamp				=	current_uptime;
-
-	devices[rx_device].alarm_flag				=	p_air_packet_rx[PACKET_FLAGS_POS];
-
-	devices[rx_device].latitude.as_array[0]	=		p_air_packet_rx[PACKET_LATITUDE_POS];
-	devices[rx_device].latitude.as_array[1]	=		p_air_packet_rx[PACKET_LATITUDE_POS + 1];
-	devices[rx_device].latitude.as_array[2]	=		p_air_packet_rx[PACKET_LATITUDE_POS + 2];
-	devices[rx_device].latitude.as_array[3]	=		p_air_packet_rx[PACKET_LATITUDE_POS + 3];
-
-	devices[rx_device].longitude.as_array[0]	=	p_air_packet_rx[PACKET_LONGITUDE_POS];
-	devices[rx_device].longitude.as_array[1]	=	p_air_packet_rx[PACKET_LONGITUDE_POS + 1];
-	devices[rx_device].longitude.as_array[2]	=	p_air_packet_rx[PACKET_LONGITUDE_POS + 2];
-	devices[rx_device].longitude.as_array[3]	=	p_air_packet_rx[PACKET_LONGITUDE_POS + 3];
-}
-
-void process_all_devices(void)
-{
-	for (uint8_t dev = 1; dev <= DEVICES_ON_AIR_MAX; dev++)
-	{
-		if (dev == this_device)	//except this device
-		{
-			continue;
-		}
-
-		if (devices[dev].exist_flag == 1)	//all existing
-		{
-			calc_relative_position(dev);
-		}
-	}
-}
-*/
 
 //pp_devices_lrns[another_device]->latitude.as_integer
 //pp_devices_lrns[another_device]->longitude.as_integer

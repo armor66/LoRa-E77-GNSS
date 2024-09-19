@@ -57,7 +57,7 @@ SubGHz_Phy/App/subghz_phy_app.o: ../SubGHz_Phy/App/subghz_phy_app.c \
  ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo.h ../Core/Inc/sys_app.h \
  ../SubGHz_Phy/App/subghz_phy_app.h \
  ../Middlewares/Third_Party/SubGHz_Phy/radio.h \
- ../Middlewares/Third_Party/SubGHz_Phy/radio_ex.h \
+ ../Middlewares/Third_Party/SubGHz_Phy/radio_ex.h ../Core/Inc/iwdg.h \
  ../Utilities/misc/stm32_systime.h ../Utilities/timer/stm32_timer.h \
  ../Drivers/CMSIS/Include/cmsis_compiler.h ../Core/Inc/utilities_conf.h \
  ../Utilities/misc/stm32_mem.h ../Utilities/misc/stm32_tiny_vsnprintf.h \
@@ -67,7 +67,8 @@ SubGHz_Phy/App/subghz_phy_app.o: ../SubGHz_Phy/App/subghz_phy_app.c \
  ../Core/Inc/tim.h ../Core/Inc/lptim.h ../Core/Inc/buttons.h \
  ../Core/Inc/settings.h ../Core/Inc/spi.h ../Core/Inc/lrns.h \
  ../Core/Inc/compass.h ../Core/Inc/ST7735.h ../Core/Inc/fonts.h \
- ../Core/Inc/gnss.h ../Core/Inc/gpio.h
+ ../Core/Inc/gnss.h ../Core/Inc/gpio.h \
+ ../Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver/radio_driver.h
 ../Core/Inc/platform.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wlxx.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
@@ -129,6 +130,7 @@ SubGHz_Phy/App/subghz_phy_app.o: ../SubGHz_Phy/App/subghz_phy_app.c \
 ../SubGHz_Phy/App/subghz_phy_app.h:
 ../Middlewares/Third_Party/SubGHz_Phy/radio.h:
 ../Middlewares/Third_Party/SubGHz_Phy/radio_ex.h:
+../Core/Inc/iwdg.h:
 ../Utilities/misc/stm32_systime.h:
 ../Utilities/timer/stm32_timer.h:
 ../Drivers/CMSIS/Include/cmsis_compiler.h:
@@ -153,3 +155,4 @@ SubGHz_Phy/App/subghz_phy_app.o: ../SubGHz_Phy/App/subghz_phy_app.c \
 ../Core/Inc/fonts.h:
 ../Core/Inc/gnss.h:
 ../Core/Inc/gpio.h:
+../Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver/radio_driver.h:

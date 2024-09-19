@@ -819,7 +819,9 @@ void fillScreen(uint16_t color) {
     fillRect(0, 0, _width, _height, color);
 }
 
-
+void ST7735_FillScreen(uint16_t color) {
+    fillRect(0, 0, _width, _height, color);
+}
 
 void testLines(uint16_t color)
 {

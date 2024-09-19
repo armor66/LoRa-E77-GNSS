@@ -95,6 +95,12 @@ struct devices_struct
 
     uint8_t fix_type_opt;
     uint8_t valid_fix_flag;
+    uint16_t p_dop;
+
+    uint8_t time_hours;
+	uint8_t time_minutes;
+	uint8_t time_seconds;
+
     //ABSOLUTE COORDINATES
     union
     {
@@ -115,8 +121,6 @@ struct devices_struct
     uint32_t distance;          //distance in meters to a device
     int16_t azimuth_deg_signed;       //heading to a device, degrees
     double azimuth_rad;			//heading to a device, radians
-
-    uint16_t p_dop;
 
     uint8_t core_voltage;
     uint8_t batt_voltage;

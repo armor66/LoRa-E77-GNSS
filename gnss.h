@@ -7,9 +7,9 @@
 
 #define TREKPOINTS_TOTAL (1)
 //~20m gap
-static const float latitude_array []={0};
+static const float latitude_array[]={0}
 
-static const float longitude_array[]={0};
+static const float longitude_array[]={0}
 
 struct trekpoints_struct
 {

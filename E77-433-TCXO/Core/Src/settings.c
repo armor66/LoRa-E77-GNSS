@@ -271,6 +271,13 @@ void settings_load(void)
     settings.magn_radius.as_array[0] = 			settings_array[SETTINGS_MAG_RADIUS_POS];
     settings.magn_radius.as_array[1] = 			settings_array[SETTINGS_MAG_RADIUS_POS + 1];
 
+    if(settings.spreading_factor == 12)
+    {
+    	settings.device_number = 3;	//RX only (slot1 and slot2), Radio.SetRxConfig IQ inverted, TX on demand
+    	settings.devices_on_air = 3;
+    	settings.coding_rate_opt = 3;
+    }
+    else if(settings.spreading_factor == 11) settings.coding_rate_opt = 2;
 }
 
 void settings_save_default(void)		//page 63 == 1F800

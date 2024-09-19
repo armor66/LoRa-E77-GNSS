@@ -67,7 +67,8 @@ SubGHz_Phy/App/subghz_phy_app.o: ../SubGHz_Phy/App/subghz_phy_app.c \
  ../Core/Inc/tim.h ../Core/Inc/lptim.h ../Core/Inc/buttons.h \
  ../Core/Inc/settings.h ../Core/Inc/spi.h ../Core/Inc/lrns.h \
  ../Core/Inc/compass.h ../Core/Inc/ST7735.h ../Core/Inc/fonts.h \
- ../Core/Inc/gnss.h ../Core/Inc/gpio.h
+ ../Core/Inc/gnss.h ../Core/Inc/gpio.h \
+ ../Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver/radio_driver.h
 ../Core/Inc/platform.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wlxx.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
@@ -154,3 +155,4 @@ SubGHz_Phy/App/subghz_phy_app.o: ../SubGHz_Phy/App/subghz_phy_app.c \
 ../Core/Inc/fonts.h:
 ../Core/Inc/gnss.h:
 ../Core/Inc/gpio.h:
+../Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver/radio_driver.h:

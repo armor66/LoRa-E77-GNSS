@@ -54,8 +54,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-//#define BEACON
-#ifndef BEACON
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -99,47 +98,6 @@ void Error_Handler(void);
 #define BATT_Pin GPIO_PIN_15
 #define BATT_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
-#else
-#define RTC_PREDIV_A ((1<<(15-RTC_N_PREDIV_S))-1)
-#define RTC_N_PREDIV_S 10
-#define RTC_PREDIV_S ((1<<RTC_N_PREDIV_S)-1)
-#define LED_W_Pin GPIO_PIN_3
-#define LED_W_GPIO_Port GPIOB
-#define BUZZ_Pin GPIO_PIN_4
-#define BUZZ_GPIO_Port GPIOB
-#define LED_R_Pin GPIO_PIN_5
-#define LED_R_GPIO_Port GPIOB
-#define BTN_1_Pin GPIO_PIN_8
-#define BTN_1_GPIO_Port GPIOB
-#define BTN_1_EXTI_IRQn EXTI9_5_IRQn
-#define BTN_2_Pin GPIO_PIN_0
-#define BTN_2_GPIO_Port GPIOA
-#define BTN_2_EXTI_IRQn EXTI0_IRQn
-#define GPS_EN_Pin GPIO_PIN_1
-#define GPS_EN_GPIO_Port GPIOA
-#define PPS_Pin GPIO_PIN_4
-#define PPS_GPIO_Port GPIOA
-#define PPS_EXTI_IRQn EXTI4_IRQn
-#define BTN_3_Pin GPIO_PIN_5
-#define BTN_3_GPIO_Port GPIOA
-#define BTN_3_EXTI_IRQn EXTI9_5_IRQn
-#define RF_CTRL2_Pin GPIO_PIN_6
-#define RF_CTRL2_GPIO_Port GPIOA
-#define RF_CTRL1_Pin GPIO_PIN_7
-#define RF_CTRL1_GPIO_Port GPIOA
-#define CS_Pin GPIO_PIN_9
-#define CS_GPIO_Port GPIOA
-#define LED_B_Pin GPIO_PIN_12
-#define LED_B_GPIO_Port GPIOB
-#define DC_Pin GPIO_PIN_11
-#define DC_GPIO_Port GPIOA
-#define RST_Pin GPIO_PIN_12
-#define RST_GPIO_Port GPIOA
-#define HOLD_Pin GPIO_PIN_13
-#define HOLD_GPIO_Port GPIOC
-#define BATT_Pin GPIO_PIN_15
-#define BATT_GPIO_Port GPIOA
-#endif
 
 #define PPS_SKIP	(2)		//how many first PPS pulses are skipped before switching to active mode
 uint32_t get_abs_pps_cntr(void);
@@ -154,11 +112,11 @@ struct main_flags_struct
 //    uint8_t tick_1s;
 
     uint8_t time_slot_timer_ovf;
-    uint32_t time_stamp;
+//    uint32_t time_stamp;
 
     int8_t short_beeps;
-    int8_t long_beep;
     int8_t fix_valid;
+//    int8_t beeper_flag_received;
 };
 
 extern struct main_flags_struct main_flags;

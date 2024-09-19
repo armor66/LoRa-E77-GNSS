@@ -45,13 +45,13 @@ extern "C" {
 #define LORA_PREAMBLE_LENGTH                        8         /* Same for Tx and Rx */
 #define LORA_SYMBOL_TIMEOUT                         5         /* Symbols */
 #define LORA_FIX_LENGTH_PAYLOAD_ON                  true	//TX_Start->OnRxDone ==(727...729)mS false==820mS
-#define LORA_IQ_INVERSION_ON                        false
+//#define LORA_IQ_INVERSION	                        false
 
 /* USER CODE BEGIN EC */
 //#define RX_TIMEOUT_VALUE                            2000
-#define TX_TIMEOUT_VALUE                            750		//3000
-#define BUFFER_AIR_SIZE                             16  /* Define the payload size here */
-#define BUFFER_RX                                 	18	//BUFFER_SIZE + 2 rssi and snr
+#define TX_TIMEOUT_VALUE                            0		//3000
+#define BUFFER_AIR_SIZE                             13  /* Define the payload size here */
+#define BUFFER_RX                                 	15	//BUFFER_SIZE + 2 rssi and snr
 //#define TX_PERIOD_MS                                10000  /* App TX duty cycle */
 
 #define TCXO_WORKAROUND_TIME_MARGIN                 50  /* 50ms margin */

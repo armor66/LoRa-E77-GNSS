@@ -123,44 +123,46 @@ void calibrate_compass(void)
 	{
 		calState = bno055_getCalibrationState();
 		row = 0;
+		if((calState.gyro == 3) && !gyro_ok) {
+			gyro_ok = 1;
+			sprintf(&Line[row][0],"            ");
+			ST7735_WriteString(0, row*11, &Line[row][0], Font_7x10, BLACK,BLACK);
+			sprintf(&Line[row+1][0]," Gyroscope OK");
+			ST7735_WriteString(0, (row+1)*11, &Line[row+1][0], Font_7x10, GREEN,BLACK);
+			sprintf(&Line[row+1][10],"OK");
+			ST7735_WriteString(78, (row+1)*11, &Line[row+1][10], Font_7x10, CYANB,BLACK);
+			led_w_on();
+			HAL_Delay(10);
+			led_w_off();
+			led_blue_on();
+		}else if(!gyro_ok) {
+			sprintf(&Line[row][0]," Do not move");
+			ST7735_WriteString(0, row*11, &Line[row][0], Font_7x10, YELLOW,BLACK);
+			sprintf(&Line[row+1][0]," Gyroscope --");
+			ST7735_WriteString(0, (row+1)*11, &Line[row+1][0], Font_7x10, CYAN,BLACK);
+		}
+		row+=2;	//2
 		if((calState.accel == 3) && !accel_ok){
 			accel_ok = 1;
 			sprintf(&Line[row][0],"                  ");
 			ST7735_WriteString(0, row*11, &Line[row][0], Font_7x10, BLACK,BLACK);
 			sprintf(&Line[row+1][0]," Accelerometer OK");
 			ST7735_WriteString(0, (row+1)*11, &Line[row+1][0], Font_7x10, GREEN,BLACK);
-			sprintf(&Line[row+1][15],"OK");
-			ST7735_WriteString(105, (row+1)*11, &Line[row+1][15], Font_7x10, BLUE,BLACK);
+//			sprintf(&Line[row+1][15],"OK");
+//			ST7735_WriteString(105, (row+1)*11, &Line[row+1][15], Font_7x10, GREEN,BLACK);
 			led_w_on();
 			HAL_Delay(10);
 			led_w_off();
-			led_blue_on();
+			led_green_on();
 		}else if(!accel_ok){
 			sprintf(&Line[row][0]," Place 6 positions");
 			ST7735_WriteString(0, row*11, &Line[row][0], Font_7x10, YELLOW,BLACK);
 			sprintf(&Line[row+1][0]," Accelerometer --");
 			ST7735_WriteString(0, (row+1)*11, &Line[row+1][0], Font_7x10, CYAN,BLACK);
 		}
-		row+=2;	//2
-		if((calState.gyro == 3) && !magn_ok) {
-			magn_ok = 1;
-			sprintf(&Line[row][0],"            ");
-			ST7735_WriteString(0, row*11, &Line[row][0], Font_7x10, BLACK,BLACK);
-			sprintf(&Line[row+1][0]," Gyroscope OK");
-			ST7735_WriteString(0, (row+1)*11, &Line[row+1][0], Font_7x10, GREEN,BLACK);
-			led_w_on();
-			HAL_Delay(10);
-			led_w_off();
-			led_green_on();
-		}else if(!magn_ok) {
-			sprintf(&Line[row][0]," Do not move");
-			ST7735_WriteString(0, row*11, &Line[row][0], Font_7x10, YELLOW,BLACK);
-			sprintf(&Line[row+1][0]," Gyroscope --");
-			ST7735_WriteString(0, (row+1)*11, &Line[row+1][0], Font_7x10, CYAN,BLACK);
-		}
 		row+=2;	//4
-		if((calState.mag == 3) && !gyro_ok){
-			gyro_ok = 1;
+		if((calState.mag == 3) && !magn_ok){
+			magn_ok = 1;
 			sprintf(&Line[row][0],"              ");
 			ST7735_WriteString(0, row*11, &Line[row][0], Font_7x10, BLACK,BLACK);
 			sprintf(&Line[row+1][0]," Magnetometer OK");
@@ -171,7 +173,7 @@ void calibrate_compass(void)
 			HAL_Delay(10);
 			led_w_off();
 			led_red_on();
-		}else if(!gyro_ok) {
+		}else if(!magn_ok) {
 			sprintf(&Line[row][0]," Draw figure 8");
 			ST7735_WriteString(0, row*11, &Line[row][0], Font_7x10, YELLOW,BLACK);
 			sprintf(&Line[row+1][0]," Magnetometer --");
@@ -197,12 +199,16 @@ void calibrate_compass(void)
 			ST7735_WriteString(0, (row+6)*11, &Line[row+4][0], Font_7x10, MAGENTA,BLACK);
 		}
 
-		if (!(GPIOA->IDR & BTN_2_Pin))	//OK for save
+		if (!(GPIOA->IDR & BTN_2_Pin) && sys_ok == 1)	//OK for save
 	    {
 	    	break;
 	    }
-		if (!(GPIOA->IDR & BTN_3_Pin))	//ECS for restart
+		if (!(GPIOA->IDR & BTN_3_Pin) && sys_ok == 1)	//ECS for restart
     	{
+			bno055_setup();
+			bno055_writeData(BNO055_AXIS_MAP_CONFIG, 0x21);		//-90° page 25 of "BST_BNO055_DS000_14.pdf"
+			bno055_writeData(BNO055_AXIS_MAP_SIGN, 0x07);		//up side down
+			bno055_setOperationModeNDOF();
     		goto restart_cal;
     	}
 		HAL_Delay(200);

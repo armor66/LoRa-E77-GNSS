@@ -135,9 +135,9 @@ char *region[] = {"RU", "EU", "US"};
 //settings size
 #define SETTINGS_SIZE						(32) //half-words (% sizeof(uint64_t)) == 0)
 
-#define SETTINGS_PAGE		0x0803D800		//page 123(0x0801F000)	//page 62
+#define SETTINGS_PAGE		0x0803D800		//0x3D800 / 0x800 = page 123 (0x0801F000)	//page 62
 //------------------------memory points defines----------------------------------
-#define FLASH_POINTS_PAGE	0x0803E800		//page 125	(0x08020000)//page 64 start (0x0801F800)
+#define FLASH_POINTS_PAGE	0x0803E800		//0x3E800 / 0x800 = page 125 (0x08020000)//page 64 start (0x0801F800)
 
 #define MEMORY_POINT_SIZE	(12)	//9 bytes include: 1 flag, 4 lat; 4 lon.
 
@@ -271,6 +271,13 @@ void settings_load(void)
     settings.magn_radius.as_array[0] = 			settings_array[SETTINGS_MAG_RADIUS_POS];
     settings.magn_radius.as_array[1] = 			settings_array[SETTINGS_MAG_RADIUS_POS + 1];
 
+    if(settings.spreading_factor == 12)
+    {
+//    	settings.device_number = 3;	//RX only (slot1 and slot2), Radio.SetRxConfig IQ inverted, TX on demand
+    	settings.devices_on_air = 3;
+    	settings.coding_rate_opt = 3;
+    }
+    else if(settings.spreading_factor == 11) settings.coding_rate_opt = 2;
 }
 
 void settings_save_default(void)		//page 63 == 1F800

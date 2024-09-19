@@ -123,33 +123,37 @@ void rx_to_devices(uint8_t device_number)
 //	uint8_t *buffer = bufNode[device_number];
 	uint8_t *buffer = bufferRx;
 
-	devices[device_number].longitude.as_array[0] = buffer[4];
-	devices[device_number].longitude.as_array[1] = buffer[5];
-	devices[device_number].longitude.as_array[2] = buffer[6];
-	devices[device_number].longitude.as_array[3] = buffer[7];
-
-	devices[device_number].latitude.as_array[0] = buffer[8];
-	devices[device_number].latitude.as_array[1] = buffer[9];
-	devices[device_number].latitude.as_array[2] = buffer[10];
-	devices[device_number].latitude.as_array[3] = buffer[11];
-
-//	devices[device_number].gps_heading =
-	devices[device_number].fix_type_opt = (buffer[14] & 0x60) >> 5;			//only 2 bits used to transmit
-	devices[device_number].valid_fix_flag = ((buffer[14] & 0x10) >> 4);		//bit0 only
-	devices[device_number].p_dop = buffer[15];								//0...25.5
-
-	devices[device_number].batt_voltage = (buffer[14] & 0x0F)+27;			//in decimal volts
-	devices[device_number].rssi = buffer[BUFFER_AIR_SIZE];
-	devices[device_number].snr = buffer[BUFFER_AIR_SIZE + 1];
 	devices[device_number].beacon_flag = buffer[0] >> 7;
 	devices[device_number].emergency_flag = (buffer[0] & 0x40) >> 6;
 	devices[device_number].alarm_flag = (buffer[0] & 0x20) >> 5;
 	devices[device_number].gather_flag = (buffer[0] & 0x10) >> 4;
 	devices[device_number].beeper_flag = (buffer[0] & 0x8) >> 3;
+//	main_flags.beeper_flag_received = (buffer[0] & 0x8) >> 3;
 	devices[device_number].device_num = buffer[0] & 0x07;
-//	if((buffer[0] & 0x8) >> 3) (devices[device_number].beeper_flag = 1);		//beeper_flag received
 
-//	if(buffer[0] & 0x80)			//if is beacon (ignore it)
+//	devices[device_number].is_moving =
+	devices[device_number].fix_type_opt = (buffer[1] & 0x60) >> 5;			//only 2 bits used to transmit
+	devices[device_number].valid_fix_flag = ((buffer[1] & 0x10) >> 4);		//bit0 only
+	devices[device_number].batt_voltage = (buffer[1] & 0x0F)+27;			//in decimal volts
+	devices[device_number].p_dop = buffer[2];								//0...25.5
+
+	devices[device_number].longitude.as_array[0] = buffer[3];
+	devices[device_number].longitude.as_array[1] = buffer[4];
+	devices[device_number].longitude.as_array[2] = buffer[5];
+	devices[device_number].longitude.as_array[3] = buffer[6];
+
+	devices[device_number].latitude.as_array[0] = buffer[7];
+	devices[device_number].latitude.as_array[1] = buffer[8];
+	devices[device_number].latitude.as_array[2] = buffer[9];
+	devices[device_number].latitude.as_array[3] = buffer[10];
+
+	devices[device_number].time_hours = (buffer[11] >> 4) + 8;
+	devices[device_number].time_minutes = (((buffer[11] & 0xF) << 2) + ((buffer[12] & 0xC0) >> 6));
+	devices[device_number].time_seconds = (buffer[12] & 0x3F);
+
+	devices[device_number].rssi = buffer[BUFFER_AIR_SIZE];
+	devices[device_number].snr = buffer[BUFFER_AIR_SIZE + 1];
+
 	if(pp_devices[p_settings_lrns->device_number]->valid_fix_flag)
 	{							// ignore 7 point groups to get 7, 8, 9 ,10, 11 - 5 device groups
 		int8_t group_start_index = (MEMORY_POINT_GROUPS + device_number - 1) * MEMORY_SUBPOINTS;
@@ -176,7 +180,7 @@ void rx_to_devices(uint8_t device_number)
 			pp_points_lrns[0 + device_number]->latitude.as_integer = devices[device_number].latitude.as_integer;
 			pp_points_lrns[0 + device_number]->longitude.as_integer = devices[device_number].longitude.as_integer;
 			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
-			shortBeeps(device_number);				//emergency_flag received
+			if(!pp_devices[p_settings_lrns->device_number]->display_status) shortBeeps(device_number);				//emergency_flag received
 		}
 		if(devices[device_number].alarm_flag)
 		{	//Alarms group = 0, sub point 1
@@ -198,13 +202,13 @@ void check_traced(uint8_t device_number)
 {
 	if(--devices[device_number].beacon_traced <= 0)	//may be decremented below 0
 	{
+		devices[device_number].beacon_traced = 0;
 		devices[device_number].beacon_lost = 1;
 	}
 }
 void clear_fix_data(uint8_t device_number)
 {
 	devices[device_number].fix_type_opt = 0;			//only 2 bits used to transmit
-//	if(devices[device_number].valid_fix_flag > 0) devices[device_number].valid_fix_flag--;
 	devices[device_number].valid_fix_flag = 0;			//bit0 only
 	devices[device_number].p_dop = 0;
 }

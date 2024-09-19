@@ -165,17 +165,24 @@ int main(void)
   ST7735_Init(0);
   fillScreen(BLACK);
 //  setI2CHandle(&hi2c1);
-  	if(!(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin))	//if DOWN button is pressed and  OK button is released upon power up
+  	if(!(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin))
 	{
-		GPSconfigureFlag = 1;
+		GPSconfigureFlag = 1;	//if DOWN button is pressed and  OK button is released upon power up
 		init_gnss();
 //		calibrateCompassFlag = 1;
 //		init_compass();
-	}else if(!(GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
+	}
+  	else if(!(GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
 	{
-		scanRadioFlag = 1;	//if OK button is pressed and DOWN button is released upon power up
+		scanRadioFlag = 1;		//if OK button is pressed and DOWN button is released upon power up
 		SubghzApp_Init();
-	}else
+	}
+  	else if(!(GPIOA->IDR & BTN_2_Pin) && !(GPIOA->IDR & BTN_3_Pin))
+	{
+		calibrateCompassFlag = 1;//if both buttons is pressed
+		init_compass();
+	}
+  	else
 	{
 		init_compass();
 		SubghzApp_Init();
@@ -192,7 +199,7 @@ int main(void)
 		init_menu();
 		main_flags.update_screen = 1;
 		HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
-	    MX_IWDG_Init();
+//	    MX_IWDG_Init();
 	}
   /* USER CODE END 2 */
 
@@ -213,7 +220,7 @@ int main(void)
   		}
   		if (main_flags.update_screen)	//buttons processed or on case 3 or if no PPS signal
   		{
-  	  		HAL_IWDG_Refresh(&hiwdg);
+//  	  		HAL_IWDG_Refresh(&hiwdg);
   			draw_current_menu();
   			main_flags.update_screen = 0;
   		}
