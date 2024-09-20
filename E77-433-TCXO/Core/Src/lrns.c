@@ -112,7 +112,7 @@ void ublox_to_this_device(uint8_t device_number)
 		devices[device_number].latitude.as_array[2] = PVTbuffer[36];
 		devices[device_number].latitude.as_array[3] = PVTbuffer[37];
 
-		devices[device_number].gps_speed = ((PVTbuffer[63+6]<<24)+(PVTbuffer[62+6]<<16)+(PVTbuffer[61+6]<<8)+PVTbuffer[60+6])/278 & 0xFF;			// 0 - 255 km/h
+		devices[device_number].gps_speed = ((PVTbuffer[63+6]<<24)+(PVTbuffer[62+6]<<16)+(PVTbuffer[61+6]<<8)+PVTbuffer[60+6])/278 & 0xFF;		// 0 - 255 km/h
 		devices[device_number].gps_heading = ((PVTbuffer[67+6]<<24)+(PVTbuffer[66+6]<<16)+(PVTbuffer[65+6]<<8)+PVTbuffer[64+6])/100000 & 0x1FF;	// 0 - 511 degrees
 		devices[device_number].p_dop = (PVTbuffer[77+6]<<8)+PVTbuffer[76+6];
 
@@ -147,9 +147,12 @@ void rx_to_devices(uint8_t device_number)
 	devices[device_number].latitude.as_array[2] = buffer[9];
 	devices[device_number].latitude.as_array[3] = buffer[10];
 
-	devices[device_number].time_hours = (buffer[11] >> 4) + 8;
-	devices[device_number].time_minutes = (((buffer[11] & 0xF) << 2) + ((buffer[12] & 0xC0) >> 6));
-	devices[device_number].time_seconds = (buffer[12] & 0x3F);
+//	devices[device_number].time_hours = (buffer[11] >> 4) + 8;
+//	devices[device_number].time_minutes = (((buffer[11] & 0xF) << 2) + ((buffer[12] & 0xC0) >> 6));
+//	devices[device_number].time_seconds = (buffer[12] & 0x3F);
+
+	devices[device_number].gps_speed = (buffer[11] >> 1);					// 0 - 128 km/h
+	devices[device_number].gps_heading = (((buffer[11] & 0x1) << 8) + buffer[12]);
 
 	devices[device_number].rssi = buffer[BUFFER_AIR_SIZE];
 	devices[device_number].snr = buffer[BUFFER_AIR_SIZE + 1];

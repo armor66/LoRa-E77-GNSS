@@ -147,9 +147,12 @@ void rx_to_devices(uint8_t device_number)
 	devices[device_number].latitude.as_array[2] = buffer[9];
 	devices[device_number].latitude.as_array[3] = buffer[10];
 
-	devices[device_number].time_hours = (buffer[11] >> 4) + 8;
-	devices[device_number].time_minutes = (((buffer[11] & 0xF) << 2) + ((buffer[12] & 0xC0) >> 6));
-	devices[device_number].time_seconds = (buffer[12] & 0x3F);
+//	devices[device_number].time_hours = (buffer[11] >> 4) + 8;
+//	devices[device_number].time_minutes = (((buffer[11] & 0xF) << 2) + ((buffer[12] & 0xC0) >> 6));
+//	devices[device_number].time_seconds = (buffer[12] & 0x3F);
+
+	devices[device_number].gps_speed = (buffer[11] >> 1);					// 0 - 128 km/h
+	devices[device_number].gps_heading = (((buffer[11] & 0x1) << 8) + buffer[12]);
 
 	devices[device_number].rssi = buffer[BUFFER_AIR_SIZE];
 	devices[device_number].snr = buffer[BUFFER_AIR_SIZE + 1];

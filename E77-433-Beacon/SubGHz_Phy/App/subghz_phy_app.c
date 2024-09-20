@@ -234,18 +234,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     	HAL_TIM_Base_Start_IT(&htim2);
         break;
 
-	case  PPS_Pin:				// interrupt on PPS front - the same as on TIM16 interrupt	void EXTI1_IRQHandler(void)
-		getADC_sensors(p_settings_phy->device_number);								//lrns.c
-		if(pps_counter++ > 60) {													//if 60sec no buttons activity
-			pps_counter = 60;
-			HAL_LPTIM_PWM_Stop(&hlptim1);											//lcd_off();
-			pp_devices_phy[p_settings_phy->device_number]->display_status = 0;		//for TPS7330 Vthresold=2.64V
+	case  PPS_Pin:
+		getADC_sensors(p_settings_phy->device_number);
+//		if(pps_counter++ > 60) {
+//			pps_counter = 60;
+//			HAL_LPTIM_PWM_Stop(&hlptim1);											//lcd_off();
+//			pp_devices_phy[p_settings_phy->device_number]->display_status = 0;		//for TPS7330 Vthresold=2.64V
 			if(pp_devices_phy[p_settings_phy->device_number]->batt_voltage < 30) {	//for TPS7333 Vthresold=2.87V(287-270=17) 0==270(2.70V) (actually ~2.95V)
 				longBeepsBlocking(1);												//long beep to prevent silent "RESET"
 				HAL_Delay(50);
 				release_power();
 			}
-		}
+//		}
 
 	if(PVTbuffer[16]%p_settings_phy->devices_on_air == 0)// || (p_settings_phy->spreading_factor == 12))	//start timer ones of 3, 4 or 5 seconds
 	{
@@ -268,8 +268,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //	{
 	if(p_settings_phy->device_number == (time_slot + 1)) clear_fix_data(time_slot + 1);	//before uart handling finished
 	if(p_settings_phy->spreading_factor == 12 && p_settings_phy->device_number == 2) clear_fix_data(2);	//for beacon №2 only to transmit
-		led_red_on();
-		led_green_on();
+//		led_red_on();
+//		led_green_on();
 //	}
 //avoid extra beeps
 	led_w_off();
@@ -350,7 +350,7 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
 //	   			uartIdx = 0;
 	   			ublox_to_this_device(p_settings_phy->device_number);
-	   			led_green_off();
+//	   			led_green_off();
 	   		} else uartIdx++;	//do not increment index in case 1 or 2
 		}
 	}
@@ -451,7 +451,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 					}
 					Radio.Rx(0);	//start to receive
 				}
-				led_red_off();		//occurrence case 2
+//				led_red_off();		//occurrence case 2
 				break;
 
 			case 8:	//on the alien slot only (paranoid, should be ignored)
@@ -573,7 +573,8 @@ static void OnTxDone(void)
 {
   /* USER CODE BEGIN OnTxDone */
 	main_flags.permit_actions = 1;
-	led_blue_off();
+	led_red_off();
+//	led_blue_off();
   /* USER CODE END OnTxDone */
 }
 
@@ -695,7 +696,7 @@ static void OnRxError(void)
 void transmit_data(void)
 {
 	int8_t beeper_flag_to_transmit;
-	int8_t daylight_hour;
+//	int8_t daylight_hour;
 
 	(pp_devices_phy[p_settings_phy->device_number]->beeper_flag)? (beeper_flag_to_transmit = 1): (beeper_flag_to_transmit = 0);
 
@@ -721,27 +722,21 @@ void transmit_data(void)
 	  bufferTx[9] = PVTbuffer[36];	//(uint8_t) ((UBLOX_Handle.lat >> 8) & 0xFF);
 	  bufferTx[10] = PVTbuffer[37];	//(uint8_t) ((UBLOX_Handle.lat >> 0) & 0xFF);
 
-//	  bufferTx[11] = ((PVTbuffer[13] & 0x1F) << 3) +		//дни	  mask 0b00011111
-//	  	  	  	     ((PVTbuffer[14] & 0x1C) >> 2);	//часы	  mask 0b00011100
-//	  bufferTx[12] = ((PVTbuffer[14] & 0x03) << 6) +		//часы	  mask 0b00000011
-//	   	  	  	      (PVTbuffer[15] & 0x3F);		//минуты  mask 0b00111111
-//	  bufferTx[13] = ((PVTbuffer[16] & 0x3F) << 2);		//секунды mask 0b00111111
+//	  daylight_hour = PVTbuffer[14] + p_settings_phy->time_zone_hour;
+//	  if(daylight_hour > 24) daylight_hour = daylight_hour - 24;
+//	  (daylight_hour > 8)? (daylight_hour = daylight_hour - 8): (daylight_hour = 0);	//9-:_23
+//	  bufferTx[11] = (daylight_hour << 4) +				//часы	  mask 0b00011111	  0-:-15
+//	  	   	  	  	 ((PVTbuffer[15] & 0x3F) >> 2);		//минуты  mask 0b00111111
+//	  bufferTx[12] = ((PVTbuffer[15] & 0x03) << 6) +	//минуты  mask 0b00000011
+//	  	  	  	      (PVTbuffer[16] & 0x3F);			//секунды mask 0b00111111
 
-	  daylight_hour = PVTbuffer[14] + p_settings_phy->time_zone_hour;
-	  if(daylight_hour > 24) daylight_hour = daylight_hour - 24;
-	  (daylight_hour > 8)? (daylight_hour = daylight_hour - 8): (daylight_hour = 0);	//9-:_23
-	  bufferTx[11] = (daylight_hour << 4) +				//часы	  mask 0b00011111	  0-:-15
-	  	   	  	  	 ((PVTbuffer[15] & 0x3F) >> 2);		//минуты  mask 0b00111111
-	  bufferTx[12] = ((PVTbuffer[15] & 0x03) << 6) +	//минуты  mask 0b00000011
-	  	  	  	      (PVTbuffer[16] & 0x3F);			//секунды mask 0b00111111
-
-//	  if(pp_devices_phy[p_settings_phy->device_number]->gps_speed > GPS_SPEED_THRS)
-//		  {
-//		  bufferTx[3] = 0x01;		//device is moving
-//	  	  bufferTx[12] = pp_devices_phy[p_settings_phy->device_number]->gps_speed;
-//	  	  bufferTx[13] = ((pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0x1FE) >> 1);	//mask 0b1111 1111 0
-//	  	  bufferTx[14] = ((pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0x01) << 7);	//mask 0b00000001
-//		  }
+		if(pp_devices_phy[p_settings_phy->device_number]->gps_speed > GPS_SPEED_THRS)
+		{
+			bufferTx[11] = ((pp_devices_phy[p_settings_phy->device_number]->gps_speed & 0x7F) << 1) +	// 0 - 128 km/h
+						((pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0x1FF) >> 8);	//mask 0b0000 0001 1111 1111
+		  	bufferTx[12] = (pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0xFF);			//mask 0b0000 0000 1111 1111
+		}
+		else bufferTx[12] = bufferTx[11] = 0;
 
 	  Radio.Send(bufferTx, BUFFER_AIR_SIZE); 	// to be filled by attendee BufferAirSize
 }

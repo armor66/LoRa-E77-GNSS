@@ -895,7 +895,7 @@ void draw_main(void)
 		hour = hour + p_settings_menu->time_zone_hour;
 		if(hour > 24) hour = hour - 24;
 	}
-	if(!pp_devices_menu[this_device]->batt_voltage)
+	if(pp_devices_menu[this_device]->batt_voltage < 50)		// U < 3.2volt (!pp_devices_menu[this_device]->batt_voltage)
 	{
 		sprintf(&Line[row][0], "DevID:%02d Batt low!", this_device);
 	}else sprintf(&Line[row][0], "DevID:%02d %d.%02d Volt", this_device, (pp_devices_menu[this_device]->batt_voltage+270)/100,
@@ -1156,8 +1156,13 @@ void draw_beacons(void)
 		ST7735_WriteString(0, row*18, &Line[row][0], Font_11x18, YELLOW,BLACK);
 		if(pp_devices_menu[current_device]->beacon_traced)
 		{
-			sprintf(&Line[row][5], "Traced");		//"Trcd%2d", pp_devices_menu[current_device]->beacon_traced);
-			ST7735_WriteString(60, row*18, &Line[row][5], Font_11x18, GREEN,BLACK);
+			(pp_devices_menu[current_device]->gps_speed)?
+					sprintf(&Line[row][5], "%2dkm/h", pp_devices_menu[current_device]->gps_speed):
+					sprintf(&Line[row][5], "Traced");		//"Trcd%2d", pp_devices_menu[current_device]->beacon_traced);
+
+			(pp_devices_menu[current_device]->gps_speed)?
+					ST7735_WriteString(60, row*18, &Line[row][5], Font_11x18, CYAN,BLACK):
+					ST7735_WriteString(60, row*18, &Line[row][5], Font_11x18, GREEN,BLACK);
 		}else if(pp_devices_menu[current_device]->beacon_lost)
 		{
 			sprintf(&Line[row][5], "!LOST!");
@@ -1207,9 +1212,9 @@ void draw_beacons(void)
 //		ST7735_WriteString(31, 4*18, &Line[4][3], Font_11x18, RED,BLACK);
 		}
 
-		if(pp_devices_menu[current_device]->batt_voltage < 28)		//(buffer[14] & 0x0F) == 0)
+		if(pp_devices_menu[current_device]->batt_voltage < 32)
 		{
-			sprintf(&Line[++row][0], " LOW");		//< 2.7 volt
+			sprintf(&Line[++row][0], " LOW");		//< 3.2 volt
 		} else sprintf(&Line[++row][0], "%d.%dV", pp_devices_menu[current_device]->batt_voltage/10, pp_devices_menu[current_device]->batt_voltage%10);
 		if(pp_devices_menu[current_device]->valid_fix_flag) ST7735_WriteString(0, row*18, &Line[row][0], Font_7x10, CYAN,BLACK);
 		else ST7735_WriteString(0, row*18, &Line[row][0], Font_7x10, MAGENTA,BLACK);
@@ -1318,7 +1323,7 @@ void draw_this_device(void)
 		if(hour > 24) hour = hour - 24;
 	}
 	ST7735_SetRotation(0);
-		sprintf(&Line[0][0], " NodeID: %02d ", this_device);
+		sprintf(&Line[0][0], " Device: %02d ", this_device);
 			if(pp_devices_menu[this_device]->valid_fix_flag) ST7735_WriteString(0, 0, &Line[0][0], Font_11x18, YELLOW,BLACK);		//if fix valid
 			else ST7735_WriteString(0, 0, &Line[0][0], Font_11x18, MAGENTA,BLACK);
 //		sprintf(&Line[2][0], "LoRa 433MHz SF=%02d", p_settings_menu->spreading_factor);
@@ -1366,58 +1371,60 @@ void draw_this_device(void)
 void draw_devices(void)	//int8_t menu)
 {
 	if(current_device == this_device) draw_this_device();
-	else {
-//	uint8_t *buffer = bufNode[current_device];
-
-	if(pp_devices_menu[current_device]->device_num == current_device)		//data has received
+	else
 	{
-		if(pp_devices_menu[current_device]->beacon_flag)		//(buffer[0] >> 7)		//if is beacon
+		if(pp_devices_menu[current_device]->device_num == current_device)		//data has received
 		{
-			sprintf(&Line[0][0], "tBcn%d data:", pp_devices_menu[current_device]->device_num);			//(buffer[0] & 0x03));
-		}else sprintf(&Line[0][0], "Node%d data:", pp_devices_menu[current_device]->device_num);		//(buffer[0] & 0x03));
-	}
-	else sprintf(&Line[0][0], " NO NODE %02d ", current_device);
-	ST7735_SetRotation(0);
-	ST7735_WriteString(0, 0, &Line[0][0], Font_11x18, YELLOW,BLACK);
+			if(pp_devices_menu[current_device]->beacon_flag)		//(buffer[0] >> 7)		//if is beacon
+			{
+				sprintf(&Line[0][0], "tBcn%d data:", pp_devices_menu[current_device]->device_num);			//(buffer[0] & 0x03));
+			}else sprintf(&Line[0][0], " Dev%d data:", pp_devices_menu[current_device]->device_num);		//(buffer[0] & 0x03));
+		}
+		else sprintf(&Line[0][0], " NoDevice %d ", current_device);
+		ST7735_SetRotation(0);
+		ST7735_WriteString(0, 0, &Line[0][0], Font_11x18, YELLOW,BLACK);
 
-	sprintf(&Line[2][0], " %5s pDop:%2d.%d", fixType[pp_devices_menu[current_device]->fix_type_opt],
-			pp_devices_menu[current_device]->p_dop/10, pp_devices_menu[current_device]->p_dop%10);
-//fixType only 2 bits used to transmit, pDop/10 (0...25.5)	buffer[15]/10, buffer[15]%10);
-	sprintf(&Line[3][0], "Date../09 %02d:%02d:%02d", pp_devices_menu[current_device]->time_hours,
-			pp_devices_menu[current_device]->time_minutes, pp_devices_menu[current_device]->time_seconds);
-//															((buffer[11] & 0xF8) >> 3),					//дни	  mask 0b1111100
-//			 	 	 	 	 	 	 	 	 	 	 	 	 	 	  PVTbuffer[6+6],					//текущий месяц
-//							   ((buffer[11] & 0x07) << 2) + ((buffer[12] & 0xC0) >> 6),					//часы	  mask 0b11000000
-//																  (buffer[2] & 0x3F),					//минуты  mask 0b00111111
-//														  ((buffer[13] & 0xFC) >> 2));					//секунды mask 0b11111100
-	sprintf(&Line[4][0], "Latit : %ld", pp_devices_menu[current_device]->latitude.as_integer);	//((int32_t)(buffer[10]<<24)+(buffer[9]<<16)+(buffer[8]<<8)+buffer[7]));
-	sprintf(&Line[5][0], "Longit: %ld", pp_devices_menu[current_device]->longitude.as_integer);	//((int32_t)(buffer[6]<<24)+(buffer[5]<<16)+(buffer[4]<<8)+buffer[3]));
+		//fixType only 2 bits used to transmit, pDop/10 (0...25.5)	buffer[15]/10, buffer[15]%10);
+		sprintf(&Line[2][0], " %5s pDop:%2d.%d", fixType[pp_devices_menu[current_device]->fix_type_opt],
+				pp_devices_menu[current_device]->p_dop/10, pp_devices_menu[current_device]->p_dop%10);
 
-	sprintf(&Line[6][0], "Azimuth_s : %03d%%", azimuth_deg_signed[current_device]);
-	sprintf(&Line[7][0], "Azimuth_u : %03d%%", azimuth_deg_unsigned[current_device]);
+//	sprintf(&Line[3][0], "Date../09 %02d:%02d:%02d", pp_devices_menu[current_device]->time_hours,
+//			pp_devices_menu[current_device]->time_minutes, pp_devices_menu[current_device]->time_seconds);
+		sprintf(&Line[3][0], "Distance:%5d m", ((uint16_t)distance[current_device] & 0xFFFF));
+		azimuth_relative_deg = azimuth_deg_signed[current_device] - heading_deg;
+		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
+		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
+		sprintf(&Line[4][0], "AzRelative: %03d%%", azimuth_relative_deg);
 
-	azimuth_relative_deg = azimuth_deg_signed[current_device] - heading_deg;
-	if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
-	if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
-	sprintf(&Line[8][0], "AzRelative: %03d%%", azimuth_relative_deg);
-	sprintf(&Line[9][0], "Distance:%5d m", ((uint16_t)distance[current_device] & 0xFFFF));
+		sprintf(&Line[5][0], "Speed:   %3d km/h", pp_devices_menu[current_device]->gps_speed);
+		if(pp_devices_menu[current_device]->gps_speed)
+		{
+			sprintf(&Line[6][0], "HeadingGPS:  %03d%% ", pp_devices_menu[current_device]->gps_heading);
+		}else 	sprintf(&Line[6][0], "Device%d not moving", current_device);
 
-	if((pp_devices_menu[current_device]->batt_voltage - 27) == 0)		//((buffer[14] & 0x0F) == 0)
-	{
-		sprintf(&Line[10][0], "Battery :  low           ");		//<=2.7 volt
-	} else sprintf(&Line[10][0], "Battery: %d.%d Volt        ", pp_devices_menu[current_device]->batt_voltage/10, pp_devices_menu[current_device]->batt_voltage%10);
+//	sprintf(&Line[6][0], "Azimuth_s : %03d%%", azimuth_deg_signed[current_device]);
+//	sprintf(&Line[7][0], "Azimuth_u : %03d%%", azimuth_deg_unsigned[current_device]);
+		sprintf(&Line[7][0], "                  ");
 
-	sprintf(&Line[11][0], "RX%d to TX%d: %4dmS", pp_devices_menu[current_device]->device_num, this_device, endRX_2_TX);
-	sprintf(&Line[12][0], "RSSI: %ddBm", pp_devices_menu[current_device]->rssi);	//(int8_t)buffer[BUFFER_AIR_SIZE]);			//rssi = Radio.Rssi(MODEM_LORA);
-	sprintf(&Line[13][0], " SNR: %02ddB", pp_devices_menu[current_device]->snr);	//buffer[BUFFER_AIR_SIZE + 1]);
+		if(pp_devices_menu[current_device]->batt_voltage < 32)
+		{
+			sprintf(&Line[8][0], "Battery :  low    ");		//<=3.2 volt
+		} else sprintf(&Line[8][0], "Battery: %d.%d Volt ", pp_devices_menu[current_device]->batt_voltage/10, pp_devices_menu[current_device]->batt_voltage%10);
 
-//	GPIOB->BSRR = GPIO_BSRR_BR3;	//blue led off DRAW MENU END SPI start
-	for (uint8_t k = 2; k < 14; k++)
-	{
-		if(pp_devices_menu[current_device]->valid_fix_flag) ST7735_WriteString(0, 4+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);	//if remote fix valid (validFixFlag[current_device]),((buffer[14] & 0x10) >> 4)
-		else ST7735_WriteString(0, 4+k*11, &Line[k][0], Font_7x10, MAGENTA,BLACK);
-	}
-//	GPIOB->BSRR = GPIO_BSRR_BS3;	//blue led on SPI stop
+		sprintf(&Line[9][0], "RSSI: %ddBm", pp_devices_menu[current_device]->rssi);
+		sprintf(&Line[10][0], " SNR: %02ddB", pp_devices_menu[current_device]->snr);
+
+		(p_settings_menu->spreading_factor == 12)? sprintf(&Line[11][0], "                  "):
+		sprintf(&Line[11][0], "RX%d to TX%d: %4dmS", pp_devices_menu[current_device]->device_num, this_device, endRX_2_TX);
+
+		sprintf(&Line[12][0], "Latit : %ld", pp_devices_menu[current_device]->latitude.as_integer);
+		sprintf(&Line[13][0], "Longit: %ld", pp_devices_menu[current_device]->longitude.as_integer);
+
+		for (uint8_t k = 2; k < 14; k++)
+		{
+			if(pp_devices_menu[current_device]->valid_fix_flag) ST7735_WriteString(0, 4+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);	//if remote fix valid (validFixFlag[current_device]),((buffer[14] & 0x10) >> 4)
+			else ST7735_WriteString(0, 4+k*11, &Line[k][0], Font_7x10, MAGENTA,BLACK);
+		}
 	}// end of else (current_device != this_device)
 }
 //-----------------------------DEVICES MENU SET------------------------------------
@@ -1594,7 +1601,7 @@ void draw_points(void)
 	}
 	for (uint8_t k = 0; k < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); k++)		//draw points groups
 	{
-		sprintf(&Line[k][0], " %6s   %1d", get_points_group_name(k), pp_points_menu[k * MEMORY_SUBPOINTS]->exist_flag);	//amount of saved sub-points
+		sprintf(&Line[k][0], " %7s   %1d", get_points_group_name(k), pp_points_menu[k * MEMORY_SUBPOINTS]->exist_flag);	//amount of saved sub-points
 		if(k == row) ST7735_WriteString(21, 14+k*12, &Line[k][0], Font_7x10, YELLOW,BLACK);		//active points group
 		else ST7735_WriteString(21, 14+k*12, &Line[k][0], Font_7x10, GREEN,BLACK);				//other points groups
 	}

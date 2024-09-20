@@ -147,19 +147,19 @@ char *region[] = {"RU", "EU", "US"};
 #define MEMORY_POINT_LAT_POS	(4)
 #define MEMORY_POINT_LON_POS	(8)
 
-#define MEM_POINT_NAME_LEN 	(6)			//max len of any point name
-#define MEM_POINT_0_NAME   	("Alarms")
-#define MEM_POINT_1_NAME   	("Group1")
-#define MEM_POINT_2_NAME   	("Group2")
-#define MEM_POINT_3_NAME  	("Group3")
-#define MEM_POINT_4_NAME   	("Group4")
-#define MEM_POINT_5_NAME   	("Group5")
-#define MEM_POINT_6_NAME   	("BcnMan")
-#define MEM_POINT_7_NAME  	("Saved1")
-#define MEM_POINT_8_NAME  	("Saved2")
-#define MEM_POINT_9_NAME  	("Saved3")
-#define MEM_POINT_10_NAME  	("Saved4")
-#define MEM_POINT_11_NAME  	("Saved5")
+#define MEM_POINT_NAME_LEN 	(7)			//max len of any point name
+#define MEM_POINT_0_NAME   	("Alarms!")
+#define MEM_POINT_1_NAME   	("Group_1")
+#define MEM_POINT_2_NAME   	("Group_2")
+#define MEM_POINT_3_NAME  	("Group_3")
+#define MEM_POINT_4_NAME   	("Group_4")
+#define MEM_POINT_5_NAME   	("Group_5")
+#define MEM_POINT_6_NAME   	("BcnManu")
+#define MEM_POINT_7_NAME  	("Device1")
+#define MEM_POINT_8_NAME  	("Device2")
+#define MEM_POINT_9_NAME  	("Device3")
+#define MEM_POINT_10_NAME  	("Device4")
+#define MEM_POINT_11_NAME  	("Device5")
 
 #define MEM_POINTS_GROUPS_ARRAY 	{ 	{MEM_POINT_0_NAME}, 	\
 										{MEM_POINT_1_NAME}, 	\

@@ -448,6 +448,12 @@ void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
 #include <math.h>
 #include "lrns.h"
 
+void drawCourse(int16_t x0, int16_t y0, double angle, uint16_t color)
+{
+//in void draw_beacons(void)
+//void drawPosition(63, 97, scaled_dist, azimuth_relative_rad, 7, current_device, RED)
+}
+
 void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, uint16_t color1, uint16_t color2)
 {
 	double xarrow, yarrow, xcentre, ycentre, x1, y1, x2, y2;

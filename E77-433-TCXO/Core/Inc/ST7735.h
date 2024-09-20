@@ -127,6 +127,7 @@ void  drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
 void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
 
+void drawCourse(int16_t x0, int16_t y0, double angle, uint16_t color);
 void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, uint16_t color1, uint16_t color2);
 void drawPosition(int16_t x0, int16_t y0, int16_t r1, double angle, int16_t r2, int16_t tag, uint16_t color);
 void drawTrace(int16_t x0, int16_t y0, int16_t r1, double angle, int16_t r2, uint16_t color);

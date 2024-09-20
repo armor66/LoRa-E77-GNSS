@@ -702,7 +702,7 @@ void transmit_data(void)
 	int8_t beeper_flag_to_transmit;
 	int8_t device_number;
 	int8_t buffer_to_transmit;
-	int8_t daylight_hour;
+//	int8_t daylight_hour;
 
 	(pp_devices_phy[p_settings_phy->device_number]->beeper_flag)? (beeper_flag_to_transmit = 1): (beeper_flag_to_transmit = 0);
 
@@ -739,36 +739,22 @@ void transmit_data(void)
 	  bufferTx[9] = PVTbuffer[36];	//(uint8_t) ((UBLOX_Handle.lat >> 8) & 0xFF);
 	  bufferTx[10] = PVTbuffer[37];	//(uint8_t) ((UBLOX_Handle.lat >> 0) & 0xFF);
 
-//	  bufferTx[11] = ((PVTbuffer[13] & 0x1F) << 3) +		//дни	  mask 0b00011111
-//	  	  	  	     ((PVTbuffer[14] & 0x1C) >> 2);	//часы	  mask 0b00011100
-//	  bufferTx[12] = ((PVTbuffer[14] & 0x03) << 6) +		//часы	  mask 0b00000011
-//	   	  	  	      (PVTbuffer[15] & 0x3F);		//минуты  mask 0b00111111
-//	  bufferTx[13] = ((PVTbuffer[16] & 0x3F) << 2);		//секунды mask 0b00111111
+//	  daylight_hour = PVTbuffer[14] + p_settings_phy->time_zone_hour;
+//	  if(daylight_hour > 24) daylight_hour = daylight_hour - 24;
+//	  (daylight_hour > 8)? (daylight_hour = daylight_hour - 8): (daylight_hour = 0);	//9-:_23
+//	  bufferTx[11] = (daylight_hour << 4) +				//часы	  mask 0b00011111	  0-:-15
+//	  	   	  	  	 ((PVTbuffer[15] & 0x3F) >> 2);		//минуты  mask 0b00111111
+//	  bufferTx[12] = ((PVTbuffer[15] & 0x03) << 6) +	//минуты  mask 0b00000011
+//			  	  	  (PVTbuffer[16] & 0x3F);			//секунды mask 0b00111111
 
-	  daylight_hour = PVTbuffer[14] + p_settings_phy->time_zone_hour;
-	  if(daylight_hour > 24) daylight_hour = daylight_hour - 24;
-	  (daylight_hour > 8)? (daylight_hour = daylight_hour - 8): (daylight_hour = 0);	//9-:_23
-	  bufferTx[11] = (daylight_hour << 4) +				//часы	  mask 0b00011111	  0-:-15
-	  	   	  	  	 ((PVTbuffer[15] & 0x3F) >> 2);		//минуты  mask 0b00111111
-	  bufferTx[12] = ((PVTbuffer[15] & 0x03) << 6) +	//минуты  mask 0b00000011
-			  	  	  (PVTbuffer[16] & 0x3F);			//секунды mask 0b00111111
+	if(pp_devices_phy[p_settings_phy->device_number]->gps_speed > GPS_SPEED_THRS)
+	{
+		bufferTx[11] = ((pp_devices_phy[p_settings_phy->device_number]->gps_speed & 0x7F) << 1) +	// 0 - 128 km/h
+					((pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0x1FF) >> 8);	//mask 0b0000 0001 1111 1111
+	  	bufferTx[12] = (pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0xFF);			//mask 0b0000 0000 1111 1111
+	}
+	else bufferTx[12] = bufferTx[11] = 0;
 
-//	  if(pp_devices_phy[p_settings_phy->device_number]->gps_speed > GPS_SPEED_THRS)
-//		  {
-//		  bufferTx[3] = 0x01;		//device is moving
-//	  	  bufferTx[12] = pp_devices_phy[p_settings_phy->device_number]->gps_speed;
-//	  	  bufferTx[13] = ((pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0x1FE) >> 1);	//mask 0b1111 1111 0
-//	  	  bufferTx[14] = ((pp_devices_phy[p_settings_phy->device_number]->gps_heading & 0x01) << 7);	//mask 0b00000001
-//		  }
-//	  bufferTx[12] = (pp_devices_phy[p_settings_phy->device_number]->p_dop/10 & 0xFF);					//pDop/10 (0...25.5)
-//	  bufferTx[14] = ((PVTbuffer[20+6] & 0x03) << 5) +				//fix type, 2 bits only to transmit	//mask 0b0000 0011
-//			  	  	 ((PVTbuffer[21+6] & 0x01) << 4) +				//fix valid, bit0 only				//mask 0b0000 0001
-//					 (pp_devices_phy[p_settings_phy->device_number]->batt_voltage/10 & 0x0F);			//mask 0b0000 1111 (0-:150 -> 0-:-15)s
-
-//	  bufferTx[15] = (pp_devices_phy[p_settings_phy->device_number]->p_dop/10 & 0xFF);					//pDop/10 (0...25.5)
-	  /* TX data over the air */
-//	  if (isChannelFree)						//todo do some check before reach transmit slot
-//	  {
 //	    Radio.SetChannel(RF_FREQUENCY);
 //	    HAL_Delay(Radio.GetWakeupTime() + TCXO_WORKAROUND_TIME_MARGIN);
 	  Radio.Send(bufferTx, buffer_to_transmit); 	// to be filled by attendee BufferAirSize
