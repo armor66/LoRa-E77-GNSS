@@ -1,0 +1,5 @@
+compass.c:33:6:init_compass	1
+compass.c:41:6:calibrate_compass	1
+compass.c:48:9:read_north	3
+compass.c:76:9:is_north_ready	2
+compass.c:82:9:reset_north	1

@@ -1,0 +1,11 @@
+../SubGHz_Phy/App/subghz_phy_app.c:673:13:OnTxTimeout	0	static
+../SubGHz_Phy/App/subghz_phy_app.c:680:13:OnRxTimeout	0	static
+../SubGHz_Phy/App/subghz_phy_app.c:687:13:OnRxError	0	static
+../SubGHz_Phy/App/subghz_phy_app.c:581:13:OnRxDone	32	static
+../SubGHz_Phy/App/subghz_phy_app.c:572:13:OnTxDone	0	static
+../SubGHz_Phy/App/subghz_phy_app.c:206:6:HAL_GPIO_EXTI_Callback	24	static
+../SubGHz_Phy/App/subghz_phy_app.c:296:6:USART2_IRQHandler	16	static
+../SubGHz_Phy/App/subghz_phy_app.c:696:6:transmit_data	24	static
+../SubGHz_Phy/App/subghz_phy_app.c:384:6:HAL_TIM_PeriodElapsedCallback	72	static
+../SubGHz_Phy/App/subghz_phy_app.c:744:6:scan_channels	64	static,ignoring_inline_asm
+../SubGHz_Phy/App/subghz_phy_app.c:162:6:SubghzApp_Init	80	static

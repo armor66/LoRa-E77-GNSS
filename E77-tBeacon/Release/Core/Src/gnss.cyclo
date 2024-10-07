@@ -1,0 +1,11 @@
+gnss.c:31:28:get_trekpoints	1
+gnss.c:44:9:UBLOX_verify_checksum	3
+gnss.c:110:6:serialPrint	3
+gnss.c:118:6:restart_uart	1
+gnss.c:154:6:configure_gps	17
+gnss.c:128:6:init_gnss	1
+gnss.c:299:6:calc_trekpoint_position	3
+gnss.c:329:6:find_nearest_trekpoint	2
+gnss.c:357:8:is_point_ahead	3
+gnss.c:379:6:draw_trekpoints	2
+gnss.c:397:6:manage_trekpoints	19

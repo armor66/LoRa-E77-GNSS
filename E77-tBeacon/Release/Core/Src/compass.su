@@ -1,0 +1,5 @@
+../Core/Src/compass.c:33:6:init_compass	0	static
+../Core/Src/compass.c:41:6:calibrate_compass	0	static
+../Core/Src/compass.c:48:9:read_north	8	static
+../Core/Src/compass.c:76:9:is_north_ready	0	static
+../Core/Src/compass.c:82:9:reset_north	0	static
