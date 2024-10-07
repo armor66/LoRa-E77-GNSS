@@ -1,4 +1,4 @@
 ##### Some photos
-![module photo](photos/module.jpg)
+![module photo](Photos/module.jpg)
 
-![beacon photo](photos/beacon.jpg)
+![beacon photo](Photos/beacon.jpg)
