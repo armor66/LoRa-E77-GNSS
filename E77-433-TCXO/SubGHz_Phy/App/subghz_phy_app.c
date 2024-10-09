@@ -264,13 +264,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	USART2->RDR;				//!!!очистка регистра чтением!!!иначе прерывание сработает сразу
 	USART2->CR1 = 0x00000000;	//иначе работает только после resetа
 	USART2->CR1 = USART_CR1_UE;
-	USART2->CR1 |= USART_CR1_TE | USART_CR1_RE | USART_CR1_RXNEIE_RXFNEIE;	//1: USART interrupt generated whenever ORE = 1 or RXFNE = 1 in the USART_ISR register
+	USART2->CR1 |= USART_CR1_RE | USART_CR1_RXNEIE_RXFNEIE;	//1: USART interrupt generated whenever ORE = 1 or RXFNE = 1 in the USART_ISR register
 
 //	if((p_settings_phy->spreading_factor < 12) || !time_slot)
 //	{
 	if(p_settings_phy->device_number == (time_slot + 1)) clear_fix_data(time_slot + 1);	//before uart handling finished
 	if(p_settings_phy->spreading_factor == 12 && p_settings_phy->device_number == 2) clear_fix_data(2);	//for beacon №2 only to transmit
-		led_red_on();
+		led_blue_on();
 		led_green_on();
 //	}
 //avoid extra beeps
@@ -380,8 +380,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	  {
 		  main_flags.time_slot_timer_ovf++;	//0...59
 
-		if (pps_flag)
-		{
+//		if (pps_flag)
+//		{
 			(p_settings_phy->spreading_factor == 12)? (pattern_index = 1): (pattern_index = 0);
 			switch (timeslot_pattern[pattern_index][main_flags.time_slot_timer_ovf])
 			{
@@ -442,7 +442,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 						Radio.Rx(0);			//start to receive if SF != 12 or no beeper_flag has set on SF ==12
 					}
 				}
-				led_red_off();		//occurrence case 2
+				led_blue_off();		//occurrence case 2
 				break;
 
 			case 3:			//check if remote devices on the air, draw menu items
@@ -507,20 +507,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				break;
 
 			case 6:					//if PPS did not come, but cycle has complete + 50mS
-				time_slot = 0;
-				main_flags.time_slot_timer_ovf = 0;
+				HAL_TIM_Base_Stop_IT(&htim1);
 				pps_flag = 0;
-//		    	HAL_TIM_Base_Stop_IT(&htim1); do not stop to update menu
-				break;
+				time_slot = 0;			// from TIM1_IRQ case: 2
+				main_flags.time_slot_timer_ovf = 0;
+				__HAL_TIM_SET_COUNTER(&htim1, 0);
+				__HAL_TIM_CLEAR_FLAG(&htim1, TIM_SR_UIF);		// очищаем флаг
+				HAL_TIM_Base_Start_IT(&htim1);
 
 			default:
 				break;
-			}
-		} else {	//no pps_flag
-			main_flags.update_screen = 1;
-//			Radio.SetChannel(RF_FREQUENCY);
-//			Radio.Rx(50);					//if no PPS and no TIM16 IRQ, start receive every 50mS
-		}
+			}	//end of switch/case
+//		} else {	//no pps_flag
+//			main_flags.update_screen = 1;
+//			//if no PPS and no TIM16 IRQ, start receive every 50mS
+//		}
 	  }
   	  else	// if(scanRadioFlag)
       {
@@ -568,7 +569,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		HAL_TIM_Base_Stop_IT(&htim17);
 		current_point_group = 0;
-//		led_blue_off();		//current_point_group has reseted
 	}
 }
 /* USER CODE END EF */
@@ -578,7 +578,7 @@ static void OnTxDone(void)
 {
   /* USER CODE BEGIN OnTxDone */
 	main_flags.permit_actions = 1;
-	led_blue_off();
+	led_red_off();
   /* USER CODE END OnTxDone */
 }
 
@@ -762,7 +762,6 @@ void transmit_data(void)
 
 void scan_channels(void)
 {
-	led_blue_off();		//just to off after start
 	HAL_TIM_Base_Stop_IT(&htim1);
 	  __HAL_TIM_SET_COUNTER(&htim1, 0);
 	  __HAL_TIM_CLEAR_FLAG(&htim1, TIM_SR_UIF); // очищаем флаг

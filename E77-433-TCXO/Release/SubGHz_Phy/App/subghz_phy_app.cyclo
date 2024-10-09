@@ -6,6 +6,6 @@ subghz_phy_app.c:577:13:OnTxDone	1
 subghz_phy_app.c:207:6:HAL_GPIO_EXTI_Callback	12
 subghz_phy_app.c:287:6:USART2_IRQHandler	24
 subghz_phy_app.c:700:6:transmit_data	4
-subghz_phy_app.c:375:6:HAL_TIM_PeriodElapsedCallback	42
+subghz_phy_app.c:375:6:HAL_TIM_PeriodElapsedCallback	41
 subghz_phy_app.c:763:6:scan_channels	8
 subghz_phy_app.c:163:6:SubghzApp_Init	1

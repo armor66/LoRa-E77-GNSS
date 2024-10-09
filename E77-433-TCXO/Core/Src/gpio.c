@@ -157,11 +157,9 @@ void led_blue_off(void){
 }
 void led_w_on(void){
 	GPIOB->BSRR = GPIO_BSRR_BS12;	//+
-//	GPIOA->BSRR = GPIO_BSRR_BS5;
 }
 void led_w_off(void){
 	GPIOB->BSRR = GPIO_BSRR_BR12;
-//	GPIOA->BSRR = GPIO_BSRR_BR5;
 }
 void gps_enable(void){
 	GPIOA->BSRR = GPIO_BSRR_BS5;	//+

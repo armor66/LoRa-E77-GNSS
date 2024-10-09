@@ -128,16 +128,14 @@ int main(void)
   HAL_TIM_Base_Stop_IT(&htim2);
   HAL_TIM_Base_Stop_IT(&htim16);		//starts onRxDone if no PPS
   disable_buttons_interrupts();
-#ifndef BEACON
+
   EXTI->IMR1 &= ~EXTI_IMR1_IM8;			//interrupt disabled on PPS front
-#else		// if BEACON
-  EXTI->IMR1 &= ~EXTI_IMR1_IM4;			//interrupt disabled on PPS front
-#endif
+
   hold_power();
   led_w_off();
   led_red_off();
   led_green_off();
-  led_blue_on();
+  led_blue_off();
 //  void manage_power(void) {
     if(!(RCC->CSR & RCC_CSR_SFTRSTF))	// || !(RCC->CSR & RCC_CSR_IWDGRSTF))	//if the reset is not caused by software (save & restart after settings changed)
     {																		//or not independent watchdog reset occurs
@@ -189,16 +187,14 @@ int main(void)
 		memory_points_load();
 		init_gnss();
 		enable_buttons_interrupts();
-#ifndef BEACON
+
 		EXTI->IMR1 |= EXTI_IMR1_IM8;				//interrupt enabled on PPS front
-#else		// if BEACON
-		EXTI->IMR1 |= EXTI_IMR1_IM4;				//interrupt enabled on PPS front
-#endif
 		USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;
 //		HAL_TIM_Base_Start_IT(&htim1);				//timer1_start just for menu: main_flags.update_screen = 1;
 		init_menu();
 		main_flags.update_screen = 1;
 		HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
+		HAL_TIM_Base_Start_IT(&htim1);
 //	    MX_IWDG_Init();
 	}
   /* USER CODE END 2 */
@@ -220,12 +216,12 @@ int main(void)
   		}
   		if (main_flags.update_screen)	//buttons processed or on case 3 or if no PPS signal
   		{
-//  	  		HAL_IWDG_Refresh(&hiwdg);
+//  	  	HAL_IWDG_Refresh(&hiwdg);
   			draw_current_menu();
   			main_flags.update_screen = 0;
   		}
-  		if(GPIOA->ODR & GPIO_ODR_OD6) led_blue_on();		//RADIO_SWITCH_RFO_HP
-  		else led_blue_off();		//						//RADIO_SWITCH_RX
+  		if(GPIOA->ODR & GPIO_ODR_OD6) led_red_on();		//RADIO_SWITCH_RFO_HP
+  		else led_red_off();		//						//RADIO_SWITCH_RX
 
 //		if(HAL_GetTick() > main_flags.time_stamp + 10) led_w_off();
 	}

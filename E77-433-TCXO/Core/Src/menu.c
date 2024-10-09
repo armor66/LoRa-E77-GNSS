@@ -916,6 +916,7 @@ void draw_main(void)
 	}
 	else
 	{
+		shortBeeps(2);			//1 beep actually every PPS
 		sprintf(&Line[row][0], "GPS not configured");
 		ST7735_WriteString(0, 1+row*11, &Line[row][0], Font_7x10, ORANGE,BLACK);
 	}
@@ -1624,7 +1625,7 @@ void draw_show_points(void)
 {
 	current_point_group = row;
 	ST7735_SetRotation(0);
-	sprintf(&Line[0][1], " %2d %4s points:", pp_points_menu[current_point_group * MEMORY_SUBPOINTS]->exist_flag, get_points_group_name(current_point_group));
+	sprintf(&Line[0][1], " %2d %7s points:", pp_points_menu[current_point_group * MEMORY_SUBPOINTS]->exist_flag, get_points_group_name(current_point_group));
 	ST7735_WriteString(0, 0, &Line[0][1], Font_6x8, CYAN,BLACK);
 
 //	row = 0;
@@ -1667,7 +1668,7 @@ void draw_device_submenu(void)
 		row = get_current_item();
 		for (uint8_t k = 0; k < MEMORY_POINT_GROUPS; k++)		//draw points groups
 		{
-			sprintf(&Line[k][0], " %4s  /%1d", get_points_group_name(k), pp_points_menu[k * MEMORY_SUBPOINTS]->exist_flag);	//amount of saved sub-points
+			sprintf(&Line[k][0], " %4s   /%1d", get_points_group_short(k), pp_points_menu[k * MEMORY_SUBPOINTS]->exist_flag);	//amount of saved sub-points
 			if(k == row) ST7735_WriteString(3, 17+k*18, &Line[k][0], Font_11x18, YELLOW,BLACK);		//active points group
 			else ST7735_WriteString(3, 17+k*18, &Line[k][0], Font_11x18, GREEN,BLACK);				//other points groups
 		}
@@ -1693,7 +1694,7 @@ void draw_set_points(void)
 	current_point_group = row;
 	for (uint8_t k = 0; k < MEMORY_POINT_GROUPS; k++)
 	{
-		sprintf(&Line[k][0], " %4s %1d/%1d", get_points_group_name(k), memory_subpoint_ind[k], pp_points_menu[k * MEMORY_SUBPOINTS]->exist_flag);
+		sprintf(&Line[k][0], " %4s  %1d/%1d", get_points_group_short(k), memory_subpoint_ind[k], pp_points_menu[k * MEMORY_SUBPOINTS]->exist_flag);
 		if(k == row) {
 			ST7735_WriteString(3, 17+k*18, &Line[k][0], Font_11x18, CYAN,BLACK);									//active points group
 			if(pp_points_menu[current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[k]]->exist_flag == 1) {

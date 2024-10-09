@@ -10,6 +10,7 @@
 #include "buttons.h"
 #include "gpio.h"
 #include "tim.h"
+#include "bit_band.h"
 //#include "settings.h"
 
 
@@ -38,40 +39,28 @@ uint8_t timeout_prev_state = TIMEOUT_NO_OVERFLOW;
 
 void enable_buttons_interrupts(void)
 {
-#ifndef BEACON
-//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM3) = 1;		//unmask interrupt 3
-	EXTI->IMR1 |= EXTI_IMR1_IM4;
-	EXTI->IMR1 |= EXTI_IMR1_IM1;
-#else		// if BEACON
-	EXTI->IMR1 |= EXTI_IMR1_IM8;
-	EXTI->IMR1 |= EXTI_IMR1_IM5;
-#endif
-	//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 1;		//unmask interrupt 5
-	EXTI->IMR1 |= EXTI_IMR1_IM0;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM4) = 1;		//button1
+//	EXTI->IMR1 |= EXTI_IMR1_IM4;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 1;		//button2
+//	EXTI->IMR1 |= EXTI_IMR1_IM1;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 1;		//button3
+//	EXTI->IMR1 |= EXTI_IMR1_IM0;
 }
 
 void disable_buttons_interrupts(void)
 {
-#ifndef BEACON
-//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM3) = 0;		//mask interrupt 3
-	EXTI->IMR1 &= ~EXTI_IMR1_IM4;
-	EXTI->IMR1 &= ~EXTI_IMR1_IM1;
-#else		// if BEACON
-	EXTI->IMR1 &= ~EXTI_IMR1_IM8;
-	EXTI->IMR1 &= ~EXTI_IMR1_IM5;
-#endif
-//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 0;		//mask interrupt 5
-	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM4) = 0;		//button1
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM4;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 0;		//button2
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM1;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 0;		//button3
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
 }
 
 //button return code = {ButtonNumber(0...BUTTONS_NUM-1) * BUTTON_ACTIONS_NUM + BUTTON_ACTION(_SHORT)(_LONG)} + 1
 uint8_t scan_button(uint8_t button)
 {
-#ifndef BEACON
 	if ((GPIOA->IDR & BTN_1_Pin) && (GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
-#else
-	if ((GPIOB->IDR & BTN_1_Pin) && (GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
-#endif
 		{
 		button_prev_state = button_state;
 			button_state = BUTTON_RELEASED;

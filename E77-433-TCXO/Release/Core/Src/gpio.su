@@ -10,10 +10,10 @@
 ../Core/Src/gpio.c:152:6:led_blue_on	0	static
 ../Core/Src/gpio.c:155:6:led_blue_off	0	static
 ../Core/Src/gpio.c:158:6:led_w_on	0	static
-../Core/Src/gpio.c:162:6:led_w_off	0	static
-../Core/Src/gpio.c:166:6:gps_enable	0	static
-../Core/Src/gpio.c:169:6:gps_disable	0	static
-../Core/Src/gpio.c:172:6:buzz_on	0	static
-../Core/Src/gpio.c:175:6:buzz_off	0	static
-../Core/Src/gpio.c:179:6:shortBeepsBlocking	24	static
-../Core/Src/gpio.c:189:6:longBeepsBlocking	24	static
+../Core/Src/gpio.c:161:6:led_w_off	0	static
+../Core/Src/gpio.c:164:6:gps_enable	0	static
+../Core/Src/gpio.c:167:6:gps_disable	0	static
+../Core/Src/gpio.c:170:6:buzz_on	0	static
+../Core/Src/gpio.c:173:6:buzz_off	0	static
+../Core/Src/gpio.c:177:6:shortBeepsBlocking	24	static
+../Core/Src/gpio.c:187:6:longBeepsBlocking	24	static
