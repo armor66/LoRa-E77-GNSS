@@ -506,7 +506,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			case 6:					//if PPS did not come, but cycle has complete + 50mS
 				getADC_sensors(p_settings_phy->device_number);
 				clear_fix_data(p_settings_phy->device_number);
-				USART2->CR1 = 0x00000000;
 				HAL_TIM_Base_Stop_IT(&htim1);
 				pps_flag = 0;
 				time_slot = 0;			// from TIM1_IRQ case: 2
