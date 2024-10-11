@@ -117,9 +117,9 @@ int main(void)
   MX_LPTIM1_Init();
 
   MX_ADC_Init();
-  MX_I2C1_Init();
   MX_SPI2_Init();
   MX_USART2_UART_Init();
+  MX_I2C1_Init();
 //  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Stop_IT(&htim1);

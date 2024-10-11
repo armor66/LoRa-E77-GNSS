@@ -8,6 +8,7 @@
 #include "ST7735.h"
 #include "gpio.h"
 #include "usart.h"
+#include "lptim.h"
 
 const double rad_2_deg = 57.29577951308232;        //rad to deg multiplyer
 const double deg_2_rad = 0.00000000174532925199433;       //deg to rad multiplyer
@@ -60,6 +61,46 @@ uint8_t UBLOX_verify_checksum(volatile uint8_t *buffer, uint8_t len)
 	else return 0;
 }
 
+#define UBX_HEADER_1		0xB5
+#define UBX_HEADER_2		0x62
+#define UBX_CLASS_CFG	0x06
+#define UBX_CFG_RST		0x04
+
+void send_ubx(uint8_t ubx_class, uint8_t ubx_id, uint8_t payload[], uint8_t len)
+{
+	uint8_t ubx_message[255 + 8] = {0};
+	uint8_t CK_A = 0;
+	uint8_t CK_B = 0;
+
+	ubx_message[0] = UBX_HEADER_1;
+	ubx_message[1] = UBX_HEADER_2;
+	ubx_message[2] = ubx_class;
+	ubx_message[3] = ubx_id;
+	ubx_message[4] = len;		//length of payload field LSB (expected len < 256)
+	ubx_message[5] = 0;			//length of payload field MSB
+	ubx_message[6] = 0;			//payload starts from here
+
+	for (uint8_t i = 0; i < len; i++)
+	{
+		ubx_message[6 + i] = payload[i];	//copy payload
+	}
+
+	for (uint8_t m = 2; m < (len + 6); m++)
+	{
+		CK_A = CK_A + ubx_message[m];		//calc checksums
+		CK_B = CK_B + CK_A;
+	}
+
+	ubx_message[6 + len] = CK_A;
+	ubx_message[6 + len + 1] = CK_B;
+
+//	for (uint8_t n = 0; n < (len + 8); n++)		//8 bytes header & checksum
+//	{
+//		uart3_tx_byte(ubx_message[n]);			//transmit
+//	}
+	serialPrint(ubx_message, (len + 8));
+}
+
 uint8_t nav_pvt_ram_flag = 0;
 uint8_t out_ubx_ram_flag = 0;
 uint8_t out_nmea_ram_flag = 0;
@@ -70,39 +111,42 @@ const uint8_t ubx_mon_ver[] = {0xB5, 0x62, 0x0a, 0x04, 0x00, 0x00, 0x0e, 0x34};
 //uint8_t set_baudrate[] = {0xB5, 0x62, 0x06, 0x8A, 0x0C, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01, 0x00, 0x52, 0x40, 0x00, 0x96, 0x00, 0x00, 0xCC, 0x61};
 //set 57600
 const uint8_t set_baudrate[] = {0xB5, 0x62, 0x06, 0x8A, 0x0C, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01, 0x00, 0x52, 0x40, 0x00, 0xE1, 0x00, 0x00, 0x17, 0x42};
-//ACK-ACK	B5 62 05 01 02 00 06 8A 98 C1
 //set 38400
 const uint8_t revert_baudrate[] = {0xB5, 0x62, 0x06, 0x8A, 0x0C, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01, 0x00, 0x52, 0x40, 0x00, 0x96, 0x00, 0x00, 0xCC, 0x61};
+//save to BBR, RAM
 const uint8_t save_to_bbr_flash[] = {0xB5, 0x62, 0x06, 0x09, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x1D, 0xAB};
-const uint8_t revert_to_default[] = {0xB5, 0x62, 0x06, 0x09, 0x0D, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x03, 0x1B, 0x9A};
-//uint8_t factory_reset[] =   {0xB5, 0x62, 0x06, 0x09, 0x0D, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x07, 0x1F, 0x9E};
-//ACK-ACK	B5 62 05 01 02 00 06 09 17 40
+//save to FLASH, BBR, RAM
+const uint8_t to_ram_bbr_flash[]  = {0xB5, 0x62, 0x06, 0x09, 0x0D, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x21, 0xAF};
+//save to BBR, RAM
+//const uint8_t revert_to_default[]={0xB5, 0x62, 0x06, 0x09, 0x0D, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x03, 0x1B, 0x9A};
+//save to FLASH, BBR, RAM
+const uint8_t revert_to_default[] = {0xB5, 0x62, 0x06, 0x09, 0x0D, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x07, 0x1F, 0x9E};
 //set to FLASH, BBR, RAM: NAV-PVT (uart1), pedestrian (3), MEAS (1000), LEN_TP1 (1000), UBX (true), NMEA (false)
-const uint8_t set_crucial_opts[] = {0xB5, 0x62, 0x06, 0x8A, 0x26, 0x00, 0x00, 0x07, 0x00, 0x00, 0x07, 0x00, 0x91, 0x20, 0x01, 0x21, 0x00, 0x11, 0x20, 0x03, 0x01,
-		0x00, 0x21, 0x30, 0xE8, 0x03, 0x04, 0x00, 0x05, 0x40, 0xE8, 0x03, 0x00, 0x00, 0x01, 0x00, 0x74, 0x10, 0x01, 0x02, 0x00, 0x74, 0x10, 0x00, 0x48, 0x34};
-//ACK-ACK B5 62 05 01 02 00 06 8A 98 C1
-
+//const uint8_t set_crucial_opts[] = {0xB5, 0x62, 0x06, 0x8A, 0x26, 0x00, 0x00, 0x07, 0x00, 0x00, 0x07, 0x00, 0x91, 0x20, 0x01, 0x21, 0x00, 0x11, 0x20, 0x03, 0x01,
+//			0x00, 0x21, 0x30, 0xE8, 0x03, 0x04, 0x00, 0x05, 0x40, 0xE8, 0x03, 0x00, 0x00, 0x01, 0x00, 0x74, 0x10, 0x01, 0x02, 0x00, 0x74, 0x10, 0x00, 0x48, 0x34};
+//set to FLASH, BBR, RAM: NAV-PVT (uart1), pedestrian (3), MEAS (1000), LEN_TP1 (0), LEN_LOCK_TP1 (100.000), UBX-InOut (true), NMEA-InOut (false)
+const uint8_t set_crucial_opts[] = {0xB5, 0x62, 0x06, 0x8A, 0x38, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01, 0x00, 0x73, 0x10, 0x01, 0x02, 0x00, 0x73, 0x10, 0x00, 0x01,
+			0x00, 0x74, 0x10, 0x01, 0x02, 0x00, 0x74, 0x10, 0x00, 0x07, 0x00, 0x91, 0x20, 0x01, 0x21, 0x00, 0x11, 0x20, 0x03, 0x01, 0x00, 0x21, 0x30, 0xE8, 0x03,
+			0x04, 0x00, 0x05, 0x40, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x05, 0x40, 0xA0, 0x86, 0x01, 0x00, 0xEA, 0xEC};
 //request from RAM:
 //CFG-MSGOUT-UBX_NAVPVT_UART1
 const uint8_t req_nav_pvt_ram[] = {0xB5, 0x62, 0x06, 0x8B, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00, 0x91, 0x20, 0x51, 0xEF};
-//answer					 0xB5, 0x62, 0x06, 0x8B, 0x09, 0x00, 0x01, 0x00, 0x00, 0x00, 0x07, 0x00, 0x91, 0x20, 0x01, 0x54, 0x55
 //CFG-UART1OUTPROT-UBX
 const uint8_t req_out_ubx_ram[] = {0xB5, 0x62, 0x06, 0x8B, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x74, 0x10, 0x1E, 0x8D};
-//answer					 0xB5, 0x62, 0x06, 0x8B, 0x09, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00, 0x74, 0x10, 0x01, 0x21, 0xC0
 //CFG-UART1OUTPROT-NMEA
 const uint8_t req_out_nmea_ram[] = {0xB5, 0x62, 0x06, 0x8B, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x74, 0x10, 0x1F, 0x91};
-//answer					 0xB5, 0x62, 0x06, 0x8B, 0x09, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x74, 0x10, 0x00, 0x21, 0xC4
-//set BeiDou
-//	B5 62 06 3E 34 00 00 00 31 06 00 08 10 00 01 00
-//	01 01 01 03 03 00 01 00 01 01 02 08 0C 00 01 00
-//	01 01 03 06 0E 00 01 00 01 01 05 03 04 00 01 00
-//	05 01 06 08 0C 00 00 00 00 01 35 78
-//set GLONASS
-//	B5 62 06 3E 34 00 00 31 31 06 00 08 10 00 01 00
-//	01 01 01 03 03 00 01 00 01 01 02 08 0C 00 01 00
-//	01 01 03 06 0E 00 00 00 00 05 05 03 04 00 01 00
-//	05 05 06 08 0C 00 01 00 01 01 6E 83
-//ACK-ACK	B5 62 05 01 02 00 06 3E 4C 75
+//Power mode:
+const uint8_t set_agressive_pm[] = {0xB5, 0x62, 0x06, 0x86, 0x08, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x97, 0x6F};
+const uint8_t set_balanced_pm[] =  {0xB5, 0x62, 0x06, 0x86, 0x08, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x95, 0x61};
+//set to RAM only:  CFG-RATE-MEAS=3000, CFG-TP-PERIOD_TP1=3.000.000, CFG-TP-PERIOD_LOCK_TP1=3.000.000
+const uint8_t set_three_seconds[] = {0xB5, 0x62, 0x06, 0x8A, 0x1A, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x00, 0x21, 0x30, 0xB8, 0x0B, 0x02, 0x00, 0x05, 0x40, 0xC0, 0xC6,
+		0x2D, 0x00, 0x03, 0x00, 0x05, 0x40, 0xC0, 0xC6, 0x2D, 0x00, 0xB5, 0x38};
+//perhaps not need: CFG-RATE-MEAS=1000, CFG-TP-PERIOD_TP1=1.000.000, CFG-TP-PERIOD_LOCK_TP1=1.000.000
+const uint8_t set_one_second[]    = {0xB5, 0x62, 0x06, 0x8A, 0x1A, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x00, 0x21, 0x30, 0xE8, 0x03, 0x02, 0x00, 0x05, 0x40, 0x40, 0x42,
+		0x0F, 0x00, 0x03, 0x00, 0x05, 0x40, 0x40, 0x42, 0x0F, 0x00, 0x99, 0x70};
+
+//This performs forced HW restart + coldstart	B5 62 06 04 04 00 FF B9 00 00 C6 8B
+uint8_t cfg_rst_cold_restart[] = {0xFF, 0xB9, 0x00, 0x00};
 
 gpsBaudRate_e baudRateInd = 0;
 uint16_t baudBRR[BAUDRATE_MAX_IND +1] = {0x1388, 0x9C4, 0x4E2, 0x341, 0x1A0, 0xD0};
@@ -122,7 +166,7 @@ void restart_uart(int8_t baud_rate_index)
    	USART2->CR1 = 0x00000000;
    	USART2->BRR = baudBRR[baud_rate_index];
    	USART2->CR1 = USART_CR1_UE;
-   	USART2->CR1 |= USART_CR1_TE | USART_CR1_RE | USART_CR1_RXNEIE_RXFNEIE;
+   	USART2->CR1 |= USART_CR1_RE | USART_CR1_TE | USART_CR1_RXNEIE_RXFNEIE;
 }
 
 void init_gnss(void)
@@ -146,15 +190,25 @@ void init_gnss(void)
 	{
 		GPScheckFlag = 1;					//check valid gnss settings: if "nav_pvt_ram_flag" has set
 		restart_uart(GPS_BAUDRATE_57600);
+		HAL_Delay(100);
 		serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
-		HAL_Delay(50);
+		HAL_Delay(100);
+	}
+	if(!nav_pvt_ram_flag)
+	{
+		led_blue_on();
+		send_ubx(UBX_CLASS_CFG, UBX_CFG_RST, &cfg_rst_cold_restart[0], sizeof(cfg_rst_cold_restart));
+		HAL_Delay(100);
+		GPScheckFlag = 1;					//check valid gnss settings: if "nav_pvt_ram_flag" has set
+		restart_uart(GPS_BAUDRATE_57600);
+		HAL_Delay(100);
+		serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
+		HAL_Delay(100);
 	}
 }
-// set baud rate 38400, disable NMEA, NAV-PVT for uart1, pedestrian model, 1 second PPS, GALILEO, power mode
+
 void configure_gps(void)
 {
-#include "lptim.h"
-
 volatile int8_t row;
 uint16_t baudRate[BAUDRATE_MAX_IND +2] = {96, 192, 384, 576, 1152, 2304, 0};
 //led_red_on();
@@ -164,7 +218,13 @@ ST7735_SetRotation(0);
 
 HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
 
-restart_configuration:	//todo restart gnss module, then HAL_Delay(100);
+restart_configuration:
+
+	if(new_options_flag)	//re-init gnss module:
+	{
+		send_ubx(UBX_CLASS_CFG, UBX_CFG_RST, &cfg_rst_cold_restart[0], sizeof(cfg_rst_cold_restart));
+		HAL_Delay(500);
+	}
 
 	ubx_hwVersion = 0;
 	fillScreen(BLACK);
@@ -180,7 +240,6 @@ restart_configuration:	//todo restart gnss module, then HAL_Delay(100);
         if(ubx_hwVersion) break;
     }
     //restart IRQ for either serialPrint
-
 	restart_uart(baudRateInd);
 //    while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_RX)	//if gps module does not transmit
     serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
@@ -206,12 +265,12 @@ restart_configuration:	//todo restart gnss module, then HAL_Delay(100);
 			led_red_on();
 			led_green_off();
 		}
+		(nav_pvt_ram_flag && out_ubx_ram_flag && !out_nmea_ram_flag)? led_blue_on(): led_blue_off();
 //		sprintf(&Line[0][0], " GPS-");
 //		ST7735_WriteString(0, 0, &Line[0][0], Font_11x18, CYAN,BLACK);
 //		sprintf(&Line[1][4], "SETTINGS ");
 //		ST7735_WriteString(54, 6, &Line[1][4], Font_7x10, CYAN,BLACK);
 		row	= 0;
-//		sprintf(&Line[row][0], "GNSS version M%d", ubx_hwVersion);
 
 		if(baudRate[baudRateInd])
 		{
@@ -247,7 +306,12 @@ restart_configuration:	//todo restart gnss module, then HAL_Delay(100);
 		row	= 5;	//+=3;
 		if(1)
 		{
-			sprintf(&Line[row][0], "   Press OK to   ");
+			sprintf(&Line[row][0], "   Press PWR to  ");
+			ST7735_WriteString(0, (row)*14+7, &Line[row][0], Font_7x10, YELLOW,BLACK);
+			sprintf(&Line[row+=1][0], "  RESTART DEVICE ");	//" REVERT DEFAULTS "
+			ST7735_WriteString(0, (row)*14+5, &Line[row][0], Font_7x10, ORANGE,BLACK);
+
+			sprintf(&Line[row+=1][0], "   Press OK to   ");
 			ST7735_WriteString(0, (row)*14+7, &Line[row][0], Font_7x10, YELLOW,BLACK);
 			sprintf(&Line[row+=1][0], "  SET NEW DATA   ");
 			ST7735_WriteString(0, (row)*14+5, &Line[row][0], Font_7x10, ORANGE,BLACK);
@@ -255,44 +319,45 @@ restart_configuration:	//todo restart gnss module, then HAL_Delay(100);
 			sprintf(&Line[row+=1][0], "   Press ESC to  ");
 			ST7735_WriteString(0, (row)*14+7, &Line[row][0], Font_7x10, YELLOW,BLACK);
 //			sprintf(&Line[row+=1][0], "     RE-CHECK    ");
-			sprintf(&Line[row+=1][0], "  SET BAUD RATE   ");
-			ST7735_WriteString(0, (row)*14+5, &Line[row][0], Font_7x10, ORANGE,BLACK);
-
-			sprintf(&Line[row+=1][0], "   Press PWR to  ");
-			ST7735_WriteString(0, (row)*14+7, &Line[row][0], Font_7x10, YELLOW,BLACK);
-			sprintf(&Line[row+=1][0], "  RESTART DEVICE ");	//" REVERT DEFAULTS "
+			sprintf(&Line[row+=1][0], "  SET BAUD RATE   ");	//" REVERT DEFAULTS "
 			ST7735_WriteString(0, (row)*14+5, &Line[row][0], Font_7x10, ORANGE,BLACK);
 		}
 
-		if (!(GPIOA->IDR & BTN_2_Pin))	//OK to set values
+		if((new_options_flag != 1) && !(GPIOA->IDR & BTN_2_Pin) && !(GPIOA->IDR & BTN_3_Pin))
+		{
+			new_options_flag = 1;
+			serialPrint(revert_to_default, sizeof(revert_to_default));
+			HAL_Delay(100);
+			serialPrint(revert_baudrate, sizeof(revert_baudrate));
+			HAL_Delay(100);
+    		goto restart_configuration;
+		}
+		if ((new_options_flag != 2) && !(GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))	//OK to set values
 	    {
-//			led_blue_off();
+			new_options_flag = 2;
 //			while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_RX)	//if gps module does not transmit
 			serialPrint(set_crucial_opts, sizeof(set_crucial_opts));
 			HAL_Delay(100);
-			new_options_flag = 1;
+			serialPrint(set_agressive_pm, sizeof(set_agressive_pm));
+			HAL_Delay(100);
+			serialPrint(to_ram_bbr_flash, sizeof(to_ram_bbr_flash));
+			HAL_Delay(100);
 			goto restart_configuration;
 	    }
-		if (!(GPIOA->IDR & BTN_3_Pin) && (baudRateInd != GPS_BAUDRATE_57600))	//ECS for restart
+		if ((new_options_flag != 3) && !(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin) && (baudRateInd != GPS_BAUDRATE_57600))
     	{
+			new_options_flag = 3;
 			serialPrint(set_baudrate, sizeof(set_baudrate));
-			HAL_Delay(50);
+			HAL_Delay(100);
     		goto restart_configuration;
-    		//todo release_power();	//re-init gnss module
     	}
-#ifndef BEACON
-		if(!(GPIOA->IDR & BTN_1_Pin))	//PWR for defaults
-#else	// if BEACON
-		if(!(GPIOB->IDR & BTN_1_Pin))	//PWR for defaults
-#endif
+		if(!(GPIOB->IDR & BTN_1_Pin))	//PWR for restart
 		{
-		    NVIC_SystemReset();
-//			serialPrint(revert_to_default, sizeof(revert_to_default));
-//			HAL_Delay(50);
-//			serialPrint(revert_baudrate, sizeof(revert_baudrate));
-//			HAL_Delay(50);
-//    		goto restart_configuration;
-    		//todo release_power();	//re-init gnss module
+			//re-init gnss module:
+			send_ubx(UBX_CLASS_CFG, UBX_CFG_RST, &cfg_rst_cold_restart[0], sizeof(cfg_rst_cold_restart));
+			HAL_Delay(500);
+			NVIC_SystemReset();
+//			goto restart_configuration;
 		}
 		HAL_Delay(200);
 //		led_blue_on();

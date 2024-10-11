@@ -1,13 +1,3 @@
-bno055_stm32.h:20:6:bno055_assignI2C	1
-bno055_stm32.h:24:6:bno055_delay	1
-bno055_stm32.h:32:6:bno055_writeData	22
-bno055_stm32.h:96:6:bno055_readData	1
-compass.c:33:10:absv	1
-compass.c:39:9:maxv	1
-compass.c:45:9:minv	1
-compass.c:51:9:limit_to	2
-compass.c:89:6:calibrate_compass	21
-compass.c:58:6:init_compass	1
-compass.c:242:9:read_north	5
-compass.c:270:9:is_north_ready	2
-compass.c:276:9:reset_north	1
+compass.c:33:9:read_north	3
+compass.c:51:9:is_north_ready	2
+compass.c:57:9:reset_north	1

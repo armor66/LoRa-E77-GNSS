@@ -7,5 +7,5 @@
 ../SubGHz_Phy/App/subghz_phy_app.c:287:6:USART2_IRQHandler	16	static
 ../SubGHz_Phy/App/subghz_phy_app.c:700:6:transmit_data	24	static
 ../SubGHz_Phy/App/subghz_phy_app.c:375:6:HAL_TIM_PeriodElapsedCallback	72	static,ignoring_inline_asm
-../SubGHz_Phy/App/subghz_phy_app.c:763:6:scan_channels	64	static,ignoring_inline_asm
+../SubGHz_Phy/App/subghz_phy_app.c:760:6:scan_channels	64	static,ignoring_inline_asm
 ../SubGHz_Phy/App/subghz_phy_app.c:163:6:SubghzApp_Init	80	static

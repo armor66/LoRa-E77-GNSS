@@ -19,9 +19,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
-#include "i2c.h"
+//#include "i2c.h"
 #include "iwdg.h"
-#include "lptim.h"
+//#include "lptim.h"
 #include "spi.h"
 #include "app_subghz_phy.h"
 #include "tim.h"
@@ -117,9 +117,9 @@ int main(void)
 //  MX_LPTIM1_Init();
 
   MX_ADC_Init();
-  MX_I2C1_Init();
   MX_SPI2_Init();
   MX_USART2_UART_Init();
+//  MX_I2C1_Init();
 //  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Stop_IT(&htim1);
@@ -128,16 +128,14 @@ int main(void)
   HAL_TIM_Base_Stop_IT(&htim2);
   HAL_TIM_Base_Stop_IT(&htim16);		//starts onRxDone if no PPS
   disable_buttons_interrupts();
-#ifndef BEACON
-  EXTI->IMR1 &= ~EXTI_IMR1_IM8;			//interrupt disabled on PPS front
-#else		// if BEACON
+
   EXTI->IMR1 &= ~EXTI_IMR1_IM4;			//interrupt disabled on PPS front
-#endif
+
   hold_power();
   led_w_off();
   led_red_off();
   led_green_off();
-  led_blue_on();
+  led_blue_off();
 //  void manage_power(void) {
     if(!(RCC->CSR & RCC_CSR_SFTRSTF))	// || !(RCC->CSR & RCC_CSR_IWDGRSTF))	//if the reset is not caused by software (save & restart after settings changed)
     {																		//or not independent watchdog reset occurs
@@ -179,26 +177,24 @@ int main(void)
 	}
   	else if(!(GPIOA->IDR & BTN_2_Pin) && !(GPIOA->IDR & BTN_3_Pin))
 	{
-		calibrateCompassFlag = 1;//if both buttons is pressed
-		init_compass();
+//		calibrateCompassFlag = 1;//if both buttons is pressed
+//		init_compass();
 	}
   	else
 	{
-		init_compass();
+//		init_compass();
 		SubghzApp_Init();
 		memory_points_load();
 		init_gnss();
 		enable_buttons_interrupts();
-#ifndef BEACON
-		EXTI->IMR1 |= EXTI_IMR1_IM8;				//interrupt enabled on PPS front
-#else		// if BEACON
+
 		EXTI->IMR1 |= EXTI_IMR1_IM4;				//interrupt enabled on PPS front
-#endif
 		USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;
 //		HAL_TIM_Base_Start_IT(&htim1);				//timer1_start just for menu: main_flags.update_screen = 1;
 		init_menu();
 		main_flags.update_screen = 1;
-		HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
+//		HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
+		HAL_TIM_Base_Start_IT(&htim1);
 //	    MX_IWDG_Init();
 	}
   /* USER CODE END 2 */
@@ -224,8 +220,8 @@ int main(void)
   			draw_current_menu();
   			main_flags.update_screen = 0;
   		}
-  		if(GPIOA->ODR & GPIO_ODR_OD6) led_red_on();		//RADIO_SWITCH_RFO_HP
-  		else led_red_off();		//						//RADIO_SWITCH_RX
+//  		if(GPIOA->ODR & GPIO_ODR_OD6) led_red_on();		//RADIO_SWITCH_RFO_HP
+//  		else led_red_off();		//						//RADIO_SWITCH_RX
 
 //		if(HAL_GetTick() > main_flags.time_stamp + 10) led_w_off();
 	}

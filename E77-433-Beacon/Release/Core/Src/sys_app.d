@@ -24,8 +24,6 @@ Core/Src/sys_app.o: ../Core/Src/sys_app.c ../Core/Inc/platform.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_lptim.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h \
@@ -87,8 +85,6 @@ Core/Src/sys_app.o: ../Core/Src/sys_app.c ../Core/Inc/platform.h \
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c_ex.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_lptim.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h:

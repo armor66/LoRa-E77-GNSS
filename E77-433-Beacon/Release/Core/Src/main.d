@@ -24,8 +24,6 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_lptim.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h \
@@ -48,12 +46,12 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
  ../SubGHz_Phy/App/subghz_phy_app.h ../Core/Inc/settings.h \
- ../Core/Inc/main.h ../Core/Inc/adc.h ../Core/Inc/i2c.h \
- ../Core/Inc/iwdg.h ../Core/Inc/lptim.h ../Core/Inc/spi.h \
- ../SubGHz_Phy/App/app_subghz_phy.h ../Core/Inc/tim.h ../Core/Inc/usart.h \
- ../Core/Inc/gpio.h ../Core/Inc/sys_app.h ../Core/Inc/menu.h \
- ../Core/Inc/ST7735.h ../Core/Inc/fonts.h ../Core/Inc/lrns.h \
- ../Core/Inc/compass.h ../Core/Inc/buttons.h ../Core/Inc/gnss.h
+ ../Core/Inc/main.h ../Core/Inc/adc.h ../Core/Inc/iwdg.h \
+ ../Core/Inc/spi.h ../SubGHz_Phy/App/app_subghz_phy.h ../Core/Inc/tim.h \
+ ../Core/Inc/usart.h ../Core/Inc/gpio.h ../Core/Inc/sys_app.h \
+ ../Core/Inc/menu.h ../Core/Inc/ST7735.h ../Core/Inc/fonts.h \
+ ../Core/Inc/lrns.h ../Core/Inc/compass.h ../Core/Inc/buttons.h \
+ ../Core/Inc/gnss.h
 ../Core/Inc/main.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
 ../Core/Inc/stm32wlxx_hal_conf.h:
@@ -80,8 +78,6 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c_ex.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_lptim.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h:
@@ -107,9 +103,7 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/settings.h:
 ../Core/Inc/main.h:
 ../Core/Inc/adc.h:
-../Core/Inc/i2c.h:
 ../Core/Inc/iwdg.h:
-../Core/Inc/lptim.h:
 ../Core/Inc/spi.h:
 ../SubGHz_Phy/App/app_subghz_phy.h:
 ../Core/Inc/tim.h:

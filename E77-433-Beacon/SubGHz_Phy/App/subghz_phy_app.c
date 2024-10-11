@@ -34,7 +34,7 @@
 #include "adc_if.h"
 //#include "ublox.h"
 #include "tim.h"
-#include "lptim.h"
+//#include "lptim.h"
 #include "buttons.h"
 #include <stdlib.h>
 #include "settings.h"
@@ -47,6 +47,7 @@
 #include "gnss.h"
 #include "gpio.h"		//#include "main.h"		//***main_flags_struct
 #include "radio_driver.h"
+#include "menu.h"
 
 struct main_flags_struct main_flags = {0};
 /* USER CODE END Includes */
@@ -66,6 +67,7 @@ struct main_flags_struct main_flags = {0};
 uint8_t pps_counter = 0;
 uint8_t pps_flag = 0;
 uint8_t time_slot = 0;
+//transmit_iq_inverted_flag
 uint8_t long_beep_ones = 0;
 //uint8_t time_slot_timer_ovf = 0;		//added to main flags
 //uint8_t gps_speed = 0;
@@ -236,16 +238,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 	case  PPS_Pin:
 		getADC_sensors(p_settings_phy->device_number);
-//		if(pps_counter++ > 60) {
-//			pps_counter = 60;
+		if(pps_counter++ > 60)
+		{
+			pps_counter = 60;
 //			HAL_LPTIM_PWM_Stop(&hlptim1);											//lcd_off();
-//			pp_devices_phy[p_settings_phy->device_number]->display_status = 0;		//for TPS7330 Vthresold=2.64V
-			if(pp_devices_phy[p_settings_phy->device_number]->batt_voltage < 30) {	//for TPS7333 Vthresold=2.87V(287-270=17) 0==270(2.70V) (actually ~2.95V)
+			pp_devices_phy[p_settings_phy->device_number]->display_status = 0;		//for TPS7330 Vthresold=2.64V
+			if(pp_devices_phy[p_settings_phy->device_number]->batt_voltage < 30) 	//for TPS7333 Vthresold=2.87V(287-270=17) 0==270(2.70V) (actually ~2.95V)
+			{
 				longBeepsBlocking(1);												//long beep to prevent silent "RESET"
 				HAL_Delay(50);
 				release_power();
 			}
-//		}
+		}
 
 	if(PVTbuffer[16]%p_settings_phy->devices_on_air == 0)// || (p_settings_phy->spreading_factor == 12))	//start timer ones of 3, 4 or 5 seconds
 	{
@@ -256,19 +260,20 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		__HAL_TIM_SET_COUNTER(&htim1, 0);
 		__HAL_TIM_CLEAR_FLAG(&htim1, TIM_SR_UIF);		// очищаем флаг
 		HAL_TIM_Base_Start_IT(&htim1);					// start time slot timer right after PPS
+		if(p_settings_phy->spreading_factor == 12) led_blue_on();
 	}
 
 	uartIdx = 0;
 	USART2->RDR;				//!!!очистка регистра чтением!!!иначе прерывание сработает сразу
 	USART2->CR1 = 0x00000000;	//иначе работает только после resetа
 	USART2->CR1 = USART_CR1_UE;
-	USART2->CR1 |= USART_CR1_TE | USART_CR1_RE | USART_CR1_RXNEIE_RXFNEIE;	//1: USART interrupt generated whenever ORE = 1 or RXFNE = 1 in the USART_ISR register
+	USART2->CR1 |= USART_CR1_RE | USART_CR1_RXNEIE_RXFNEIE;	//1: USART interrupt generated whenever ORE = 1 or RXFNE = 1 in the USART_ISR register
 
 //	if((p_settings_phy->spreading_factor < 12) || !time_slot)
 //	{
 	if(p_settings_phy->device_number == (time_slot + 1)) clear_fix_data(time_slot + 1);	//before uart handling finished
 	if(p_settings_phy->spreading_factor == 12 && p_settings_phy->device_number == 2) clear_fix_data(2);	//for beacon №2 only to transmit
-//		led_red_on();
+	if(p_settings_phy->spreading_factor != 12) led_blue_on();	//PPS received
 //		led_green_on();
 //	}
 //avoid extra beeps
@@ -278,14 +283,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		break;
 
 	case BUZZ_IN_Pin:
-//			EXTI->IMR1 |= EXTI_IMR1_IM2;			//interrupt enabled
 		if(!(GPIOB->IDR & BUZZ_IN_Pin))		//falling edge
 		{
 			int8_t beep_slot;
 			(p_settings_phy->device_number == 1)? (beep_slot = 2): (beep_slot = 1);
 			pp_devices_phy[beep_slot]->beeper_flag = 1;
-//			EXTI->IMR1 &= ~EXTI_IMR1_IM2;			//interrupt disabled
-				}
+		}
 	break;
 
     default:
@@ -389,8 +392,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	  {
 		  main_flags.time_slot_timer_ovf++;	//0...59
 
-		if (pps_flag)
-		{
+//		if (pps_flag)
+//		{
 			(p_settings_phy->spreading_factor == 12)? (pattern_index = 1): (pattern_index = 0);
 			switch (timeslot_pattern[pattern_index][main_flags.time_slot_timer_ovf])
 			{
@@ -399,29 +402,29 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 			case 1:			//50mS
 				time_slot++;
-				//clear what should be received or not in this slot after draw menu has finished
+//clear what should be received or not in this slot after draw menu has finished
 				if(p_settings_phy->device_number != time_slot) clear_fix_data(time_slot);
 				if(p_settings_phy->spreading_factor == 12)
 				{
-					//set TX iq_inversion = 0 so that module №3 can receive data
+//set TX iq_inversion = 0 so that module №3 can receive data
 					if(p_settings_phy->device_number == time_slot)	//transmit LORA_IQ_NORMAL
 					{
 						Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_phy[p_settings_phy->tx_power_opt], 0,
 						LORA_BANDWIDTH,	p_settings_phy->spreading_factor, p_settings_phy->coding_rate_opt,
 						LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);
 					}
-					//set RX iq_inversion = 1 to not receive from other beacon but receive from module №3
+//set RX iq_inversion = 1 to not receive from other beacon but receive from module №3
 					if(p_settings_phy->device_number != time_slot)	//receive LORA_IQ_INVERTED
 					{
 						Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_phy->spreading_factor,
 						p_settings_phy->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH, LORA_SYMBOL_TIMEOUT,
 						LORA_FIX_LENGTH_PAYLOAD_ON,	3, true, 0, 0, LORA_IQ_INVERTED, true);		//BUFFER_AIR_SIZE = 3
 					}
-
 				}
 				break;
 
 			case 2:			//100mS
+//				led_red_off();		//occurrence case 2 after PPS
 				if(time_slot == p_settings_phy->device_number)
 				{	//if this device doesn't get gnss fix via uart 100mS after PPS, delay for full pattern time
 					if(!pp_devices_phy[p_settings_phy->device_number]->valid_fix_flag)	main_flags.fix_valid--;
@@ -451,10 +454,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 					}
 					Radio.Rx(0);	//start to receive
 				}
-//				led_red_off();		//occurrence case 2
 				break;
 
 			case 8:	//on the alien slot only (paranoid, should be ignored)
+				if(pp_devices_phy[p_settings_phy->device_number]->display_status) led_red_on();
 //				if((time_slot != p_settings_phy->device_number) && (main_flags.beeper_flag_received))
 				if(pp_devices_phy[time_slot]->beeper_flag)
 				{
@@ -466,6 +469,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				break;
 
 			case 3:		//check if remote devices on the air, draw menu items
+				led_red_off();
 				if(long_beep_ones)	//(main_flags.beeper_flag_received) || 		//used on case 2 or case 8 previously
 				{
 					led_w_off();
@@ -475,6 +479,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				}
 				main_flags.short_beeps? led_w_on(): (main_flags.update_screen = 1);
 				main_flags.permit_actions = 1;		//process buttons here after
+				if(main_flags.buttons_scanned)
+				{
+					change_menu(button_code);
+					main_flags.buttons_scanned = 0;
+				}
+				if(pp_devices_phy[p_settings_phy->device_number]->display_status) draw_current_menu();
 				break;
 
 			case 4:
@@ -488,7 +498,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			case 5:
 				if((main_flags.short_beeps) && (main_flags.short_beeps < 3))
 				{
-//					main_flags.time_stamp = HAL_GetTick();
 					led_w_on();
 				}
 				break;
@@ -496,31 +505,32 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			case 7:
 				if(main_flags.short_beeps == 1)
 				{
-//					main_flags.time_stamp = HAL_GetTick();
 					led_w_on();
 				}
 				break;
 
 			case 6:					//if PPS did not come, but cycle has complete + 50mS
-				time_slot = 0;
-				main_flags.time_slot_timer_ovf = 0;
+				getADC_sensors(p_settings_phy->device_number);
+				clear_fix_data(p_settings_phy->device_number);
+				HAL_TIM_Base_Stop_IT(&htim1);
 				pps_flag = 0;
-//		    	HAL_TIM_Base_Stop_IT(&htim1); do not stop to update menu
+				time_slot = 0;			// from TIM1_IRQ case: 2
+				main_flags.time_slot_timer_ovf = 0;
+				__HAL_TIM_SET_COUNTER(&htim1, 0);
+				__HAL_TIM_CLEAR_FLAG(&htim1, TIM_SR_UIF);		// очищаем флаг
+				HAL_TIM_Base_Start_IT(&htim1);
 				break;
 
 			default:
 				break;
-			}
-		} else {	//no pps_flag
-			main_flags.update_screen = 1;
-//			Radio.SetChannel(RF_FREQUENCY);
-//			Radio.Rx(50);					//if no PPS and no TIM16 IRQ, start receive every 50mS
-		}
+			}	//end of switch/case
+//		} else {	//no pps_flag
+//			main_flags.update_screen = 1;
+//		}
 	  }
   	  else	// if(scanRadioFlag)
       {
-  		  led_toggle();
-//  		  GPIOB->ODR ^= GPIO_ODR_OD5;
+  		  led_toggle();	//led_red
   		  Radio.SetChannel((433000 + 50 + (channel_ind*5 + FREQ_CHANNEL_FIRST) * 25) * 1000);	//(RF_FREQUENCY);
   		  Radio.Rx(45);
   		  HAL_Delay(Radio.GetWakeupTime());
@@ -563,7 +573,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		HAL_TIM_Base_Stop_IT(&htim17);
 		current_point_group = 0;
-//		led_blue_off();		//current_point_group has reseted
 	}
 }
 /* USER CODE END EF */
@@ -573,8 +582,7 @@ static void OnTxDone(void)
 {
   /* USER CODE BEGIN OnTxDone */
 	main_flags.permit_actions = 1;
-	led_red_off();
-//	led_blue_off();
+//	led_red_off();
   /* USER CODE END OnTxDone */
 }
 
@@ -748,7 +756,7 @@ void scan_channels(void)
 	  __HAL_TIM_SET_COUNTER(&htim1, 0);
 	  __HAL_TIM_CLEAR_FLAG(&htim1, TIM_SR_UIF); // очищаем флаг
 	fillScreen(BLACK);
-	HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
+//	HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
 	while (1)//(GPIOA->IDR & BTN_2_Pin)		//wait for OK click to start cal
 	{
 	ST7735_SetRotation(0);
@@ -764,11 +772,8 @@ void scan_channels(void)
 	ST7735_WriteString(0, 77, &Lines[8][0], Font_7x10, GREEN,BLACK);
 	ST7735_WriteString(0, 99, &Lines[9][0], Font_7x10, YELLOW,BLACK);
 	ST7735_WriteString(3, 121, &Lines[10][0], Font_7x10, GREEN,BLACK);
-#ifndef BEACON
-		while (GPIOA->IDR & BTN_1_Pin)
-#else
+
 		while (GPIOB->IDR & BTN_1_Pin)
-#endif
 		{
 			if (!(GPIOA->IDR & BTN_3_Pin))	//ECS for scan
 			{

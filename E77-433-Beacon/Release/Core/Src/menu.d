@@ -24,8 +24,6 @@ Core/Src/menu.o: ../Core/Src/menu.c ../Core/Inc/menu.h ../Core/Inc/main.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_lptim.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h \
@@ -55,7 +53,7 @@ Core/Src/menu.o: ../Core/Src/menu.c ../Core/Inc/menu.h ../Core/Inc/main.h \
  ../Utilities/misc/stm32_mem.h ../Utilities/misc/stm32_tiny_vsnprintf.h \
  ../Core/Inc/utilities_def.h ../Core/Inc/settings.h ../Core/Inc/lrns.h \
  ../Core/Inc/compass.h ../Core/Inc/adc.h ../Core/Inc/tim.h \
- ../Core/Inc/lptim.h ../Core/Inc/gnss.h
+ ../Core/Inc/gnss.h
 ../Core/Inc/menu.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
@@ -83,8 +81,6 @@ Core/Src/menu.o: ../Core/Src/menu.c ../Core/Inc/menu.h ../Core/Inc/main.h \
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c_ex.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_lptim.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h:
@@ -125,5 +121,4 @@ Core/Src/menu.o: ../Core/Src/menu.c ../Core/Inc/menu.h ../Core/Inc/main.h \
 ../Core/Inc/compass.h:
 ../Core/Inc/adc.h:
 ../Core/Inc/tim.h:
-../Core/Inc/lptim.h:
 ../Core/Inc/gnss.h:

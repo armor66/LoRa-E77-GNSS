@@ -25,8 +25,6 @@ SubGHz_Phy/App/subghz_phy_app.o: ../SubGHz_Phy/App/subghz_phy_app.c \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_lptim.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h \
@@ -64,11 +62,12 @@ SubGHz_Phy/App/subghz_phy_app.o: ../SubGHz_Phy/App/subghz_phy_app.c \
  ../Core/Inc/utilities_def.h ../Utilities/sequencer/stm32_seq.h \
  ../Core/Inc/utilities_def.h ../SubGHz_Phy/App/app_version.h \
  ../Core/Inc/adc_if.h ../Core/Inc/adc.h ../Core/Inc/platform.h \
- ../Core/Inc/tim.h ../Core/Inc/lptim.h ../Core/Inc/buttons.h \
- ../Core/Inc/settings.h ../Core/Inc/spi.h ../Core/Inc/lrns.h \
- ../Core/Inc/compass.h ../Core/Inc/ST7735.h ../Core/Inc/fonts.h \
- ../Core/Inc/gnss.h ../Core/Inc/gpio.h \
- ../Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver/radio_driver.h
+ ../Core/Inc/tim.h ../Core/Inc/buttons.h ../Core/Inc/settings.h \
+ ../Core/Inc/spi.h ../Core/Inc/lrns.h ../Core/Inc/compass.h \
+ ../Core/Inc/ST7735.h ../Core/Inc/fonts.h ../Core/Inc/gnss.h \
+ ../Core/Inc/gpio.h \
+ ../Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver/radio_driver.h \
+ ../Core/Inc/menu.h
 ../Core/Inc/platform.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wlxx.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
@@ -95,8 +94,6 @@ SubGHz_Phy/App/subghz_phy_app.o: ../SubGHz_Phy/App/subghz_phy_app.c \
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_i2c_ex.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_lptim.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h:
@@ -145,7 +142,6 @@ SubGHz_Phy/App/subghz_phy_app.o: ../SubGHz_Phy/App/subghz_phy_app.c \
 ../Core/Inc/adc.h:
 ../Core/Inc/platform.h:
 ../Core/Inc/tim.h:
-../Core/Inc/lptim.h:
 ../Core/Inc/buttons.h:
 ../Core/Inc/settings.h:
 ../Core/Inc/spi.h:
@@ -156,3 +152,4 @@ SubGHz_Phy/App/subghz_phy_app.o: ../SubGHz_Phy/App/subghz_phy_app.c \
 ../Core/Inc/gnss.h:
 ../Core/Inc/gpio.h:
 ../Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver/radio_driver.h:
+../Core/Inc/menu.h:

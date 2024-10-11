@@ -50,7 +50,10 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED_W_Pin|BUZZ_Pin|LED_R_Pin|LED_B_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, LED_W_Pin|BUZZ_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, LED_R_Pin|LED_B_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPS_EN_GPIO_Port, GPS_EN_Pin, GPIO_PIN_SET);
@@ -62,8 +65,15 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(HOLD_GPIO_Port, HOLD_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PBPin PBPin PBPin PBPin */
-  GPIO_InitStruct.Pin = LED_W_Pin|BUZZ_Pin|LED_R_Pin|LED_B_Pin;
+  /*Configure GPIO pins : PBPin PBPin */
+  GPIO_InitStruct.Pin = LED_W_Pin|BUZZ_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PBPin PBPin */
+  GPIO_InitStruct.Pin = LED_R_Pin|LED_B_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -131,7 +141,6 @@ void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 2 */
-
 void led_toggle(void){
 //GPIOB->ODR ^= GPIO_ODR_OD4;
 GPIOB->ODR ^= GPIO_ODR_OD5;
@@ -142,13 +151,6 @@ void led_red_on(void){
 void led_red_off(void){
 	GPIOB->BSRR = GPIO_BSRR_BS5;
 }
-void hold_power(void) {
-    GPIOC->BSRR = GPIO_BSRR_BS13;	//+
-}
-void release_power(void) {
-    GPIOC->BSRR = GPIO_BSRR_BR13;	//gnd
-}
-
 void led_green_on(void){
 //	GPIOB->BSRR = GPIO_BSRR_BR2;	//gnd for custom pcb
 }
@@ -156,11 +158,19 @@ void led_green_off(void){
 //	GPIOB->BSRR = GPIO_BSRR_BS2;
 }
 void led_blue_on(void){
-	GPIOB->BSRR = GPIO_BSRR_BR12;	//gnd for custom pcb
+//	GPIOB->BSRR = GPIO_BSRR_BR12;	//gnd for custom pcb
 }
 void led_blue_off(void){
-	GPIOB->BSRR = GPIO_BSRR_BS12;
+//	GPIOB->BSRR = GPIO_BSRR_BS12;
 }
+
+void hold_power(void) {
+    GPIOC->BSRR = GPIO_BSRR_BS13;	//+
+}
+void release_power(void) {
+    GPIOC->BSRR = GPIO_BSRR_BR13;	//gnd
+}
+
 void gps_enable(void){
 	GPIOA->BSRR = GPIO_BSRR_BS1;	//+
 }
