@@ -48,8 +48,7 @@ Core/Src/gnss.o: ../Core/Src/gnss.c ../Core/Inc/gnss.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
  ../SubGHz_Phy/App/subghz_phy_app.h ../Core/Inc/settings.h \
  ../Core/Inc/lrns.h ../Core/Inc/compass.h ../Core/Inc/ST7735.h \
- ../Core/Inc/fonts.h ../Core/Inc/gpio.h ../Core/Inc/usart.h \
- ../Core/Inc/lptim.h
+ ../Core/Inc/fonts.h ../Core/Inc/gpio.h ../Core/Inc/usart.h
 ../Core/Inc/gnss.h:
 ../Core/Inc/settings.h:
 ../Core/Inc/main.h:
@@ -107,4 +106,3 @@ Core/Src/gnss.o: ../Core/Src/gnss.c ../Core/Inc/gnss.h \
 ../Core/Inc/fonts.h:
 ../Core/Inc/gpio.h:
 ../Core/Inc/usart.h:
-../Core/Inc/lptim.h:

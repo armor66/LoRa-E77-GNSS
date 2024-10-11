@@ -177,24 +177,24 @@ int main(void)
 	}
   	else if(!(GPIOA->IDR & BTN_2_Pin) && !(GPIOA->IDR & BTN_3_Pin))
 	{
-		calibrateCompassFlag = 1;//if both buttons is pressed
-		init_compass();
+//		calibrateCompassFlag = 1;//if both buttons is pressed
+//		init_compass();
 	}
   	else
 	{
-		init_compass();
+//		init_compass();
 		SubghzApp_Init();
 		memory_points_load();
 		init_gnss();
 		enable_buttons_interrupts();
 
 		EXTI->IMR1 |= EXTI_IMR1_IM4;				//interrupt enabled on PPS front
-
 		USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;
 //		HAL_TIM_Base_Start_IT(&htim1);				//timer1_start just for menu: main_flags.update_screen = 1;
 		init_menu();
 		main_flags.update_screen = 1;
-		HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
+//		HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
+		HAL_TIM_Base_Start_IT(&htim1);
 //	    MX_IWDG_Init();
 	}
   /* USER CODE END 2 */
@@ -204,7 +204,7 @@ int main(void)
   	while (1)
   	{
     /* USER CODE END WHILE */
-    MX_SubGHz_Phy_Process();
+//    MX_SubGHz_Phy_Process();
 
     /* USER CODE BEGIN 3 */
 //restrict buttons actions when data is transmitting, permit_actions always on case 3 (radio tx or rx finished)

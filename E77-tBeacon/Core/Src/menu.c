@@ -916,6 +916,7 @@ void draw_main(void)
 	}
 	else
 	{
+		shortBeeps(2);			//1 beep actually every PPS
 		sprintf(&Line[row][0], "GPS not configured");
 		ST7735_WriteString(0, 1+row*11, &Line[row][0], Font_7x10, ORANGE,BLACK);
 	}

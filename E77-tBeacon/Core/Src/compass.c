@@ -30,21 +30,6 @@ double heading_rad = 0;
 
 int8_t north_ready = 0; //flag is north value ready to readout
 
-void init_compass(void)
-{
-	if(calibrateCompassFlag) calibrate_compass();
-	else {
-//		bno055_setCalibrationData(calData);
-	}
-}
-
-void calibrate_compass(void){}
-
-int16_t x = 0;
-int16_t y = 0;
-double comp_x = 0;
-double comp_y = 0;
-
 uint8_t read_north(void)		//subghz_phy_app.c: 345,400
 {
 	pp_devices_compass = get_devices();
@@ -58,16 +43,6 @@ uint8_t read_north(void)		//subghz_phy_app.c: 345,400
 		return 1;						//if is moving
 	} else
 	{
-//		calState = bno055_getCalibrationState();
-//		if(calState.mag == 3)				//compass is calibrated
-//		{
-//			bno055_vector_t v = bno055_getVectorEuler();
-//			heading_deg = (int16_t)v.x;
-//			if(heading_deg > 180) heading_deg = heading_deg - 360;
-//			heading_rad = heading_deg * 0.0174532925199433;       //deg to rad multiplyer
-//			north_ready = 3;
-//			return 1; 					//if not moving but calibrated
-//		}
 	}
 	north_ready--;
 	return 0; //return 0 if nor moving not calibrated

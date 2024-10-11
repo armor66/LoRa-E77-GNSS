@@ -2,6 +2,7 @@
 #include "buttons.h"
 #include "gpio.h"
 #include "tim.h"
+#include "bit_band.h"
 //#include "settings.h"
 
 #define BUTTONS_NUM             (3)     //three buttons total
@@ -28,16 +29,22 @@ uint8_t timeout_prev_state = TIMEOUT_NO_OVERFLOW;
 
 void enable_buttons_interrupts(void)
 {
-	EXTI->IMR1 |= EXTI_IMR1_IM0;
-	EXTI->IMR1 |= EXTI_IMR1_IM1;
-	EXTI->IMR1 |= EXTI_IMR1_IM5;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 1;		//button1
+//	EXTI->IMR1 |= EXTI_IMR1_IM0;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 1;		//button2
+//	EXTI->IMR1 |= EXTI_IMR1_IM1;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 1;		//button3
+//	EXTI->IMR1 |= EXTI_IMR1_IM5;
 }
 
 void disable_buttons_interrupts(void)
 {
-	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
-	EXTI->IMR1 &= ~EXTI_IMR1_IM1;
-	EXTI->IMR1 &= ~EXTI_IMR1_IM5;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 0;		//button1
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 0;		//button2
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM1;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 0;		//button3
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM5;
 }
 
 //button return code = {ButtonNumber(0...BUTTONS_NUM-1) * BUTTON_ACTIONS_NUM + BUTTON_ACTION(_SHORT)(_LONG)} + 1
