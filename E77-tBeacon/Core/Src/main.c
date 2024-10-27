@@ -19,7 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
-//#include "i2c.h"
 #include "iwdg.h"
 #include "lptim.h"
 #include "spi.h"
@@ -37,8 +36,7 @@
 //#include <stdio.h>			//for 'sprintf'
 #include "subghz_phy_app.h"
 #include "lrns.h"
-#include "compass.h"
-//#include "settings.h"
+//#include "compass.h"
 #include "buttons.h"
 #include "gnss.h"
 /* USER CODE END Includes */
@@ -74,6 +72,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+struct main_flags_struct main_flags = {0};
 void shortBeeps(int8_t beeps)
 {
 	main_flags.short_beeps = beeps;
@@ -117,7 +116,6 @@ int main(void)
 //  MX_LPTIM1_Init();
 
   MX_ADC_Init();
-//  MX_I2C1_Init();
   MX_SPI2_Init();
   MX_USART2_UART_Init();
 //  MX_IWDG_Init();
@@ -136,39 +134,31 @@ int main(void)
   led_red_off();
   led_green_off();
   led_blue_on();
-//  void manage_power(void) {
+
     if(!(RCC->CSR & RCC_CSR_SFTRSTF))	// || !(RCC->CSR & RCC_CSR_IWDGRSTF))	//if the reset is not caused by software (save & restart after settings changed)
     {																		//or not independent watchdog reset occurs
 	   release_power();					//initially set off position
-//	   led_blue_on();
 	   HAL_Delay(1000); 				//startup delay ~2sec
-//	   hold_power();
-//	   led_blue_off();
-//	   led_w_on();
 	   NVIC_SystemReset();
 	}else								//if Software reset or Independent watchdog reset occurred
 	{
 		RCC->CSR |= RCC_CSR_RMVF;		//clear the reset flags IWDGRSTF, SFTRSTF by writing bit to the RMVF
 	    led_w_on();
-//		led_blue_on();
 	}
-//    }
+
    HAL_Delay(10);
    led_w_off();
 
   settings_load();
   init_lrns();
-//  init_gnss();
 
   ST7735_Init(0);
   fillScreen(BLACK);
-//  setI2CHandle(&hi2c1);
+
   	if(!(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin))
 	{
 		GPSconfigureFlag = 1;	//if DOWN button is pressed and  OK button is released upon power up
 		init_gnss();
-//		calibrateCompassFlag = 1;
-//		init_compass();
 	}
   	else if(!(GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
 	{
@@ -214,16 +204,15 @@ int main(void)
   			main_flags.buttons_scanned = 0;
   			main_flags.update_screen = 1;
   		}
+
   		if (main_flags.update_screen)	//buttons processed or on case 3 or if no PPS signal
   		{
-//  	  		HAL_IWDG_Refresh(&hiwdg);
+//  	  	HAL_IWDG_Refresh(&hiwdg);
   			draw_current_menu();
   			main_flags.update_screen = 0;
   		}
-  		if(GPIOA->ODR & GPIO_ODR_OD6) led_red_on();		//RADIO_SWITCH_RFO_HP
-  		else led_red_off();		//						//RADIO_SWITCH_RX
 
-//		if(HAL_GetTick() > main_flags.time_stamp + 10) led_w_off();
+  		__NOP();
 	}
   /* USER CODE END 3 */
 }

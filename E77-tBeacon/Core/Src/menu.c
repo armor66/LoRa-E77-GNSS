@@ -618,10 +618,10 @@ void change_menu(uint8_t button_code)
 				HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
 				pp_devices_menu[this_device]->display_status = 1;
 				if(current_menu == M_NAVIGATION && pp_devices_menu[this_device]->valid_fix_flag && pp_devices_menu[this_device]->flwtrek_flag)
-				{
-					find_nearest_trekpoint_flag = 1;		//find_nearest_trekpoint();
-					fillScreen(BLACK);
-				}
+//				{
+//					find_nearest_trekpoint_flag = 1;		//find_nearest_trekpoint();
+//					fillScreen(BLACK);
+//				}
 				break;
 
 			case BTN_UP:				//if short pressed
@@ -885,23 +885,25 @@ void draw_current_menu(void)
 //---------------------------MAIN MENU------------------------------
 void draw_main(void)
 {
+	uint8_t day = PVTbuffer[7+6];
+	uint8_t month = PVTbuffer[6+6];
 	uint16_t year = (PVTbuffer[5+6]<<8) + PVTbuffer[4+6];
 	uint8_t hour = PVTbuffer[14];
 	row = 0;
 
-	if(PVTbuffer[22+6] & 0x20)		//bit 5: information about UTC Date and Time of Day validity conﬁrmation is available
+	if(pp_devices_menu[this_device]->valid_date_flag)		//bit 5: information about UTC Date and Time of Day validity conﬁrmation is available
 	{
 		year = year - 2000;
 		hour = hour + p_settings_menu->time_zone_hour;
 		if(hour > 24) hour = hour - 24;
-	}
+	}else day = month = year = hour = 0;
 	if(pp_devices_menu[this_device]->batt_voltage < 50)		// U < 3.2volt (!pp_devices_menu[this_device]->batt_voltage)
 	{
 		sprintf(&Line[row][0], "DevID:%02d Batt low!", this_device);
 	}else sprintf(&Line[row][0], "DevID:%02d %d.%02d Volt", this_device, (pp_devices_menu[this_device]->batt_voltage+270)/100,
     															  (pp_devices_menu[this_device]->batt_voltage+270)%100);
 	row+=1;	//1
-	sprintf(&Line[row][0], "%02d/%02d/%02d  %02d:%02d:%02d", PVTbuffer[7+6], PVTbuffer[6+6], year, hour, PVTbuffer[15], PVTbuffer[16]);
+	sprintf(&Line[row][0], "%02d/%02d/%02d  %02d:%02d:%02d", day, month, year, hour, PVTbuffer[15], PVTbuffer[16]);
 	for (uint8_t k = 0; k < row+1; k++)
 	{
 		ST7735_WriteString(0, 1+k*11, &Line[k][0], Font_7x10, WHITE,BLACK);
@@ -974,10 +976,10 @@ void main_ok(void)
 	{
 		case M_MAIN_I_NAVIGATION:
 //			timer4_start();					//start compass activity
-			if(pp_devices_menu[this_device]->valid_fix_flag && pp_devices_menu[this_device]->flwtrek_flag)
-			{
-				find_nearest_trekpoint_flag = 1;		//find_nearest_trekpoint();
-			}
+//			if(pp_devices_menu[this_device]->valid_fix_flag && pp_devices_menu[this_device]->flwtrek_flag)
+//			{
+//				find_nearest_trekpoint_flag = 1;		//find_nearest_trekpoint();
+//			}
 			current_menu = M_NAVIGATION;
 			break;
 		case M_MAIN_I_DEVICES:
@@ -1301,7 +1303,7 @@ void beacons_esc(void)
 //	if(current_device == 1) current_device = p_settings_menu->devices_on_air;
 //	else current_device--;
 //	distance_old[i] = 0;
-	if(pp_devices_menu[this_device]->valid_fix_flag && pp_devices_menu[this_device]->flwtrek_flag) find_nearest_trekpoint_flag = 1;
+//	if(pp_devices_menu[this_device]->valid_fix_flag && pp_devices_menu[this_device]->flwtrek_flag) find_nearest_trekpoint_flag = 1;
 	current_menu = M_NAVIGATION;
 }
 //--------------------------------NAVIGATION MENU END--------------------------------

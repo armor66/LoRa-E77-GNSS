@@ -885,23 +885,25 @@ void draw_current_menu(void)
 //---------------------------MAIN MENU------------------------------
 void draw_main(void)
 {
+	uint8_t day = PVTbuffer[7+6];
+	uint8_t month = PVTbuffer[6+6];
 	uint16_t year = (PVTbuffer[5+6]<<8) + PVTbuffer[4+6];
 	uint8_t hour = PVTbuffer[14];
 	row = 0;
-
-	if(PVTbuffer[22+6] & 0x20)		//bit 5: information about UTC Date and Time of Day validity conﬁrmation is available
+//
+	if(pp_devices_menu[this_device]->valid_date_flag)	//bit 5: information about UTC Date and Time of Day validity conﬁrmation is available
 	{
 		year = year - 2000;
 		hour = hour + p_settings_menu->time_zone_hour;
 		if(hour > 24) hour = hour - 24;
-	}
+	}else day = month = year = hour = 0;
 	if(pp_devices_menu[this_device]->batt_voltage < 50)		// U < 3.2volt (!pp_devices_menu[this_device]->batt_voltage)
 	{
 		sprintf(&Line[row][0], "DevID:%02d Batt low!", this_device);
 	}else sprintf(&Line[row][0], "DevID:%02d %d.%02d Volt", this_device, (pp_devices_menu[this_device]->batt_voltage+270)/100,
     															  (pp_devices_menu[this_device]->batt_voltage+270)%100);
 	row+=1;	//1
-	sprintf(&Line[row][0], "%02d/%02d/%02d  %02d:%02d:%02d", PVTbuffer[7+6], PVTbuffer[6+6], year, hour, PVTbuffer[15], PVTbuffer[16]);
+	sprintf(&Line[row][0], "%02d/%02d/%02d  %02d:%02d:%02d", day, month, year, hour, PVTbuffer[15], PVTbuffer[16]);
 	for (uint8_t k = 0; k < row+1; k++)
 	{
 		ST7735_WriteString(0, 1+k*11, &Line[k][0], Font_7x10, WHITE,BLACK);

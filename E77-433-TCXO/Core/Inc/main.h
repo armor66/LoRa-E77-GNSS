@@ -108,15 +108,10 @@ struct main_flags_struct
     uint8_t buttons_scanned;
     uint8_t update_screen;
 
-//    uint8_t process_compass;
-//    uint8_t tick_1s;
-
     uint8_t time_slot_timer_ovf;
-//    uint32_t time_stamp;
 
     int8_t short_beeps;
     int8_t fix_valid;
-//    int8_t beeper_flag_received;
 };
 
 extern struct main_flags_struct main_flags;

@@ -95,6 +95,7 @@ struct devices_struct
 
     uint8_t fix_type_opt;
     uint8_t valid_fix_flag;
+    uint8_t valid_date_flag;
     uint16_t p_dop;
 
     uint8_t time_hours;

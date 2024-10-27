@@ -50,8 +50,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Core/Inc/lptim.h ../Core/Inc/spi.h ../SubGHz_Phy/App/app_subghz_phy.h \
  ../Core/Inc/tim.h ../Core/Inc/usart.h ../Core/Inc/gpio.h \
  ../Core/Inc/sys_app.h ../Core/Inc/menu.h ../Core/Inc/ST7735.h \
- ../Core/Inc/fonts.h ../Core/Inc/lrns.h ../Core/Inc/compass.h \
- ../Core/Inc/buttons.h ../Core/Inc/gnss.h
+ ../Core/Inc/fonts.h ../Core/Inc/lrns.h ../Core/Inc/buttons.h \
+ ../Core/Inc/gnss.h
 ../Core/Inc/main.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
 ../Core/Inc/stm32wlxx_hal_conf.h:
@@ -115,6 +115,5 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/ST7735.h:
 ../Core/Inc/fonts.h:
 ../Core/Inc/lrns.h:
-../Core/Inc/compass.h:
 ../Core/Inc/buttons.h:
 ../Core/Inc/gnss.h:

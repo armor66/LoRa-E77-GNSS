@@ -9,17 +9,12 @@
 #include "gpio.h"
 #include "usart.h"
 #include "lptim.h"
-
 const double rad_2_deg = 57.29577951308232;        //rad to deg multiplyer
 const double deg_2_rad = 0.00000000174532925199433;       //deg to rad multiplyer
 
 double host_lat_lon_rad[2];
 
-//uint32_t distance;
 uint32_t min_distance;
-//int16_t azimuth_deg_signed;
-//fldoublezimuth_rad;
-//double azimuth_relative_rad;
 
 volatile int16_t nearest_trekpoint_idx;
 
@@ -181,7 +176,6 @@ void init_gnss(void)
 		pp_devices_gnss[p_settings_gnss->device_number]->flwtrek_flag = 1;
 	}
 #endif
-
 	if(GPSconfigureFlag)
 	{
 		configure_gps();

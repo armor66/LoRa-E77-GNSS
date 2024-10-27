@@ -101,6 +101,7 @@ void ublox_to_this_device(uint8_t device_number)
 {
 	devices[device_number].fix_type_opt = PVTbuffer[20+6];				//all 6 types
 	devices[device_number].valid_fix_flag = (PVTbuffer[21+6] & 0x01);	//bit0 only
+	devices[device_number].valid_date_flag = (PVTbuffer[11+6] & 0x01);	//valid UTC Date
 
 		devices[device_number].longitude.as_array[0] = PVTbuffer[30];
 		devices[device_number].longitude.as_array[1] = PVTbuffer[31];

@@ -32,7 +32,6 @@
 #include "utilities_def.h"
 #include "app_version.h"
 #include "adc_if.h"
-//#include "ublox.h"
 #include "tim.h"
 #include "lptim.h"
 #include "buttons.h"
@@ -43,12 +42,11 @@
 #include "lrns.h"
 #include "compass.h"
 #include "ST7735.h"
-
 #include "gnss.h"
 #include "gpio.h"		//#include "main.h"		//***main_flags_struct
 #include "radio_driver.h"
-
-struct main_flags_struct main_flags = {0};
+#include "menu.h"
+//struct main_flags_struct main_flags = {0};
 /* USER CODE END Includes */
 
 /* External variables ---------------------------------------------------------*/
@@ -75,7 +73,7 @@ uint16_t no_PPS_gap1 = 2705;			// RX1 to PPS gap = 677after receive NODE_ID1 779
 uint16_t no_PPS_gap2 = 1705;			//368
 uint16_t no_PPS_gap3 = 705;			//68
 uint16_t endRX_2_TX = 0;
-
+int8_t find_nearest_trekpoint_flag = 0;
 //uint8_t *p_update_interval_values;
 /* USER CODE END PD */
 
@@ -88,13 +86,10 @@ uint16_t endRX_2_TX = 0;
 /* Radio events function pointer */
 static RadioEvents_t RadioEvents;
 /* USER CODE BEGIN PV */
-//uint8_t BufferAirSize = BUFFER_AIR_SIZE;
-//uint8_t BufferRxSize = BUFFER_RX;
+
 uint8_t bufferTx[BUFFER_AIR_SIZE];
 uint8_t bufferRx[BUFFER_RX];
-
-uint8_t bufNode[NODES][BUFFER_RX];
-//uint8_t validFixFlag[4] = {0};
+//uint8_t bufNode[NODES][BUFFER_RX];
 
 #define PVTsize 100
 uint8_t PVTbuffer[PVTsize] = {0};
@@ -103,13 +98,11 @@ uint8_t PVTbuffer[PVTsize] = {0};
 uint8_t GNSSbuffer[UBX_HW_VER_SIZE] = {0};
 #define UBX_CFG_FLAG 10				//hwVersion(10)
 uint8_t ubx_hwVersion = 0;
-//uint8_t uartByte = 0;
 uint8_t uartIdx = 0;
 
 static States_t State = RX_START;		//на первые 30 секунд ??? RX_DONE ???
 
 //static uint32_t WatchDogRx = WATCHDOG_RX_PERIOD;
-bool isChannelFree = true;
 
 uint8_t button_code = 0;
 uint8_t processing_button = 0;
@@ -229,7 +222,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     case  BTN_3_Pin:					//PB3		DOWN/ESC button	void EXTI3_IRQHandler(void)
     	pps_counter = 0;//    	pp_devices_phy[p_settings_phy->device_number]->lcd_timeout = 0;
     	disable_buttons_interrupts();
-    	//EXTI->PR = EXTI_PR_PR3;			//clear interrupt
     	processing_button = BUTTON_DOWN_ESC;
     	__HAL_TIM_CLEAR_FLAG(&htim2, TIM_SR_UIF);		// очищаем флаг
     	HAL_TIM_Base_Start_IT(&htim2);
@@ -237,11 +229,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 	case  PPS_Pin:				// interrupt on PPS front - the same as on TIM16 interrupt	void EXTI1_IRQHandler(void)
 		getADC_sensors(p_settings_phy->device_number);								//lrns.c
-		if(pps_counter++ > 60) {													//if 60sec no buttons activity
+		if(pps_counter++ > 60)
+		{													//if 60sec no buttons activity
 			pps_counter = 60;
 			HAL_LPTIM_PWM_Stop(&hlptim1);											//lcd_off();
 			pp_devices_phy[p_settings_phy->device_number]->display_status = 0;		//for TPS7330 Vthresold=2.64V
-			if(pp_devices_phy[p_settings_phy->device_number]->batt_voltage < 30) {	//for TPS7333 Vthresold=2.87V(287-270=17) 0==270(2.70V) (actually ~2.95V)
+			if(pp_devices_phy[p_settings_phy->device_number]->batt_voltage < 30)
+			{	//for TPS7333 Vthresold=2.87V(287-270=17) 0==270(2.70V) (actually ~2.95V)
 				longBeepsBlocking(1);												//long beep to prevent silent "RESET"
  				HAL_Delay(50);
 				release_power();
@@ -266,13 +260,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	USART2->CR1 = USART_CR1_UE;
 	USART2->CR1 |= USART_CR1_RE | USART_CR1_RXNEIE_RXFNEIE;	//1: USART interrupt generated whenever ORE = 1 or RXFNE = 1 in the USART_ISR register
 
-//	if((p_settings_phy->spreading_factor < 12) || !time_slot)
-//	{
 	if(p_settings_phy->device_number == (time_slot + 1)) clear_fix_data(time_slot + 1);	//before uart handling finished
 	if(p_settings_phy->spreading_factor == 12 && p_settings_phy->device_number == 2) clear_fix_data(2);	//for beacon №2 only to transmit
 	if(p_settings_phy->spreading_factor != 12) led_blue_on();	//PPS received
 		led_green_on();
-//	}
 //avoid extra beeps
 	led_w_off();
 	main_flags.short_beeps = 0;
@@ -296,7 +287,7 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 			if(uartIdx == 1 && (GNSSbuffer[0] != 0xB5 || GNSSbuffer[1] != 0x62))	// || GNSSbuffer[2] != 0x0A || GNSSbuffer[3] != 0x04))
 	   		{
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
-//	   			memset(&GNSSbuffer, 0, UBX_HW_VER_SIZE);
+//	   			memset(GNSSbuffer, 0, UBX_HW_VER_SIZE);
 				GPScheckFlag = 0;	//after init_gnss one check only
 	   		}
 			//if it is answer for UBX-CFG-UART1OUT
@@ -315,7 +306,7 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 					out_nmea_ram_flag= GNSSbuffer[UBX_CFG_SIZE];
 				}
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
-		   		memset(&GNSSbuffer, 0, UBX_CFG_SIZE);
+		   		memset(GNSSbuffer, 0, UBX_CFG_SIZE);
 				GPScheckFlag = 0;	//after init_gnss one check only
 			}
 			//if it is answer for UBX_HV_VER
@@ -323,7 +314,7 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 	   		{
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
 	   			(GNSSbuffer[UBX_HW_VER_SIZE-1] == 0x41)? (ubx_hwVersion = (GNSSbuffer[UBX_HW_VER_SIZE-1] - 0x37)): (ubx_hwVersion = (GNSSbuffer[UBX_HW_VER_SIZE-1] - 0x30));
-	   			memset(&GNSSbuffer, 0, UBX_HW_VER_SIZE);
+	   			memset(GNSSbuffer, 0, UBX_HW_VER_SIZE);
 	   		}
 	   		else uartIdx++;	//do not increment index in case 1 or 2
 		}
@@ -333,13 +324,11 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 	   		if(uartIdx == 3 && (PVTbuffer[0] != 0xB5 || PVTbuffer[1] != 0x62 || PVTbuffer[2] != 0x01 || PVTbuffer[3] != 0x07))
 	   		{
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;
-//	   			uartIdx = 0;
-	   			memset(&PVTbuffer, 0, PVTsize);			//for(uint8_t i = 0; i < PVTsize; i++) { PVTbuffer[i] = 0; }
+	   			memset(PVTbuffer, 0, PVTsize);			//for(uint8_t i = 0; i < PVTsize; i++) { PVTbuffer[i] = 0; }
 	   		}
 	   		else if (uartIdx >= 83)	//83 = 77(pDOP) + 6 (uartIdx >= PVTsize)
 	   		{
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
-//	   			uartIdx = 0;
 	   			ublox_to_this_device(p_settings_phy->device_number);
 	   			led_green_off();
 	   		} else uartIdx++;	//do not increment index in case 1 or 2
@@ -371,7 +360,6 @@ const uint8_t timeslot_pattern[2][103] =
 //todo inverse LORA_IQ_INVERSION in Radio.SetTxConfig and Radio.SetRxConfig for module and beacons respectively
 //todo for beacons set Radio.SetRxConfig BUFFER_AIR_SIZE = 3
 
-int8_t find_nearest_trekpoint_flag = 0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == TIM1) 	//check if the interrupt comes from TIM1
@@ -401,13 +389,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 					p_settings_phy->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH, LORA_SYMBOL_TIMEOUT,
 					LORA_FIX_LENGTH_PAYLOAD_ON,	BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, true);
 				}
+				led_blue_off();
 				break;
 
 			case 2:			//100mS
 				if(time_slot == p_settings_phy->device_number)
 				{	//if this device doesn't get gnss fix via uart 100mS after PPS, delay for full pattern time
 					if(!pp_devices_phy[p_settings_phy->device_number]->valid_fix_flag)	main_flags.fix_valid--;
-					if(main_flags.fix_valid)	//do not transmit if no GNSS FIX
+					if(main_flags.fix_valid > 0)	//do not transmit if no GNSS FIX
 					{
 						if(pp_devices_phy[p_settings_phy->device_number]->display_status)
 						{
@@ -415,6 +404,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 							HAL_TIM_Base_Stop(&htim17);
 						}
 						main_flags.permit_actions = 0;
+						led_red_on();
 						transmit_data();		//State = TX_START;
 					}else main_flags.fix_valid = 0;		//just to avoid negative values
 				}
@@ -428,6 +418,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 							Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_phy[p_settings_phy->tx_power_opt], 0,
 								LORA_BANDWIDTH,	p_settings_phy->spreading_factor, p_settings_phy->coding_rate_opt,
 								LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_INVERTED, TX_TIMEOUT_VALUE);
+							led_red_on();
 							transmit_data();		//State = TX_START;
 					}
 					else//(p_settings_phy->spreading_factor != 12) or !(pp_devices_phy[3]->beeper_flag == time_slot)
@@ -441,7 +432,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 						Radio.Rx(0);			//start to receive if SF != 12 or no beeper_flag has set on SF ==12
 					}
 				}
-				led_blue_off();		//occurrence case 2 after PPS
 				break;
 
 			case 3:			//check if remote devices on the air, draw menu items
@@ -507,12 +497,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				getADC_sensors(p_settings_phy->device_number);
 				clear_fix_data(p_settings_phy->device_number);
 				HAL_TIM_Base_Stop_IT(&htim1);
-				pps_flag = 0;
 				time_slot = 0;			// from TIM1_IRQ case: 2
 				main_flags.time_slot_timer_ovf = 0;
 				__HAL_TIM_SET_COUNTER(&htim1, 0);
 				__HAL_TIM_CLEAR_FLAG(&htim1, TIM_SR_UIF);		// очищаем флаг
 				HAL_TIM_Base_Start_IT(&htim1);
+				led_blue_on();
 				break;
 
 			default:
@@ -583,68 +573,49 @@ static void OnTxDone(void)
 static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraSnr_FskCfo)
 {
   /* USER CODE BEGIN OnRxDone */
-	//replaced BufferAirSize, BufferRxSize with macros
 	if(pp_devices_phy[p_settings_phy->device_number]->display_status == 1) {
 		HAL_TIM_Base_Stop_IT(&htim17);				//if not stopped by IRQ
 		__HAL_TIM_SET_COUNTER(&htim17, 0);			// измеряем интервал от RX_DONE до TX по отсчету TIM17
 		__HAL_TIM_SET_AUTORELOAD(&htim17, 9999);
 		HAL_TIM_Base_Start(&htim17);				//сбросить счетчик в конце RX и начать отсчет
 	}
-//	memset(validFixFlag, 0, 4);
-//	BufferAirSize = size;
+
 	memcpy(bufferRx, payload, BUFFER_AIR_SIZE);		//BufferAirSize
 	bufferRx[BUFFER_AIR_SIZE] = (int8_t)rssi;				//BufferAirSize + 1
 	bufferRx[BUFFER_AIR_SIZE + 1] = LoraSnr_FskCfo;	//BufferAirSize + 2
 	//if received time slot == device number and it fix is valid
 	if(((bufferRx[0] & 0x07) == time_slot) && ((bufferRx[1] & 0x10) >> 4))
-	{	//todo replace it all for:
-		//&& ((bufferRx[14] & 0x10) >> 4)) rx_to_devices(time_slot); where (uint8_t *buffer = bufferRx;)
+	{
 		rx_to_devices(time_slot); //where (uint8_t *buffer = bufferRx;)
-		switch (time_slot)
-		{
-		case 1:
-//		ptrNode1rx = bufferRx;
-			memcpy(bufNode[1], &bufferRx, BUFFER_RX);		// + rssi + LoraSnr_FskCfo BufferRxSize
-//		memcpy(bufNode[1], payload, BufferAirSize);
-//		time_slot == bufNode[1][0]? bufNode[1][BufferRxSize] = rssi: (bufNode[1][BufferRxSize] = 0);
-//			validFixFlag[1] = ((bufferRx[14] & 0x10) >> 4);
-//			if(validFixFlag[1]) rx_to_devices(1);
-			break;
-		case 2:
-//		ptrNode2rx = bufferRx;
-			memcpy(bufNode[2], &bufferRx, BUFFER_RX);		// + rssi + LoraSnr_FskCfo BufferRxSize
-//		memcpy(bufNode[2], payload, BufferAirSize);
-//		time_slot == bufNode[2][0]? bufNode[2][13] = rssi: (bufNode[2][13] = 0);
-//			validFixFlag[2] = ((bufferRx[14] & 0x10) >> 4);
-//			if(validFixFlag[2]) rx_to_devices(2);
-			break;
-		case 3:
-//		ptrNode3rx = bufferRx;
-			memcpy(bufNode[3], &bufferRx, BUFFER_RX);		// + rssi + LoraSnr_FskCfo BufferRxSize
-//		memcpy(bufNode[3], payload, BufferAirSize);
-		//time_slot == bufNode[3][0]? bufNode[3][BufferRxSize] = rssi:
-//			validFixFlag[3] = ((bufferRx[14] & 0x10) >> 4);
-//			if(validFixFlag[3]) rx_to_devices(3);
-			break;
-		case 4:
-		//		ptrNode3rx = bufferRx;
-			memcpy(bufNode[4], &bufferRx, BUFFER_RX);
-			break;
-		case 5:
-		//		ptrNode3rx = bufferRx;
-			memcpy(bufNode[5], &bufferRx, BUFFER_RX);
-			break;
-		default:
-			break;
-		}
+//		switch (time_slot)
+//		{
+//		case 1:
+//			memcpy(bufNode[1], &bufferRx, BUFFER_RX);		// + rssi + LoraSnr_FskCfo BufferRxSize
+//			break;
+//		case 2:
+//			memcpy(bufNode[2], &bufferRx, BUFFER_RX);		// + rssi + LoraSnr_FskCfo BufferRxSize
+//			break;
+//		case 3:
+//			memcpy(bufNode[3], &bufferRx, BUFFER_RX);		// + rssi + LoraSnr_FskCfo BufferRxSize
+//			break;
+//		case 4:
+//			memcpy(bufNode[4], &bufferRx, BUFFER_RX);
+//			break;
+//		case 5:
+//			memcpy(bufNode[5], &bufferRx, BUFFER_RX);
+//			break;
+//		default:
+//			break;
+//		}
 	}
 	//host device valid GPS fix - pDop and accuracy
 	if(pp_devices_phy[p_settings_phy->device_number]->valid_fix_flag)	calc_relative_position(time_slot);
 
-	for(int8_t i = 0; i < BUFFER_RX; i++)	//BufferRxSize
-	{
-		bufferRx[i] = 0;
-	}
+	memset(bufferRx, 0, BUFFER_RX);
+//	for(int8_t i = 0; i < BUFFER_RX; i++)	//BufferRxSize
+//	{
+//		bufferRx[i] = 0;
+//	}
 
 	State = RX_DONE;			//do nothing
 

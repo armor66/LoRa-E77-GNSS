@@ -138,10 +138,10 @@ void led_toggle(void){
 GPIOB->ODR ^= GPIO_ODR_OD3;
 }
 void led_red_on(void){
-	GPIOB->BSRR = GPIO_BSRR_BR3;	//gnd for custom pcb
+	GPIOB->BSRR = GPIO_BSRR_BR4;	//gnd for custom pcb
 }
 void led_red_off(void){
-	GPIOB->BSRR = GPIO_BSRR_BS3;
+	GPIOB->BSRR = GPIO_BSRR_BS4;
 }
 void led_green_on(void){
 //	GPIOB->BSRR = GPIO_BSRR_BR2;	//gnd for custom pcb
@@ -150,10 +150,10 @@ void led_green_off(void){
 //	GPIOB->BSRR = GPIO_BSRR_BS2;
 }
 void led_blue_on(void){
-	GPIOB->BSRR = GPIO_BSRR_BR4;	//gnd for custom pcb
+	GPIOB->BSRR = GPIO_BSRR_BR3;	//gnd for custom pcb
 }
 void led_blue_off(void){
-	GPIOB->BSRR = GPIO_BSRR_BS4;
+	GPIOB->BSRR = GPIO_BSRR_BS3;
 }
 
 void hold_power(void) {
