@@ -8,7 +8,7 @@ bno055.c:45:6:bno055_enableExternalCrystal	1
 bno055.c:46:6:bno055_disableExternalCrystal	1
 bno055.c:48:6:bno055_reset	1
 bno055.c:53:8:bno055_getTemp	1
-bno055.c:60:6:bno055_setup	2
+bno055.c:60:6:bno055_setup	1
 bno055.c:76:9:bno055_getSWRevision	1
 bno055.c:83:9:bno055_getBootloaderRevision	1
 bno055.c:90:9:bno055_getSystemStatus	1

@@ -31,8 +31,8 @@ const double deg_to_rad = 0.0174532925199433;       //deg to rad multiplyer
 #define AIR_PACKET_LEN   (0x0D)	//payload len only, no syncword/crc included   (FSK_PP7_PLOAD_LEN_12_BYTE)
 
 struct settings_struct *p_settings_lrns;
-uint8_t *p_air_packet_tx;
-uint8_t *p_air_packet_rx;
+//uint8_t *p_air_packet_tx;
+//uint8_t *p_air_packet_rx;
 
 struct devices_struct devices[DEVICES_ON_AIR_MAX + 1];        //structures array for devices from 1 to DEVICES_IN_GROUP. Index 0 is invalid and always empty.
 struct devices_struct *p_devices[DEVICES_ON_AIR_MAX + 1];		//structure pointers array
@@ -46,55 +46,46 @@ struct devices_struct **get_devices(void)
 	return &p_devices[0];
 }
 
-//uint8_t air_packet_tx[AIR_PACKET_LEN];
-//uint8_t air_packet_rx[AIR_PACKET_LEN];
-//
-//uint8_t *get_air_packet_tx(void) {return &air_packet_tx[0];}
-//uint8_t *get_air_packet_rx(void) {return &air_packet_rx[0];}
+struct point_groups_struct point_groups[MEMORY_POINT_GROUPS];
+struct point_groups_struct *p_point_groups[MEMORY_POINT_GROUPS];
+
+struct point_groups_struct **get_point_groups(void)
+{
+	for (uint8_t grp = 0; grp < MEMORY_POINT_GROUPS; grp++)
+	{
+		p_point_groups[grp] = &point_groups[grp];
+	}
+	return &p_point_groups[0];
+}
 
 double distance[DEVICES_ON_AIR_MAX + 1];
 double arc_length[DEVICES_ON_AIR_MAX + 1];
 int16_t azimuth_deg_signed[DEVICES_ON_AIR_MAX + 1];
 int16_t azimuth_deg_unsigned[DEVICES_ON_AIR_MAX + 1];
 double azimuth_rad[DEVICES_ON_AIR_MAX + 1];
-struct devices_struct **pp_devices;
-struct points_struct **pp_points_lrns;
-//struct trekpoints_struct **pp_trekpoints_lrns;
 
-/*struct gps_num_struct gps_num;
-struct gps_num_struct *get_gps_num(void)
-{
-	return &gps_num;
-}
-*/
+struct devices_struct **pp_devices;
+struct point_groups_struct **pp_point_groups;
+struct points_struct **pp_points_lrns;
+
 void init_lrns(void)
 {
 	//Get external things
 	p_settings_lrns = get_settings();
 	pp_points_lrns = get_points();
+//	pp_lost_device_lrns = get_lost_device();
 //	pp_trekpoints_lrns = get_tekpoints();
 	pp_devices = get_devices();
-//	p_air_packet_tx = get_air_packet_tx();
-//	p_air_packet_rx = get_air_packet_rx();
+	pp_point_groups = get_point_groups();
 	//Clear mem
     for (uint8_t dev = 1; dev <= p_settings_lrns->devices_on_air; dev++)		//DEVICES_ON_AIR_MAX
     {
         memset(&devices[dev], 0, sizeof(devices[dev]));
     }
-
-	//This device number
-//	this_device = p_settings_lrns->device_number;		//not used
-
-    //Activate this device
-//	devices[this_device].exist_flag = 1;				//not used
-//	devices[this_device].device_id = p_settings_lrns->device_id;
-
-//instead of memset (str83-86)
-//	for(int8_t i = 0; i < (p_settings_lrns->devices_on_air + 1); i++)
-//   {
-//	   devices[i].beacon_traced = 0;
-//	   devices[i].beacon_lost = 0;
-//   }
+//    for (uint8_t grp = 0; grp < MEMORY_POINT_GROUPS; grp++)		//DEVICES_ON_AIR_MAX
+//    {
+//        memset(&point_groups[grp], 0, sizeof(point_groups[grp]));
+//    }
 }
 
 void ublox_to_this_device(uint8_t device_number)
@@ -161,7 +152,8 @@ void rx_to_devices(uint8_t device_number)
 	if(pp_devices[p_settings_lrns->device_number]->valid_fix_flag)
 	{							// ignore 7 point groups to get 7, 8, 9 ,10, 11 - 5 device groups
 		int8_t group_start_index = (MEMORY_POINT_GROUPS + device_number - 1) * MEMORY_SUBPOINTS;
-		if(bufferRx[3] & 0x01)		//round robin if remote device is moving
+//		if(bufferRx[3] & 0x01)		//round robin if remote device is moving
+		if(buffer[1] & 0x80)		//round robin if remote device is moving
 		{
 			for(int8_t ind = 6; ind > 0; ind--)	//6->7, 5->6, 4->5, 3->4, 2->3, 1->2
 			{
@@ -170,6 +162,10 @@ void rx_to_devices(uint8_t device_number)
 				pp_points_lrns[group_start_index + ind + 1]->longitude.as_integer = pp_points_lrns[group_start_index + ind]->longitude.as_integer;
 			}
 		}		//fill subpoint1 new data in any case
+//		pp_lost_device_lrns[device_number][0].exist_flag = 1;
+//		pp_lost_device_lrns[device_number][0].latitude.as_integer = devices[device_number].latitude.as_integer;
+//		pp_lost_device_lrns[device_number][0].longitude.as_integer = devices[device_number].longitude.as_integer;
+
 		pp_points_lrns[group_start_index + 1]->exist_flag = 1;
 		pp_points_lrns[group_start_index + 1]->latitude.as_integer = devices[device_number].latitude.as_integer;
 		pp_points_lrns[group_start_index + 1]->longitude.as_integer = devices[device_number].longitude.as_integer;
@@ -338,42 +334,42 @@ void calc_relative_position(uint8_t another_device)
 //	}
 }
 
-void calc_timeout(uint32_t current_uptime)
-{
-	for (uint8_t dev = DEVICE_NUMBER_FIRST; dev < DEVICE_NUMBER_LAST + 1; dev++)	//calculated even for this device and used to alarm about own timeout upon lost of PPS signal
-	{
-		if (devices[dev].exist_flag == 1)
-		{
-			devices[dev].timeout = current_uptime - devices[dev].timestamp; //calc timeout for each active device
-
-        	if (p_settings_lrns->timeout_threshold != TIMEOUT_ALARM_DISABLED) //if enabled
-        	{
-				if (devices[dev].timeout > p_settings_lrns->timeout_threshold)
-				{
-					if (dev == p_settings_lrns->device_number)
-					{
-						if (get_abs_pps_cntr() <= PPS_SKIP)	//if this is a timeout right after power up, ignore timeout alarm, do not set the flag
-						{									//feature, not a bug: once first PPS appeared, a short beep occurs (do "<= PPS_SKIP" to disable this, #TBD)
-							devices[dev].timeout_flag = 0;
-						}
-						else
-						{
-							devices[dev].timeout_flag = 1;
-						}
-					}
-					else
-					{
-						devices[dev].timeout_flag = 1; //set flag for alarm
-					}
-				}
-				else
-				{
-					devices[dev].timeout_flag = 0;
-				}
-        	}
-        }
-    }
-}
+//void calc_timeout(uint32_t current_uptime)
+//{
+//	for (uint8_t dev = DEVICE_NUMBER_FIRST; dev < DEVICE_NUMBER_LAST + 1; dev++)	//calculated even for this device and used to alarm about own timeout upon lost of PPS signal
+//	{
+//		if (devices[dev].exist_flag == 1)
+//		{
+//			devices[dev].timeout = current_uptime - devices[dev].timestamp; //calc timeout for each active device
+//
+//        	if (p_settings_lrns->timeout_threshold != TIMEOUT_ALARM_DISABLED) //if enabled
+//        	{
+//				if (devices[dev].timeout > p_settings_lrns->timeout_threshold)
+//				{
+//					if (dev == p_settings_lrns->device_number)
+//					{
+//						if (get_abs_pps_cntr() <= PPS_SKIP)	//if this is a timeout right after power up, ignore timeout alarm, do not set the flag
+//						{									//feature, not a bug: once first PPS appeared, a short beep occurs (do "<= PPS_SKIP" to disable this, #TBD)
+//							devices[dev].timeout_flag = 0;
+//						}
+//						else
+//						{
+//							devices[dev].timeout_flag = 1;
+//						}
+//					}
+//					else
+//					{
+//						devices[dev].timeout_flag = 1; //set flag for alarm
+//					}
+//				}
+//				else
+//				{
+//					devices[dev].timeout_flag = 0;
+//				}
+//        	}
+//        }
+//    }
+//}
 
 void calc_fence(void)		//all devices should be processed before calling this func
 {

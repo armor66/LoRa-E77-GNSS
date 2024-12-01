@@ -1,5 +1,4 @@
-Core/Src/flash_if.o: ../Core/Src/flash_if.c ../Core/Inc/flash_if.h \
- ../Core/Inc/platform.h \
+Core/Src/eeprom.o: ../Core/Src/eeprom.c ../Core/Inc/eeprom.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wlxx.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h \
  ../Drivers/CMSIS/Include/core_cm4.h \
@@ -48,18 +47,8 @@ Core/Src/flash_if.o: ../Core/Src/flash_if.c ../Core/Inc/flash_if.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
- ../Core/Inc/main.h ../SubGHz_Phy/App/subghz_phy_app.h \
- ../Core/Inc/settings.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_gpio.h \
- ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.h \
- ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_errno.h \
- ../Core/Inc/stm32wlxx_nucleo_conf.h \
- ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo.h \
- ../Utilities/misc/stm32_mem.h ../Core/Inc/utilities_conf.h \
- ../Drivers/CMSIS/Include/cmsis_compiler.h \
- ../Utilities/misc/stm32_tiny_vsnprintf.h ../Core/Inc/utilities_def.h
-../Core/Inc/flash_if.h:
-../Core/Inc/platform.h:
+ ../Core/Inc/bit_band.h
+../Core/Inc/eeprom.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wlxx.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
 ../Drivers/CMSIS/Include/core_cm4.h:
@@ -108,16 +97,4 @@ Core/Src/flash_if.o: ../Core/Src/flash_if.c ../Core/Inc/flash_if.h \
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
-../Core/Inc/main.h:
-../SubGHz_Phy/App/subghz_phy_app.h:
-../Core/Inc/settings.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_gpio.h:
-../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.h:
-../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_errno.h:
-../Core/Inc/stm32wlxx_nucleo_conf.h:
-../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo.h:
-../Utilities/misc/stm32_mem.h:
-../Core/Inc/utilities_conf.h:
-../Drivers/CMSIS/Include/cmsis_compiler.h:
-../Utilities/misc/stm32_tiny_vsnprintf.h:
-../Core/Inc/utilities_def.h:
+../Core/Inc/bit_band.h:

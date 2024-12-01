@@ -1,4 +1,4 @@
-../Core/Src/main.c:77:6:shortBeeps	0	static
-../Core/Src/main.c:233:6:SystemClock_Config	120	static,ignoring_inline_asm
-../Core/Src/main.c:87:5:main	8	static,ignoring_inline_asm
-../Core/Src/main.c:293:6:Error_Handler	0	static,ignoring_inline_asm
+../Core/Src/main.c:75:6:shortBeeps	0	static
+../Core/Src/main.c:240:6:SystemClock_Config	120	static,ignoring_inline_asm
+../Core/Src/main.c:85:5:main	16	static,ignoring_inline_asm
+../Core/Src/main.c:300:6:Error_Handler	0	static,ignoring_inline_asm

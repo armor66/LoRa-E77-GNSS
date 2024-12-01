@@ -7,8 +7,8 @@
 
 extern const double deg_to_rad;       //deg to rad multiplyer
 
-uint8_t *get_air_packet_tx(void);
-uint8_t *get_air_packet_rx(void);
+//uint8_t *get_air_packet_tx(void);
+//uint8_t *get_air_packet_rx(void);
 
 void init_lrns(void);
 void fill_air_packet(uint32_t current_uptime);
@@ -17,7 +17,7 @@ void process_all_devices(void);
 void calc_point_position(uint8_t another_device);
 
 void calc_relative_position(uint8_t another_device);
-void calc_timeout(uint32_t current_uptime);
+//void calc_timeout(uint32_t current_uptime);
 void calc_fence(void);
 uint8_t check_any_alarm_fence_timeout(void);
 
@@ -78,6 +78,8 @@ struct devices_struct
 	uint8_t beacon_lost;
 	uint8_t beacon_flag;
 
+	int8_t index_in_flash;
+
 //    uint8_t memory_point_flag;		//is this device a memory point?
 	uint8_t emergency_flag;
 	uint8_t alarm_flag;				//is alarm reported by a device?
@@ -85,10 +87,10 @@ struct devices_struct
 	uint8_t beeper_flag;
 	uint8_t flwtrek_flag;
 	uint8_t fence_flag;				//is a predefined fence distance reached?
-	uint8_t memory_subpoint;
+//	uint8_t memory_subpoint;
 
     //TIME
-    uint32_t timestamp;					//time stamp in seconds since power-up when the last activity was detected
+//    uint32_t timestamp;					//time stamp in seconds since power-up when the last activity was detected
     uint32_t timeout;					//timeout in seconds since last activity (RX of coordinates)
     uint8_t timeout_flag;				//set when predefined timeout occurs
     uint8_t display_status;
@@ -130,5 +132,13 @@ struct devices_struct
     int8_t snr;
 };
 struct devices_struct **get_devices(void);
+
+struct point_groups_struct
+{
+	int8_t index_in_flash;
+	int8_t points_stored;
+	int8_t points_in_ram;
+};
+struct point_groups_struct **get_point_groups(void);
 
 #endif /*LRNS_HEADER*/

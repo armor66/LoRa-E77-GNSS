@@ -60,11 +60,11 @@ int8_t bno055_getTemp() {
 void bno055_setup() {
   bno055_reset();
 
-  uint8_t id = 0;
-  bno055_readData(BNO055_CHIP_ID, &id, 1);
-  if (id != BNO055_ID) {
-    printf("Can't find BNO055, id: 0x%02x. Please check your wiring.\r\n", id);
-  }
+//  uint8_t id = 0;
+//  bno055_readData(BNO055_CHIP_ID, &id, 1);
+//  if (id != BNO055_ID) {
+//    printf("Can't find BNO055, id: 0x%02x. Please check your wiring.\r\n", id);
+//  }
   bno055_setPage(0);
   bno055_writeData(BNO055_SYS_TRIGGER, 0x0);
 

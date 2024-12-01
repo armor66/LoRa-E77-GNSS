@@ -46,8 +46,6 @@
 /* USER CODE BEGIN PTD */
 //struct settings_struct *p_settings_main;
 
-int8_t GPScheckFlag = 0;
-int8_t GPSconfigureFlag = 0;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -108,19 +106,19 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  SystemApp_Init();		//MX_SubGHz_Phy_Init();
+   SystemApp_Init();		//MX_SubGHz_Phy_Init();
 
-  MX_TIM1_Init();
-  MX_TIM2_Init();
-  MX_TIM16_Init();
-  MX_TIM17_Init();
-  MX_LPTIM1_Init();
+   MX_TIM1_Init();
+   MX_TIM2_Init();
+   MX_TIM16_Init();
+   MX_TIM17_Init();
+   MX_LPTIM1_Init();
 
-  MX_ADC_Init();
-  MX_SPI2_Init();
-  MX_USART2_UART_Init();
-  MX_I2C1_Init();
-//  MX_IWDG_Init();
+   MX_ADC_Init();
+   MX_SPI2_Init();
+   MX_USART2_UART_Init();
+   MX_I2C1_Init();
+//   MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Stop_IT(&htim1);
   __HAL_TIM_SET_COUNTER(&htim1, 0);
@@ -159,7 +157,7 @@ int main(void)
 
   	if(!(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin))
 	{
-		GPSconfigureFlag = 1;	//if DOWN button is pressed and  OK button is released upon power up
+		main_flags.GPSconfigureFlag = 1;	//if DOWN button is pressed and  OK button is released upon power up
 		init_gnss();
 	}
   	else if(!(GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
@@ -169,14 +167,23 @@ int main(void)
 	}
   	else if(!(GPIOA->IDR & BTN_2_Pin) && !(GPIOA->IDR & BTN_3_Pin))
 	{
-		calibrateCompassFlag = 1;//if both buttons is pressed
+		main_flags.calibrateCompassFlag = 1;//if both buttons is pressed
 		init_compass();
 	}
   	else
 	{
 		init_compass();
 		SubghzApp_Init();
-		memory_points_load();
+
+		for(uint8_t i = 1; i < (DEVICES_ON_AIR_MAX+1); i++)
+		{
+			lost_device_load(i);
+		}
+		for(uint8_t i = 0; i < MEMORY_POINT_GROUPS; i++)
+		{
+			saved_group_load(i);
+		}
+
 		init_gnss();
 		enable_buttons_interrupts();
 
@@ -259,7 +266,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLN = 6;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV6;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();

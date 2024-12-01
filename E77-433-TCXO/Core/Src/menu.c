@@ -36,7 +36,7 @@ double azimuth_relative_rad_old[10];
 //-----------------------------MEMORY POINTS MENU----------------------------
 uint8_t memory_subpoint = 0;
 uint8_t memory_subpoint_ind[MEMORY_POINT_GROUPS];
-uint8_t flag_points_changed = 0;
+uint8_t flag_group_has_changed[MEMORY_POINT_GROUPS];
 
 uint8_t get_current_item(void);
 uint8_t get_last_item(void);
@@ -85,6 +85,8 @@ void devices_esc(void);
 void draw_points(void);
 void points_esc(void);
 void draw_show_points(void);
+void draw_clear_group(void);
+void confirm_clear_group(void);
 // SETTINGS MENU
 void draw_settings(void);
 void draw_set_settings(void);
@@ -98,11 +100,6 @@ void set_spreading_factor_up(void);
 void set_spreading_factor_down(void);
 void set_spreading_factor_ok(void);
 void set_spreading_factor_esc(void);
-//:2
-//void set_freq_region_up(void);
-//void set_freq_region_down(void);
-//void set_freq_region_ok(void);
-//void set_freq_region_esc(void);
 //:2
 void set_coding_rate_up(void);
 void set_coding_rate_down(void);
@@ -137,6 +134,7 @@ void set_fence_esc(void);
 //void settings_ok(void);
 void draw_confirm_settings(void);
 void confirm_settings_reboot(void);
+void donot_save_settings(void);
 void confirm_settings_restore(void);
 //ACTIONS MENU
 void draw_actions(void);
@@ -163,7 +161,8 @@ enum
 
 	M_POINTS,
 	M_POINTS_SUBMENU,
-	M_POINTS_SUBMENU_DEVICES,
+	M_CONFIRM_CLEARGROUP,
+//	M_POINTS_SUBMENU_DEVICES,
 
 	M_SETTINGS,
 	M_CONFIRM_SETTINGS,
@@ -315,10 +314,6 @@ const struct
 	{M_SET_SPREADING_FACTOR,	BTN_OK,                 set_spreading_factor_ok},
 	{M_SET_SPREADING_FACTOR,	BTN_ESC,            	set_spreading_factor_esc},
 
-//	{M_SET_FREQ_REGION,			BTN_UP,                 set_freq_region_up},
-//	{M_SET_FREQ_REGION,			BTN_DOWN,               set_freq_region_down},
-//	{M_SET_FREQ_REGION,			BTN_OK,                 set_freq_region_ok},
-//	{M_SET_FREQ_REGION,			BTN_ESC,            	set_freq_region_esc},
 	{M_SET_CODING_RATE,			BTN_UP,                 set_coding_rate_up},
 	{M_SET_CODING_RATE,			BTN_DOWN,               set_coding_rate_down},
 	{M_SET_CODING_RATE,			BTN_OK,                 set_coding_rate_ok},
@@ -349,7 +344,7 @@ const struct
 	{M_SET_FENCE,				BTN_OK,                 set_fence_ok},
 	{M_SET_FENCE,				BTN_ESC,            	set_fence_esc},
 	{M_CONFIRM_SETTINGS,		BTN_OK,					confirm_settings_reboot},
-//	{M_CONFIRM_SETTINGS,		BTN_ESC,				confirm_settings_restore},
+	{M_CONFIRM_SETTINGS,		BTN_ESC,				donot_save_settings},
 
 	{M_MAIN,					BTN_PWR_LONG,			power_long},
 	{M_NAVIGATION,				BTN_PWR_LONG,			power_long},
@@ -358,6 +353,8 @@ const struct
 	{M_NAVTO_POINTS,			BTN_PWR_LONG,			power_long},
 	{M_POINTS,					BTN_PWR_LONG,			power_long},
 	{M_POINTS,					BTN_ESC,				points_esc},
+	{M_POINTS_SUBMENU,			BTN_OK,					draw_clear_group},
+	{M_CONFIRM_CLEARGROUP,		BTN_OK,					confirm_clear_group},
 //	{M_ACTIONS,					BTN_UP,					actions_up},
 	{M_ACTIONS,					BTN_PWR_LONG,			power_long},
 	{M_ACTIONS,					BTN_OK,					actions_ok},
@@ -431,7 +428,8 @@ const struct
 
 	{M_POINTS,	                M_MAIN},
 	{M_POINTS_SUBMENU,			M_POINTS},
-	{M_POINTS_SUBMENU_DEVICES,	M_POINTS},
+	{M_CONFIRM_CLEARGROUP,		M_POINTS_SUBMENU},
+//	{M_POINTS_SUBMENU_DEVICES,	M_POINTS},
 
     {M_SETTINGS,                M_CONFIRM_SETTINGS},	//M_MAIN},
 	{M_CONFIRM_SETTINGS,		M_SETTINGS},
@@ -488,6 +486,7 @@ const struct
 
 	{M_POINTS,                  draw_points},
 	{M_POINTS_SUBMENU,			draw_show_points},
+//	{M_CONFIRM_CLEARGROUP,		draw_clear_group},
 
     {M_SETTINGS,                draw_settings},
     {M_SET_DEVICE_NUMBER,		draw_set_settings},
@@ -528,6 +527,7 @@ uint8_t range_ind = 0;
 uint8_t range_scale[] = {1, 2, 4, 8, 16, 32, 64};
 
 struct devices_struct **pp_devices_menu;
+struct point_groups_struct **pp_point_groups_menu;
 struct points_struct **pp_points_menu;
 
 //struct acc_data *p_acceleration_menu;
@@ -547,6 +547,7 @@ void init_menu(void)
 	current_device = this_device;
 	//Load all devices
 	pp_devices_menu = get_devices();
+	pp_point_groups_menu = get_point_groups();
 	pp_points_menu = get_points();
 
 //	p_acceleration_menu = get_acceleration();
@@ -573,7 +574,7 @@ void change_menu(uint8_t button_code)
 			if (current_menu == menu_exclusive_table[i].current_menu &&
 				button_code == menu_exclusive_table[i].button_pressed)
 			{
-				fillScreen(BLACK);
+				fill_screen(BLACK);
 				menu_exclusive_table[i].execute_function();
 				return;         //exit
 			}
@@ -591,12 +592,12 @@ void change_menu(uint8_t button_code)
 
 			case BTN_OK:
 				switch_forward();
-				fillScreen(BLACK);
+				fill_screen(BLACK);
 				break;
 
 			case BTN_ESC:
 				switch_backward();
-				fillScreen(BLACK);
+				fill_screen(BLACK);
 				break;
 
 			case BTN_PWR:
@@ -620,7 +621,7 @@ void change_menu(uint8_t button_code)
 				if(current_menu == M_NAVIGATION && pp_devices_menu[this_device]->valid_fix_flag && pp_devices_menu[this_device]->flwtrek_flag)
 				{
 					find_nearest_trekpoint_flag = 1;		//find_nearest_trekpoint();
-					fillScreen(BLACK);
+					fill_screen(BLACK);
 				}
 				break;
 
@@ -676,12 +677,13 @@ void change_menu(uint8_t button_code)
 //pp_points_menu[point_absolute_index]->exist_flag = 1;
 //pp_points_menu[point_absolute_index]->latitude.as_integer = pp_devices_menu[this_device]->latitude.as_integer;
 //pp_points_menu[point_absolute_index]->longitude.as_integer = pp_devices_menu[this_device]->longitude.as_integer;
+				points_group_save(current_point_group);
 //				memory_points_save();		//save to flash
 
 				shortBeepsBlocking(memory_subpoint_ind[current_point_group]);	//number of point to save
 //				memory_points_load();
 //				settings_load();
-				fillScreen(BLACK);
+				fill_screen(BLACK);
 //				return_from_points_menu = current_menu;
 				current_menu = M_POINTS;
 				set_current_item(current_point_group);
@@ -722,7 +724,7 @@ void change_menu(uint8_t button_code)
 //				memory_points_save();		//save to flash
 //				memory_points_load();
 //				settings_load();
-				fillScreen(BLACK);
+				fill_screen(BLACK);
 //				return_from_points_menu = current_menu;
 				current_menu = M_POINTS;
 				set_current_item(current_point_group);
@@ -869,7 +871,7 @@ void draw_current_menu(void)
 			{
 				if(pp_devices_menu[i]->emergency_flag || pp_devices_menu[i]->alarm_flag || pp_devices_menu[i]->gather_flag)
 				{
-					fillScreen(BLACK);
+					fill_screen(BLACK);
 					HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
 					pp_devices_menu[this_device]->display_status = 1;
 //todo go to alarm point while display_status==0
@@ -890,13 +892,14 @@ void draw_main(void)
 	uint16_t year = (PVTbuffer[5+6]<<8) + PVTbuffer[4+6];
 	uint8_t hour = PVTbuffer[14];
 	row = 0;
-//
+
 	if(pp_devices_menu[this_device]->valid_date_flag)	//bit 5: information about UTC Date and Time of Day validity conﬁrmation is available
 	{
 		year = year - 2000;
 		hour = hour + p_settings_menu->time_zone_hour;
-		if(hour > 24) hour = hour - 24;
+		if(hour > 23) hour = hour - 24;
 	}else day = month = year = hour = 0;
+
 	if(pp_devices_menu[this_device]->batt_voltage < 50)		// U < 3.2volt (!pp_devices_menu[this_device]->batt_voltage)
 	{
 		sprintf(&Line[row][0], "DevID:%02d Batt low!", this_device);
@@ -906,21 +909,24 @@ void draw_main(void)
 	sprintf(&Line[row][0], "%02d/%02d/%02d  %02d:%02d:%02d", day, month, year, hour, PVTbuffer[15], PVTbuffer[16]);
 	for (uint8_t k = 0; k < row+1; k++)
 	{
-		ST7735_WriteString(0, 1+k*11, &Line[k][0], Font_7x10, WHITE,BLACK);
+		draw_str_by_rows(0, 1+k*11, &Line[k][0], Font_7x10, WHITE,BLACK);
 	}
 	row+=1;	//2
-	if(nav_pvt_ram_flag)
+	if(main_flags.nav_pvt_ram_flag)
 	{
-		sprintf(&Line[row][0], " %5s pDop:%2d.%02d ", fixType[pp_devices_menu[this_device]->fix_type_opt], pp_devices_menu[this_device]->p_dop/100,
-																			  	  	  	  	  	  	  	  	pp_devices_menu[this_device]->p_dop%100);
+		sprintf(&Line[row][0], " %5s pDop:%2d.%02d ", fixType[pp_devices_menu[this_device]->fix_type_opt],
+						pp_devices_menu[this_device]->p_dop/100, pp_devices_menu[this_device]->p_dop%100);
 		(pp_devices_menu[this_device]->valid_fix_flag)?
-		ST7735_WriteString(0, 1+row*11, &Line[row][0], Font_7x10, WHITE,BLACK): ST7735_WriteString(0, 1+row*11, &Line[row][0], Font_7x10, CYAN,BLACK);
+				draw_str_by_rows(0, 1+row*11, &Line[row][0], Font_7x10, WHITE,BLACK):
+//				draw_str_by_rows(0, 1+row*11, &Line[row][0], Font_7x10, CYAN,BLACK);
+				((main_flags.GPScold_restarted)?
+						draw_str_by_rows(0, 1+row*11, &Line[row][0], Font_7x10, ORANGE,BLACK):
+						draw_str_by_rows(0, 1+row*11, &Line[row][0], Font_7x10, CYAN,BLACK));
 	}
 	else
 	{
 		shortBeeps(2);			//1 beep actually every PPS
-		sprintf(&Line[row][0], "GPS not configured");
-		ST7735_WriteString(0, 1+row*11, &Line[row][0], Font_7x10, ORANGE,BLACK);
+		draw_str_by_rows(0, 1+row*11, "GPS not configured", Font_7x10, ORANGE,BLACK);
 	}
 	row+=1;	//3
 	int8_t dev;
@@ -942,14 +948,14 @@ void draw_main(void)
 	if(pp_devices_menu[dev]->emergency_flag)
 	{
 		sprintf(&Line[row][0], "Dev%d set EMERGENCY", dev);
-		ST7735_WriteString(0, 1+row*11, &Line[row][0], Font_7x10, CYAN,BLACK);
+		draw_str_by_rows(0, 1+row*11, &Line[row][0], Font_7x10, CYAN,BLACK);
 	}
 	else
 	{
 		int8_t nods_on_the_air = (pp_devices_menu[1]->valid_fix_flag) + (pp_devices_menu[2]->valid_fix_flag) + (pp_devices_menu[3]->valid_fix_flag) +
 																		(pp_devices_menu[4]->valid_fix_flag) + (pp_devices_menu[5]->valid_fix_flag);
 		sprintf(&Line[row][0], "OnTheAir: %d/%d Nods", nods_on_the_air, p_settings_menu->devices_on_air);
-		ST7735_WriteString(0, 1+row*11, &Line[row][0], Font_7x10, WHITE,BLACK);
+		draw_str_by_rows(0, 1+row*11, &Line[row][0], Font_7x10, WHITE,BLACK);
 	}
 //	sprintf(&Line[2][1], "    MENU    ");
 //	ST7735_WriteString(0, 10+2*19, &Line[2][1], Font_11x18, CYAN,BLACK);
@@ -963,11 +969,12 @@ void draw_main(void)
 	row = 2 + get_current_item();
 	for (uint8_t k = 2; k < 8; k++)
 	{
-		if(k == row) ST7735_WriteString(3, 10+k*19, &Line[k][0], Font_11x18, YELLOW,BLACK);
-		else ST7735_WriteString(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
+		if(k == row) draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, YELLOW,BLACK);
+		else draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
 	}
-	sprintf(&Line[row][0], ">");
-	ST7735_WriteString(3, 10+row*19, &Line[row][0], Font_11x18, YELLOW,BLACK);
+	draw_char(3, 10+row*19, 62, Font_11x18, YELLOW,BLACK);	//">"
+//	sprintf(&Line[row][0], ">");
+//	ST7735_WriteString(3, 10+row*19, &Line[row][0], Font_11x18, YELLOW,BLACK);
 }
 
 void main_ok(void)
@@ -1014,27 +1021,26 @@ void draw_navigation(void)	//int8_t menu)
 {
 	row = 0;
 	uint8_t dev = 0;
-//	uint8_t *buffer = bufNode[current_device];
-	ST7735_SetRotation(0);
+//	ST7735_SetRotation(0);
 
 	if(pp_devices_menu[this_device]->gps_speed > GPS_SPEED_THRS)
 	{
 		sprintf(&Line[row][4], "%2dkmh", pp_devices_menu[this_device]->gps_speed);
-		ST7735_WriteString(37, row*19, &Line[row][4], Font_11x18, GREEN,BLACK);
+		draw_str_by_rows(37, row*19, &Line[row][4], Font_11x18, GREEN,BLACK);
 	 	(heading_deg < 100)? (sprintf(&Line[row+=1][4], "%3d%% ", heading_deg)): (sprintf(&Line[row+=1][4], " %3d%%", heading_deg));	//just shift->
-	 	ST7735_WriteString(37, (row)*19, &Line[row][4], Font_11x18, YELLOW,BLACK);
+	 	draw_str_by_rows(37, (row)*19, &Line[row][4], Font_11x18, YELLOW,BLACK);
 	}else if(is_north_ready())
 	{
-		sprintf(&Line[row][4], " Magn");	//"Axis%3d ", (p_settings_menu->accel_max.as_integer - p_acceleration_menu->acc_z.as_integer));
-		ST7735_WriteString(37, row*19, &Line[row][4], Font_11x18, CYANB,BLACK);
+//		sprintf(&Line[row][4], );	//"Axis%3d ", (p_settings_menu->accel_max.as_integer - p_acceleration_menu->acc_z.as_integer));
+		draw_str_by_rows(37, row*19, " Magn", Font_11x18, CYANB,BLACK);
 	 	(heading_deg < 100)? (sprintf(&Line[row+=1][4], "%3d%% ", heading_deg)): (sprintf(&Line[row+=1][4], " %3d%%", heading_deg));	//just shift->
-	 	ST7735_WriteString(37, (row)*19, &Line[row][4], Font_11x18, GREEN,BLACK);
+	 	draw_str_by_rows(37, (row)*19, &Line[row][4], Font_11x18, GREEN,BLACK);
 	}else
 	{
-		sprintf(&Line[row][4], " TURN");
-		ST7735_WriteString(37, row*19, &Line[row][4], Font_11x18, RED,BLACK);
-		sprintf(&Line[row+=1][4], " ARND");
-		ST7735_WriteString(37, (row)*19, &Line[row][4], Font_11x18, RED,BLACK);
+//		sprintf(&Line[row][4], );
+		draw_str_by_rows(37, row*19, " TURN", Font_11x18, RED,BLACK);
+//		sprintf(&Line[row+=1][4], );
+		draw_str_by_rows(37, (row+=1)*19, " ARND", Font_11x18, RED,BLACK);
 	}
 
 	if(is_north_ready())
@@ -1073,8 +1079,8 @@ void draw_navigation(void)	//int8_t menu)
 //			sprintf(&Line[4][0], "low");		//< 2.7 volt
 //		} else sprintf(&Line[4][0], "%d.%dV", ((buffer[14] & 0x0F)+27)/10, ((buffer[14] & 0x0F)+27)%10);
 		for (uint8_t k = 0; k < 4; k++) {
-			if(pp_devices_menu[dev]->valid_fix_flag) ST7735_WriteString(0, k*11, &Line[k][0], Font_7x10, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
-			else ST7735_WriteString(0, k*11, &Line[k][0], Font_7x10, MAGENTA,BLACK);
+			if(pp_devices_menu[dev]->valid_fix_flag) draw_str_by_rows(0, k*11, &Line[k][0], Font_7x10, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
+			else draw_str_by_rows(0, k*11, &Line[k][0], Font_7x10, MAGENTA,BLACK);
 		}
 
 	for(dev = p_settings_menu->devices_on_air; dev > 0; dev--)
@@ -1101,8 +1107,8 @@ void draw_navigation(void)	//int8_t menu)
 //			sprintf(&Line[4][13], " low");		//< 2.7 volt
 //		} else sprintf(&Line[4][13], " %d.%dV", ((buffer[14] & 0x0F)+27)/10, ((buffer[14] & 0x0F)+27)%10);
 		for (uint8_t k = 0; k < 4; k++) {
-			if(pp_devices_menu[dev]->valid_fix_flag) ST7735_WriteString(91, k*11, &Line[k][13], Font_7x10, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
-			else ST7735_WriteString(91, k*11, &Line[k][13], Font_7x10, MAGENTA,BLACK);
+			if(pp_devices_menu[dev]->valid_fix_flag) draw_str_by_rows(91, k*11, &Line[k][13], Font_7x10, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
+			else draw_str_by_rows(91, k*11, &Line[k][13], Font_7x10, MAGENTA,BLACK);
 		}
 
 	if(pp_devices_menu[this_device]->valid_fix_flag && pp_devices_menu[this_device]->flwtrek_flag)
@@ -1131,9 +1137,9 @@ void draw_navigation(void)	//int8_t menu)
 	row = 13;
 	sprintf(&Line[row][0], "%d.%02dV", (pp_devices_menu[this_device]->batt_voltage+270)/100,
 		  	   	   	   	   	    		 (pp_devices_menu[this_device]->batt_voltage+270)%100);
-	ST7735_WriteString(0, 7+row*11, &Line[row][0], Font_7x10, GREEN,BLACK);
+	draw_str_by_rows(0, 7+row*11, &Line[row][0], Font_7x10, GREEN,BLACK);
 	sprintf(&Line[row][13], "%4dm", range * range_scale[range_ind]);
-	ST7735_WriteString(92, 7+row*11, &Line[row][13], Font_7x10, WHITE,BLACK);
+	draw_str_by_rows(92, 7+row*11, &Line[row][13], Font_7x10, WHITE,BLACK);
 //	GPIOB->BSRR = GPIO_BSRR_BR3;	//blue led off DRAW MENU END
 }
 void draw_beacons(void)
@@ -1143,7 +1149,7 @@ void draw_beacons(void)
 
 		row = 0;
 		uint8_t beacons_group_start = (MEMORY_POINT_GROUPS + current_device - 1) * MEMORY_SUBPOINTS;	//points_group_ind * MEMORY_SUBPOINTS;
-//	uint8_t *buffer = bufNode[current_device];
+
 		pp_points_menu[beacons_group_start]->exist_flag = 0;			//clear sub-point 0
 		for(uint8_t j = 1; j < MEMORY_SUBPOINTS; j++)
 		{
@@ -1153,10 +1159,8 @@ void draw_beacons(void)
 			}
 		}
 
-		ST7735_SetRotation(0);
-//	buffer = bufNode[dev];
 		pp_devices_menu[current_device]->beacon_flag? sprintf(&Line[row][0], "tBcn%d", current_device): sprintf(&Line[row][0], "Dev%d:", current_device);	//if is beacon or device
-		ST7735_WriteString(0, row*18, &Line[row][0], Font_11x18, YELLOW,BLACK);
+		draw_str_by_rows(0, row*18, &Line[row][0], Font_11x18, YELLOW,BLACK);
 		if(pp_devices_menu[current_device]->beacon_traced)
 		{
 			(pp_devices_menu[current_device]->gps_speed)?
@@ -1164,20 +1168,20 @@ void draw_beacons(void)
 					sprintf(&Line[row][5], "Traced");		//"Trcd%2d", pp_devices_menu[current_device]->beacon_traced);
 
 			(pp_devices_menu[current_device]->gps_speed)?
-					ST7735_WriteString(60, row*18, &Line[row][5], Font_11x18, CYAN,BLACK):
-					ST7735_WriteString(60, row*18, &Line[row][5], Font_11x18, GREEN,BLACK);
+					draw_str_by_rows(60, row*18, &Line[row][5], Font_11x18, CYAN,BLACK):
+					draw_str_by_rows(60, row*18, &Line[row][5], Font_11x18, GREEN,BLACK);
 		}else if(pp_devices_menu[current_device]->beacon_lost)
 		{
 			sprintf(&Line[row][5], "!LOST!");
-			ST7735_WriteString(60, row*18, &Line[row][5], Font_11x18, RED,BLACK);
+			draw_str_by_rows(60, row*18, &Line[row][5], Font_11x18, RED,BLACK);
 		}else if(pp_points_menu[beacons_group_start]->exist_flag)
 		{
 			sprintf(&Line[row][5], "%dsaved", pp_points_menu[beacons_group_start]->exist_flag);	//amount of saved sub-points);
-			ST7735_WriteString(60, row*18, &Line[row][5], Font_11x18, CYAN,BLACK);
+			draw_str_by_rows(60, row*18, &Line[row][5], Font_11x18, CYAN,BLACK);
 		}else
 		{
 			sprintf(&Line[row][5], "absent");
-			ST7735_WriteString(60, row*18, &Line[row][5], Font_11x18, MAGENTA,BLACK);
+			draw_str_by_rows(60, row*18, &Line[row][5], Font_11x18, MAGENTA,BLACK);
 		}
 
 		if(is_north_ready())
@@ -1196,8 +1200,8 @@ void draw_beacons(void)
 			if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
 //		sprintf(&Line[++row][0], "%4d%% %4dm", azimuth_relative_deg, ((uint16_t)distance[dev] & 0x1FFF))
 			sprintf(&Line[++row][0], "%4d%%%5dm", azimuth_relative_deg, (uint16_t)distance[current_device]);
-			if(pp_devices_menu[current_device]->valid_fix_flag) ST7735_WriteString(0, row*18, &Line[row][0], Font_11x18, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
-			else ST7735_WriteString(0, row*18, &Line[row][0], Font_11x18, MAGENTA,BLACK);
+			if(pp_devices_menu[current_device]->valid_fix_flag) draw_str_by_rows(0, row*18, &Line[row][0], Font_11x18, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
+			else draw_str_by_rows(0, row*18, &Line[row][0], Font_11x18, MAGENTA,BLACK);
 //draw magnet arrow
 			(heading_rad < 0)? (north_rad = -heading_rad): (north_rad = 2*M_PI - heading_rad);
 			drawArrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
@@ -1205,8 +1209,8 @@ void draw_beacons(void)
 			north_rad_old = north_rad;
 		}else
 		{
-			sprintf(&Line[++row][0], "TURN AROUND");
-			ST7735_WriteString(0, row*18, &Line[row][0], Font_11x18, RED,BLACK);
+//			sprintf(&Line[++row][0], "TURN AROUND");
+			draw_str_by_rows(0, (row+=1)*18, "TURN AROUND", Font_11x18, RED,BLACK);
 //erase magnet arrow
 			drawArrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
 //		sprintf(&Line[3][4], "TURN");
@@ -1219,20 +1223,20 @@ void draw_beacons(void)
 		{
 			sprintf(&Line[++row][0], " LOW");		//< 3.2 volt
 		} else sprintf(&Line[++row][0], "%d.%dV", pp_devices_menu[current_device]->batt_voltage/10, pp_devices_menu[current_device]->batt_voltage%10);
-		if(pp_devices_menu[current_device]->valid_fix_flag) ST7735_WriteString(0, row*18, &Line[row][0], Font_7x10, CYAN,BLACK);
-		else ST7735_WriteString(0, row*18, &Line[row][0], Font_7x10, MAGENTA,BLACK);
+		if(pp_devices_menu[current_device]->valid_fix_flag) draw_str_by_rows(0, row*18, &Line[row][0], Font_7x10, CYAN,BLACK);
+		else draw_str_by_rows(0, row*18, &Line[row][0], Font_7x10, MAGENTA,BLACK);
 
 		sprintf(&Line[row][12], "%4ddB", pp_devices_menu[current_device]->rssi);
-		if(pp_devices_menu[current_device]->valid_fix_flag) ST7735_WriteString(85, row*18, &Line[row][12], Font_7x10, CYAN,BLACK);		//if remote fix valid (validFixFlag[dev])
-		else ST7735_WriteString(85, row*18, &Line[row][12], Font_7x10, MAGENTA,BLACK);
+		if(pp_devices_menu[current_device]->valid_fix_flag) draw_str_by_rows(85, row*18, &Line[row][12], Font_7x10, CYAN,BLACK);		//if remote fix valid (validFixFlag[dev])
+		else draw_str_by_rows(85, row*18, &Line[row][12], Font_7x10, MAGENTA,BLACK);
 
 		row = 13;
 		sprintf(&Line[row][0], "%d.%02dV", (pp_devices_menu[this_device]->batt_voltage+270)/100,
   	   	    		 	 	 	 	 (pp_devices_menu[this_device]->batt_voltage+270)%100);
 										//(GetBatteryLevel()+270)/100, (GetBatteryLevel()+270)%100);
-		ST7735_WriteString(0, 7+row*11, &Line[row][0], Font_7x10, GREEN,BLACK);
+		draw_str_by_rows(0, 7+row*11, &Line[row][0], Font_7x10, GREEN,BLACK);
 		sprintf(&Line[row][13], "%4dm", range * range_scale[range_ind]);
-		ST7735_WriteString(92, 7+row*11, &Line[row][13], Font_7x10, WHITE,BLACK);
+		draw_str_by_rows(92, 7+row*11, &Line[row][13], Font_7x10, WHITE,BLACK);
 
 		drawCircle(63, 97, 60, WHITE);
 
@@ -1316,19 +1320,22 @@ void beacons_esc(void)
 //--------------------------------DEVICES MENU----------------------------
 void draw_this_device(void)
 {
+	uint8_t day = PVTbuffer[7+6];
+	uint8_t month = PVTbuffer[6+6];
 	uint16_t year = (PVTbuffer[5+6]<<8) + PVTbuffer[4+6];
 	uint8_t hour = PVTbuffer[14];
+	row = 0;
 
-	if(PVTbuffer[22+6] & 0x20)		//bit 5: information about UTC Date and Time of Day validity conﬁrmation is available
+	if(pp_devices_menu[this_device]->valid_date_flag)	//bit 5: information about UTC Date and Time of Day validity conﬁrmation is available
 	{
 		year = year - 2000;
 		hour = hour + p_settings_menu->time_zone_hour;
-		if(hour > 24) hour = hour - 24;
-	}
-	ST7735_SetRotation(0);
-		sprintf(&Line[0][0], " Device: %02d ", this_device);
-			if(pp_devices_menu[this_device]->valid_fix_flag) ST7735_WriteString(0, 0, &Line[0][0], Font_11x18, YELLOW,BLACK);		//if fix valid
-			else ST7735_WriteString(0, 0, &Line[0][0], Font_11x18, MAGENTA,BLACK);
+		if(hour > 23) hour = hour - 24;
+	}else day = month = year = hour = 0;
+
+		sprintf(&Line[0][0], " Device: %d ", this_device);
+			if(pp_devices_menu[this_device]->valid_fix_flag) draw_str_by_rows(0, 0, &Line[0][0], Font_11x18, YELLOW,BLACK);		//if fix valid
+			else draw_str_by_rows(0, 0, &Line[0][0], Font_11x18, MAGENTA,BLACK);
 //		sprintf(&Line[2][0], "LoRa 433MHz SF=%02d", p_settings_menu->spreading_factor);
 		sprintf(&Line[2][0], "LoRa%3d.%03dMHzSF%02d", (433000 + 50 + p_settings_menu->freq_channel * 25)/1000,
 													  (433000 + 50 + p_settings_menu->freq_channel * 25)%1000,
@@ -1339,21 +1346,22 @@ void draw_this_device(void)
 				  	  	  	  	  	  	  	  	  	 (pp_devices_menu[this_device]->core_voltage+270)%100);
 		sprintf(&Line[5][0], "Battery: %d.%02d Volt", (pp_devices_menu[this_device]->batt_voltage+270)/100,
  	  	  	  	  	  	  	  	   	   	   	   	    (pp_devices_menu[this_device]->batt_voltage+270)%100);
-		for (uint8_t k = 2; k < 6; k++)
+		sprintf(&Line[6][0], "0x%lX Flag%02X%02d",
+						main_flags.settings_address, p_settings_menu->settings_init_flag, main_flags.settings_index);
+		for (uint8_t k = 2; k < 7; k++)
 		{
 			//ST7735_WriteString(0, k*9, Line[k], Font_6x8, GREEN,BLACK);
-			ST7735_WriteString(0, k*11, &Line[k][0], Font_7x10, YELLOW,BLACK);
+			draw_str_by_rows(0, k*11, &Line[k][0], Font_7x10, YELLOW,BLACK);
 		}
 
-		sprintf(&Line[6][0], " %5s pDop:%2d.%02d ", fixType[pp_devices_menu[current_device]->fix_type_opt],
+		sprintf(&Line[7][0], " %5s pDop:%2d.%02d ", fixType[pp_devices_menu[current_device]->fix_type_opt],
 				pp_devices_menu[current_device]->p_dop/100, pp_devices_menu[current_device]->p_dop%100);
-//				[PVTbuffer[20+6]], ((PVTbuffer[77+6]<<8)+PVTbuffer[76+6])/100, ((PVTbuffer[77+6]<<8)+PVTbuffer[76+6])%100);
-		sprintf(&Line[7][0], "%02d/%02d/%02d  %02d:%02d:%02d", PVTbuffer[7+6], PVTbuffer[6+6], year, hour, PVTbuffer[15], PVTbuffer[16]);
 
-		sprintf(&Line[8][0], "Latit : %ld", pp_devices_menu[this_device]->latitude.as_integer);	//((int32_t)(PVTbuffer[37]<<24)+(PVTbuffer[36]<<16)+(PVTbuffer[35]<<8)+PVTbuffer[34]));
-		sprintf(&Line[9][0], "Longit: %ld", pp_devices_menu[this_device]->longitude.as_integer);	//((int32_t)(PVTbuffer[33]<<24)+(PVTbuffer[32]<<16)+(PVTbuffer[31]<<8)+PVTbuffer[30]));
-		sprintf(&Line[10][0], "Beep Flag:");//  %d", main_flags.beeper_flag_received);
-//		sprintf(&Line[10][0], "HeightEli:  %04dm", ((PVTbuffer[35+6]<<24)+(PVTbuffer[34+6]<<16)+(PVTbuffer[33+6]<<8)+PVTbuffer[32+6])/1000);
+		sprintf(&Line[8][0], "%02d/%02d/%02d  %02d:%02d:%02d", day, month, year, hour, PVTbuffer[15], PVTbuffer[16]);
+//		sprintf(&Line[7][0], "%02d/%02d/%02d  %02d:%02d:%02d", PVTbuffer[7+6], PVTbuffer[6+6], year, hour, PVTbuffer[15], PVTbuffer[16]);
+		sprintf(&Line[9][0], "Latit : %ld", pp_devices_menu[this_device]->latitude.as_integer);	//((int32_t)(PVTbuffer[37]<<24)+(PVTbuffer[36]<<16)+(PVTbuffer[35]<<8)+PVTbuffer[34]));
+		sprintf(&Line[10][0], "Longit: %ld", pp_devices_menu[this_device]->longitude.as_integer);	//((int32_t)(PVTbuffer[33]<<24)+(PVTbuffer[32]<<16)+(PVTbuffer[31]<<8)+PVTbuffer[30]));
+//		sprintf(&Line[10][0], "Beep Flag:");//  %d", main_flags.beeper_flag_received);
 		sprintf(&Line[11][0], "HeightMSL:  %04dm", ((PVTbuffer[39+6]<<24)+(PVTbuffer[38+6]<<16)+(PVTbuffer[37+6]<<8)+PVTbuffer[36+6])/1000);
 		sprintf(&Line[12][0], "Speed:   %03d km/h", pp_devices_menu[this_device]->gps_speed);
 
@@ -1362,11 +1370,11 @@ void draw_this_device(void)
 		}else 	sprintf(&Line[13][0], "HeadingMagn: %03d%% ", heading_deg);
 
 //		GPIOB->BSRR = GPIO_BSRR_BR3;	//blue led off DRAW MENU END SPI start
-		for (uint8_t k = 6; k < 14; k++)
+		for (uint8_t k = 7; k < 14; k++)
 		{
 			//ST7735_WriteString(0, k*9, Line[k], Font_6x8, GREEN,BLACK);
-			if(pp_devices_menu[current_device]->valid_fix_flag) ST7735_WriteString(0, 4+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);	//(PVTbuffer[21+6] & 0x01)
-			else ST7735_WriteString(0, 4+k*11, &Line[k][0], Font_7x10, MAGENTA,BLACK);
+			if(pp_devices_menu[current_device]->valid_fix_flag) draw_str_by_rows(0, 4+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);	//(PVTbuffer[21+6] & 0x01)
+			else draw_str_by_rows(0, 4+k*11, &Line[k][0], Font_7x10, MAGENTA,BLACK);
 		}
 //		GPIOB->BSRR = GPIO_BSRR_BS3;	//blue led on SPI stop
 }
@@ -1383,9 +1391,9 @@ void draw_devices(void)	//int8_t menu)
 				sprintf(&Line[0][0], "tBcn%d data:", pp_devices_menu[current_device]->device_num);			//(buffer[0] & 0x03));
 			}else sprintf(&Line[0][0], " Dev%d data:", pp_devices_menu[current_device]->device_num);		//(buffer[0] & 0x03));
 		}
-		else sprintf(&Line[0][0], " NoDevice %d ", current_device);
-		ST7735_SetRotation(0);
-		ST7735_WriteString(0, 0, &Line[0][0], Font_11x18, YELLOW,BLACK);
+		else sprintf(&Line[0][0], " NoDevice %d", current_device);
+
+		draw_str_by_rows(0, 0, &Line[0][0], Font_11x18, YELLOW,BLACK);
 
 		//fixType only 2 bits used to transmit, pDop/10 (0...25.5)	buffer[15]/10, buffer[15]%10);
 		sprintf(&Line[2][0], " %5s pDop:%2d.%d", fixType[pp_devices_menu[current_device]->fix_type_opt],
@@ -1425,8 +1433,8 @@ void draw_devices(void)	//int8_t menu)
 
 		for (uint8_t k = 2; k < 14; k++)
 		{
-			if(pp_devices_menu[current_device]->valid_fix_flag) ST7735_WriteString(0, 4+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);	//if remote fix valid (validFixFlag[current_device]),((buffer[14] & 0x10) >> 4)
-			else ST7735_WriteString(0, 4+k*11, &Line[k][0], Font_7x10, MAGENTA,BLACK);
+			if(pp_devices_menu[current_device]->valid_fix_flag) draw_str_by_rows(0, 4+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);	//if remote fix valid (validFixFlag[current_device]),((buffer[14] & 0x10) >> 4)
+			else draw_str_by_rows(0, 4+k*11, &Line[k][0], Font_7x10, MAGENTA,BLACK);
 		}
 	}// end of else (current_device != this_device)
 }
@@ -1477,7 +1485,6 @@ void draw_navto_points(void)
 			}
 		}
 
-	ST7735_SetRotation(0);
 	if(sub_point[ind]) {
 		azimuth_relative_deg = pp_points_menu[points_group_start+sub_point[ind]]->azimuth_deg_signed - heading_deg;
 		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
@@ -1591,25 +1598,28 @@ void draw_points(void)
 				}
 			}
 		}
-	ST7735_SetRotation(0);
 
-	sprintf(&Line[0][0], "N%%  POINTS SAVED    ");
-	ST7735_WriteString(0, 0, &Line[0][0], Font_7x10, CYAN,BLACK);
+//	sprintf(&Line[0][0], "N%%  POINTS SAVED ");
+	draw_str_by_rows(0, 0, "N%  POINTS SAVED i", Font_7x10, CYAN,BLACK);
 
 	row = get_current_item();
 	for (uint8_t k = 1; k < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); k++)
 	{
 		sprintf(&Line[k][0], "%2d", k);
-		ST7735_WriteString(0, 14+k*12, &Line[k][0], Font_7x10, CYAN,BLACK);
+		draw_str_by_rows(0, 14+k*12, &Line[k][0], Font_7x10, CYAN,BLACK);
 	}
 	for (uint8_t k = 0; k < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); k++)		//draw points groups
 	{
-		sprintf(&Line[k][0], " %7s   %1d", get_points_group_name(k), pp_points_menu[k * MEMORY_SUBPOINTS]->exist_flag);	//amount of saved sub-points
-		if(k == row) ST7735_WriteString(21, 14+k*12, &Line[k][0], Font_7x10, YELLOW,BLACK);		//active points group
-		else ST7735_WriteString(21, 14+k*12, &Line[k][0], Font_7x10, GREEN,BLACK);				//other points groups
+		(k < 7)? (sprintf(&Line[k][0], " %7s  %1d  %2d", get_points_group_name(k), pp_points_menu[k * MEMORY_SUBPOINTS]->exist_flag,	//amount of saved sub-points
+																	 pp_point_groups_menu[k]->index_in_flash)):
+				 (sprintf(&Line[k][0], " %7s  %1d  %2d", get_points_group_name(k), pp_points_menu[k * MEMORY_SUBPOINTS]->exist_flag,
+				 	 	 	 	 	 	 	 	 	 	 	 	 	 pp_devices_menu[1 + k - MEMORY_POINT_GROUPS]->index_in_flash));
+		if(k == row) draw_str_by_rows(21, 14+k*12, &Line[k][0], Font_7x10, YELLOW,BLACK);		//active points group
+		else draw_str_by_rows(21, 14+k*12, &Line[k][0], Font_7x10, GREEN,BLACK);				//other points groups
 	}
-	sprintf(&Line[row][0], ">");
-	ST7735_WriteString(21, 14+row*12, &Line[row][0], Font_7x10, YELLOW,BLACK);					//marker
+//	sprintf(&Line[row][0], ">");
+//	ST7735_WriteString(21, 14+row*12, &Line[row][0], Font_7x10, YELLOW,BLACK);					//marker
+	draw_char(21, 14+row*12, 62, Font_7x10, YELLOW,BLACK);	//">"
 }
 void points_esc(void)
 {
@@ -1626,9 +1636,9 @@ void points_esc(void)
 void draw_show_points(void)
 {
 	current_point_group = row;
-	ST7735_SetRotation(0);
+
 	sprintf(&Line[0][1], " %2d %7s points:", pp_points_menu[current_point_group * MEMORY_SUBPOINTS]->exist_flag, get_points_group_name(current_point_group));
-	ST7735_WriteString(0, 0, &Line[0][1], Font_6x8, CYAN,BLACK);
+	draw_str_by_rows(0, 0, &Line[0][1], Font_6x8, CYAN,BLACK);
 
 //	row = 0;
 	uint8_t k = 0;
@@ -1638,13 +1648,46 @@ void draw_show_points(void)
 		if(pp_points_menu[current_point_group * MEMORY_SUBPOINTS + i]->exist_flag == 1) {
 			sprintf(&Line[k][0], "%1dLatit : %ld", i, pp_points_menu[current_point_group * MEMORY_SUBPOINTS + i]->latitude.as_integer);
 		//sprintf(&Line[k][0], "%1dLatit : %ld",i ,pp_points_menu[12]->latitude.as_integer);
-			ST7735_WriteString(0, 8+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
+			draw_str_by_rows(0, 8+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
 			sprintf(&Line[++k][0], "%1dLongit: %ld", i, pp_points_menu[current_point_group * MEMORY_SUBPOINTS + i]->longitude.as_integer);
 		//sprintf(&Line[k][0], "%1dLatit : %ld",i ,pp_points_menu[12]->longitude.as_integer);
-			ST7735_WriteString(0, 7+k*11, &Line[k][0], Font_7x10, YLWGRN,BLACK);
+			draw_str_by_rows(0, 7+k*11, &Line[k][0], Font_7x10, YLWGRN,BLACK);
 			if(++k > 14) i = MEMORY_SUBPOINTS;			//restrict to 14 lines
 		}
 	}
+}
+
+void draw_clear_group(void)
+{
+	if((pp_points_menu[current_point_group * MEMORY_SUBPOINTS]->exist_flag) && (current_point_group < 7))
+	{
+		fill_screen(BLACK);
+
+		draw_str_by_rows(8, 1*18, "CLEAR THIS", Font_11x18, CYAN,BLACK);
+		draw_str_by_rows(3, 2*18, "GROUP WHITH", Font_11x18, CYAN,BLACK);
+		draw_str_by_rows(3, 3*18, "ALL POINTS?", Font_11x18, YELLOW,BLACK);
+		draw_str_by_rows(0, 4*18+8, "    OK?", Font_11x18, ORANGE,BLACK);
+		draw_str_by_rows(5, 5*18+16, "    or", Font_11x18, CYAN,BLACK);
+		draw_str_by_rows(0, 6*18+24, "    ESC", Font_11x18, GREEN,BLACK);
+
+		current_menu = M_CONFIRM_CLEARGROUP;
+	}
+	else current_menu = M_POINTS;
+}
+
+void confirm_clear_group(void)
+{
+	clear_points_group(current_point_group);
+
+	uint8_t ind;
+	for(uint8_t sub_point = 0; sub_point < MEMORY_SUBPOINTS; sub_point++)
+	{
+		ind = (current_point_group * MEMORY_SUBPOINTS) + sub_point;
+	   	pp_points_menu[ind]->exist_flag = 0;
+	}
+   	saved_group_load(current_point_group);
+
+	current_menu = M_POINTS;
 }
 //---------------------------------------------------------------------------
 //-----------------------------MEMORY POINTS MENU----------------------------
@@ -1660,52 +1703,49 @@ void draw_device_submenu(void)
 			}
 		}
 	}
-	ST7735_SetRotation(0);
-//	if(((current_device == this_device) && (PVTbuffer[21+6] & 0x01)) || (pp_devices_menu[current_device]->valid_fix_flag))	//if fix valid
+
 	if(pp_devices_menu[current_device]->valid_fix_flag)		//if fix valid for this or current remote device
 	{
-		sprintf(&Line[0][1], " Save %d as:", current_device);
-		ST7735_WriteString(0, -1, &Line[0][1], Font_11x18, CYAN,BLACK);
+		sprintf(&Line[0][0], " Save %d as:", current_device);
+		draw_str_by_rows(0, 0, &Line[0][0], Font_11x18, CYAN,BLACK);
 
 		row = get_current_item();
 		for (uint8_t k = 0; k < MEMORY_POINT_GROUPS; k++)		//draw points groups
 		{
 			sprintf(&Line[k][0], " %4s   /%1d", get_points_group_short(k), pp_points_menu[k * MEMORY_SUBPOINTS]->exist_flag);	//amount of saved sub-points
-			if(k == row) ST7735_WriteString(3, 17+k*18, &Line[k][0], Font_11x18, YELLOW,BLACK);		//active points group
-			else ST7735_WriteString(3, 17+k*18, &Line[k][0], Font_11x18, GREEN,BLACK);				//other points groups
+			if(k == row) draw_str_by_rows(3, 24+k*18, &Line[k][0], Font_11x18, YELLOW,BLACK);		//active points group
+			else draw_str_by_rows(3, 24+k*18, &Line[k][0], Font_11x18, GREEN,BLACK);				//other points groups
 		}
-		sprintf(&Line[row][0], ">");
-		ST7735_WriteString(3, 17+row*18, &Line[row][0], Font_11x18, YELLOW,BLACK);					//marker
+//		sprintf(&Line[row][0], ">");
+		draw_char(3, 24+row*18, 62, Font_11x18, YELLOW,BLACK);					//marker
 
 	}else {
-		sprintf(&Line[3][0], "  NOTHING ");
-		sprintf(&Line[5][0], "  TO SAVE");
-		ST7735_WriteString(0, 54, &Line[3][0], Font_11x18, CYAN,BLACK);
-		ST7735_WriteString(0, 81, &Line[5][0], Font_11x18, CYAN,BLACK);
+		draw_str_by_rows(0, 54, "  NOTHING ", Font_11x18, CYAN,BLACK);
+		draw_str_by_rows(0, 81, "  TO SAVE", Font_11x18, CYAN,BLACK);
 //		HAL_Delay(300);
 		shortBeepsBlocking(3);
-		ST7735_FillScreen(BLACK);
+		fill_screen(BLACK);
 		current_menu = M_DEVICES;
 	}
 }
 void draw_set_points(void)
 {
-		sprintf(&Line[0][1], " Save %d as:", current_device);
-		ST7735_WriteString(0, -1, &Line[0][1], Font_11x18, CYAN,BLACK);
+		sprintf(&Line[0][0], " Save %d as:", current_device);
+		draw_str_by_rows(0, 0, &Line[0][0], Font_11x18, CYAN,BLACK);
 
 	current_point_group = row;
 	for (uint8_t k = 0; k < MEMORY_POINT_GROUPS; k++)
 	{
 		sprintf(&Line[k][0], " %4s  %1d/%1d", get_points_group_short(k), memory_subpoint_ind[k], pp_points_menu[k * MEMORY_SUBPOINTS]->exist_flag);
 		if(k == row) {
-			ST7735_WriteString(3, 17+k*18, &Line[k][0], Font_11x18, CYAN,BLACK);									//active points group
+			draw_str_by_rows(3, 24+k*18, &Line[k][0], Font_11x18, CYAN,BLACK);									//active points group
 			if(pp_points_menu[current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[k]]->exist_flag == 1) {
-				ST7735_WriteString(3, 17+k*18, &Line[k][0], Font_11x18, RED,BLACK);									//if sub-point already exist
+				draw_str_by_rows(3, 24+k*18, &Line[k][0], Font_11x18, RED,BLACK);									//if sub-point already exist
 			}
-		}else ST7735_WriteString(3, 17+k*18, &Line[k][0], Font_11x18, GREEN,BLACK);									//other points groups
+		}else draw_str_by_rows(3, 24+k*18, &Line[k][0], Font_11x18, GREEN,BLACK);									//other points groups
 	}
-	sprintf(&Line[row][0], ">");
-	ST7735_WriteString(3, 17+row*18, &Line[row][0], Font_11x18, CYAN,BLACK);										//marker
+//	sprintf(&Line[row][0], ">");
+	draw_char(3, 24+row*18, 62, Font_11x18, CYAN,BLACK);										//marker
 }
 //-------------------------MEMORY POINTS SET----------------------------
 void set_subpoint_up(void) {
@@ -1731,10 +1771,11 @@ void set_subpoint_ok(void) {
    	pp_points_menu[current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[current_point_group]]->latitude.as_integer = pp_devices_menu[current_device]->latitude.as_integer;
    	pp_points_menu[current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[current_point_group]]->longitude.as_integer = pp_devices_menu[current_device]->longitude.as_integer;
 
-   	flag_points_changed = 1;
+   	flag_group_has_changed[current_point_group] = 1;
    	pp_points_menu[current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;			//clear subpoint 0
    	memory_subpoint_ind[current_point_group] = 0;
-    memory_points_save();		//save to flash
+//   	points_group_save(current_point_group);
+//    memory_points_save();		//save to flash
 
     current_menu = M_DEVICE_SUBMENU;
 	}else current_menu = M_SET_POINTS;
@@ -1743,7 +1784,8 @@ void set_subpoint_ok(void) {
 void set_subpoint_esc(void) {
 	pp_points_menu[current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;			//clear subpoint 0
 	memory_subpoint_ind[current_point_group] = 0;   //exit no save, reset value
-	memory_points_load();
+//	saved_group_load(current_point_group);
+//	memory_points_load();
     current_menu = M_DEVICE_SUBMENU;
 }
 //------------------------------MEMORY POINTS END----------------------------
@@ -1838,8 +1880,8 @@ void draw_set_settings(void)
 	    if ((settings_copy_menu.device_number != this_device) | (settings_copy_menu.devices_on_air != p_settings_menu->devices_on_air))
 	    {
 	        flag_settings_changed = 1;
-	    	settings_save(&settings_copy_menu);
-	    	settings_load();
+//	    	settings_save(&settings_copy_menu);
+//	    	settings_load();
 	    	pp_devices_menu[this_device]->display_status = 1;		//otherwise it shut off
 	    }
 	    current_menu = M_SETTINGS;
@@ -1863,11 +1905,11 @@ void draw_set_settings(void)
 	{
 	    if (settings_copy_menu.spreading_factor != p_settings_menu->spreading_factor)
 	    {
-	    	(settings_copy_menu.spreading_factor == 12)? serialPrint(set_pertriple_period, sizeof(set_pertriple_period)):
-	    												 serialPrint(set_persecond_period, sizeof(set_persecond_period));
+//	    	(settings_copy_menu.spreading_factor == 12)? serialPrint(set_pertriple_period, sizeof(set_pertriple_period)):
+//	    												 serialPrint(set_persecond_period, sizeof(set_persecond_period));
 	        flag_settings_changed = 1;
-	    	settings_save(&settings_copy_menu);
-	    	settings_load();
+//	    	settings_save(&settings_copy_menu);
+//	    	settings_load();
 	    }
 	    current_menu = M_SETTINGS;
 	}
@@ -1876,35 +1918,6 @@ void draw_set_settings(void)
 	    settings_copy_menu.spreading_factor = p_settings_menu->spreading_factor;   //exit no save, reset values
 	    current_menu = M_SETTINGS;
 	}
-	/********************************REGION****************************/
-//	void set_freq_region_up(void) {
-//	    if (settings_copy_menu.freq_region_opt == FREQ_REGION_LAST_OPTION)
-//	    {
-//	        settings_copy_menu.freq_region_opt = FREQ_REGION_FIRST_OPTION;
-//	    }else {
-//	        settings_copy_menu.freq_region_opt++;
-//	    }
-//	}
-//	void set_freq_region_down(void) {
-//	    if (settings_copy_menu.freq_region_opt == FREQ_REGION_FIRST_OPTION)
-//	    {
-//	        settings_copy_menu.freq_region_opt = FREQ_REGION_LAST_OPTION;
-//	    }else {
-//	        settings_copy_menu.freq_region_opt--;
-//	    }
-//	}
-//	void set_freq_region_ok(void) {
-//		if (settings_copy_menu.freq_region_opt != p_settings_menu->freq_region_opt) {
-//			flag_settings_changed = 1;
-//			settings_save(&settings_copy_menu);
-//	    	settings_load();
-//		}
-//	    current_menu = M_SETTINGS;
-//	}
-//	void set_freq_region_esc(void) {
-//		settings_copy_menu.freq_region_opt = p_settings_menu->freq_region_opt;   //exit no save, reset value
-//	    current_menu = M_SETTINGS;
-//	}
 	/*********************CODING RATE************************/
 	void set_coding_rate_up(void) {
 		    if (settings_copy_menu.coding_rate_opt == CODING_RATE_LAST_OPTION)
@@ -1925,8 +1938,8 @@ void draw_set_settings(void)
 		void set_coding_rate_ok(void) {
 		    if (settings_copy_menu.coding_rate_opt != p_settings_menu->coding_rate_opt) {
 		    	flag_settings_changed = 1;
-		    	settings_save(&settings_copy_menu);
-		    	settings_load();
+//		    	settings_save(&settings_copy_menu);
+//		    	settings_load();
 		    }
 		    current_menu = M_SETTINGS;
 		}
@@ -1954,8 +1967,8 @@ void draw_set_settings(void)
 	void set_freq_channel_ok(void) {
 	    if (settings_copy_menu.freq_channel != p_settings_menu->freq_channel) {
 	    	flag_settings_changed = 1;
-	    	settings_save(&settings_copy_menu);
-	    	settings_load();
+//	    	settings_save(&settings_copy_menu);
+//	    	settings_load();
 	    }
 	    current_menu = M_SETTINGS;
 	}
@@ -1983,8 +1996,8 @@ void draw_set_settings(void)
 	void set_tx_power_ok(void) {
 	    if (settings_copy_menu.tx_power_opt != p_settings_menu->tx_power_opt) {
 	    	flag_settings_changed = 1;
-	    	settings_save(&settings_copy_menu);
-	    	settings_load();
+//	    	settings_save(&settings_copy_menu);
+//	    	settings_load();
 	    }
 	    current_menu = M_SETTINGS;
 	}
@@ -2082,8 +2095,7 @@ void draw_confirm_settings(void)
     		ST7735_WriteString(0, k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
     	}
 
-    	sprintf(&Line[4][0], " Press OK  ");
-    	ST7735_WriteString(0, 4*11, &Line[4][0], Font_11x18, YELLOW,BLACK);
+    	ST7735_WriteString(0, 4*11, " Press OK  ", Font_11x18, YELLOW,BLACK);
 
     	sprintf(&Line[5][0], " REBOOT AND APPLY ");
 	    sprintf(&Line[6][0], "            ");
@@ -2091,25 +2103,20 @@ void draw_confirm_settings(void)
 	    	ST7735_WriteString(0, 11+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
 	   	}
 
-	    sprintf(&Line[7][0], " Press ESC  ");
-	    ST7735_WriteString(0, 8*11, &Line[7][0], Font_11x18, YELLOW,BLACK);
+	    ST7735_WriteString(0, 8*11, " Press ESC  ", Font_11x18, YELLOW,BLACK);
 
-	    sprintf(&Line[8][0], " RECHECK SETTINGS ");
-//	    sprintf(&Line[8][0], " RESTORE DEFAULTS ");
-//	    sprintf(&Line[9][0], "AND RESET COMPASS ");
-	    for (uint8_t k = 8; k < 9; k++) {
+	    sprintf(&Line[8][0], "  TO NOT SAVE ");
+	    sprintf(&Line[9][0], "   AND REBOOT ");
+	    for (uint8_t k = 8; k < 10; k++) {
 	    	ST7735_WriteString(0, (k+2)*11, &Line[k][0], Font_7x10, GREEN,BLACK);
 	    }
-    }else {
-        current_menu = M_MAIN;
-	//        draw_current_menu();
-    }
+    }else current_menu = M_MAIN;
 }
 void confirm_settings_reboot(void)
 {
+	fill_screen(BLACK);
 	row = 3;
-	sprintf(&Line[row][1], "  Saving...");
-	ST7735_WriteString(0, row*18, &Line[row][1], Font_11x18, YELLOW,BLACK);
+	ST7735_WriteString(0, row*18, "  Saving...", Font_11x18, YELLOW,BLACK);
 
     flag_settings_changed = 0;
    	settings_save(&settings_copy_menu);
@@ -2117,24 +2124,20 @@ void confirm_settings_reboot(void)
     HAL_Delay(1000);
     NVIC_SystemReset();
 }
-void confirm_settings_restore(void)
+
+void donot_save_settings(void)
 {
-	row = 3;
-	sprintf(&Line[row][1], "Restoring..");
+	fill_screen(BLACK);
 
-	ST7735_SetRotation(0);
-	ST7735_WriteString(0, row*18, &Line[row][1], Font_11x18, YELLOW,BLACK);
-
-	settings_save_default();
+	row = 4;
+	ST7735_WriteString(0, row*18, "Restoring..", Font_11x18, YELLOW,BLACK);
 //	settings_copy_menu = *p_settings_menu;   //reset to no changes state
-    flag_settings_changed = 0;  //clear flag
-    HAL_Delay(1000);
-    NVIC_SystemReset();
-//    current_menu = M_MAIN;
+	HAL_Delay(1000);
+	NVIC_SystemReset();
 }
 //-----------------------------SETTINGS MENU END------------------------
 //----------------------------------------------------------------------
-
+//----------------------------- MENU ACTIONS------------------------
 void draw_actions(void)
 {
 //	current_device = this_device;
@@ -2170,6 +2173,7 @@ void draw_actions(void)
 	sprintf(&Line[row][0], ">");
 	ST7735_WriteString(3, 10+row*19, &Line[row][0], Font_11x18, YELLOW,BLACK);
 }
+
 void power_long(void)
 {
 	if(current_menu == M_ACTIONS)
@@ -2181,16 +2185,12 @@ void power_long(void)
 	if (current_menu == M_POINTS) {	//otherwise if some point saved, halt after BTN_PWR_LONG immediately
 		memory_subpoint_ind[current_point_group] = 0;
 		current_point_group = 0;
-//		led_blue_off();		//current_point_group has reseted
 	}
+
 	return_from_power_menu = current_menu;
 	current_menu = M_ACTIONS;
 
 	shortBeeps(2);								//notice power_long and set emergency_flag
-//	led_w_on();
-//	HAL_Delay(10);
-//	led_w_off();
-//	draw_current_menu();
 }
 
 void actions_ok(void)	//non standard implementation: switch the current item and do the action
@@ -2198,6 +2198,10 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 	switch (get_current_item())
 	{
 		case M_ACTIONS_I_POWER_OFF:
+			for(uint8_t i = 0; i < MEMORY_POINT_GROUPS; i++)
+			{
+				if(flag_group_has_changed[i])	points_group_save(i);
+			}
 			led_w_on();
 			HAL_Delay(20);
 			release_power();
@@ -2218,20 +2222,26 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 //					(pp_devices_menu[current_device]->gather_flag = 0);
 			break;
 		case M_ACTIONS_I_ERASE_POINTS:
-			memory_points_erase();
-			memory_points_load();
+			erase_point_groups();
+
+			erase_saved_devices();
+
+	    	for(uint8_t i = 0; i < 96; i++)	//<56 for groups only, +40 for devices
+	    	{
+	    	   	pp_points_menu[i]->exist_flag = 0;
+	    	}
+//			memset(pp_points_menu, 0, 184);
+//			for(uint8_t i = 0; i < MEMORY_POINT_GROUPS; i++)
+//			{
+//		    	saved_group_load(i);
+//			}
+//			for(uint8_t i = 1; i < (DEVICES_ON_AIR_MAX+1); i++)
+//			{
+//				lost_device_load(i);
+//			}
 			break;
 		case M_ACTIONS_I_SET_DEFAULTS:
 			current_menu = M_CONFIRM_RESTORING;
-////			settings_save(&settings_copy_menu);
-//			row = 3;
-//			sprintf(&Line[row][1], "Restoring..");
-//			ST7735_SetRotation(0);
-//			ST7735_WriteString(0, row*18, &Line[row][1], Font_11x18, YELLOW,BLACK);
-//
-//			settings_save_default();
-//			HAL_Delay(1000);
-//			NVIC_SystemReset();
 			break;
 		case M_ACTIONS_I_BEEPER:	//SF12 only: invert flags to transmit in the slot, beacon can get: slot1 for beacon2, slot2 for beacon1
 			if(p_settings_menu->spreading_factor == 12)
@@ -2260,10 +2270,8 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 void actions_esc(void)
 {
 	if (current_menu == M_ACTIONS) return_from_power_menu = M_MAIN;
-//	}
 	reset_current_item_in_menu(M_ACTIONS);
 	current_menu = return_from_power_menu;
-	//draw_current_menu();
 }
 
 void draw_restore_defaults(void)
@@ -2272,22 +2280,27 @@ void draw_restore_defaults(void)
     	sprintf(&Line[2][0], "    DEFAULT      ");
    		sprintf(&Line[3][0], "    SETTINGS     ");
     	for (uint8_t k = 1; k < 4; k++) {
-    		ST7735_WriteString(0, k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
+    		ST7735_WriteString(0, k*11, &Line[k][0], Font_7x10, CYAN,BLACK);
     	}
 
-    	sprintf(&Line[4][0], " Press OK  ");
-    	ST7735_WriteString(0, 4*11, &Line[4][0], Font_11x18, YELLOW,BLACK);
+    	ST7735_WriteString(0, 5*11, "Press OK to", Font_11x18, YELLOW,BLACK);
 
-    	sprintf(&Line[5][0], " APPLY AND REBOOT ");
-	    sprintf(&Line[6][0], "            ");
-	   	for (uint8_t k = 5; k < 7; k++) {
-	    	ST7735_WriteString(0, 11+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
-	   	}
+	    ST7735_WriteString(0, 7*11, "RESTORE AND REBOOT", Font_7x10, GREEN,BLACK);
+    	ST7735_WriteString(0, 8*11, "CALIBRATE COMPASS!", Font_7x10, RED,BLACK);
 
-	    sprintf(&Line[7][0], " Press ESC ");
-	    ST7735_WriteString(0, 8*11, &Line[7][0], Font_11x18, YELLOW,BLACK);
-	    sprintf(&Line[8][0], "CALL MENU ACTIONS ");
-	    for (uint8_t k = 8; k < 9; k++) {
-	    	ST7735_WriteString(0, (k+2)*11, &Line[k][0], Font_7x10, GREEN,BLACK);
-	    }
+	    ST7735_WriteString(0, 10*11, " Press ESC ", Font_11x18, YELLOW,BLACK);
+    	ST7735_WriteString(0, 12*11, "CALL MENU ACTIONS ", Font_7x10, GREEN,BLACK);
+}
+
+void confirm_settings_restore(void)
+{
+	fill_screen(BLACK);
+
+	row = 3;
+	ST7735_WriteString(0, row*18, "Restoring..", Font_11x18, YELLOW,BLACK);
+
+	settings_save_default(p_settings_menu);
+
+    HAL_Delay(1000);
+    NVIC_SystemReset();
 }

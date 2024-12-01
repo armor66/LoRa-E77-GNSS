@@ -1,6 +1,6 @@
-#include <ST7735.h>
-#include "stdint.h"
-#include "stdlib.h"
+#include "ST7735.h"
+#include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>			//for 'sprintf'
 
 int16_t _width;       ///< Display width as modified by current rotation
@@ -168,7 +168,12 @@ void ST7735_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 
 void ST7735_Init(uint8_t rotation)
 {
-    ST7735_Select();
+	// Enable SPI
+//	if((st7735_SPI->CR1 & SPI_CR1_SPE) != SPI_CR1_SPE){
+//		SET_BIT(st7735_SPI->CR1, SPI_CR1_SPE);
+//	}
+	CS_GPIO_Port->BSRR = ( CS_Pin << 16 );
+
     ST7735_Reset();
     DisplayInit(init_cmds1);
     DisplayInit(init_cmds2);
@@ -178,10 +183,8 @@ void ST7735_Init(uint8_t rotation)
     _rowstart = 0;
  /*****  IF Doesn't work, remove the code below (before #elif) *****/
     uint8_t data = 0xC0;
-    ST7735_Select();
     ST7735_WriteCommand(ST7735_MADCTL);
     ST7735_WriteData(&data,1);
-    ST7735_Unselect();
 
 #elif ST7735_IS_128X128
     _colstart = 2;
@@ -194,8 +197,6 @@ void ST7735_Init(uint8_t rotation)
     _rowstart = 0;
 #endif
     ST7735_SetRotation (rotation);
-    ST7735_Unselect();
-
 }
 
 void ST7735_SetRotation(uint8_t m)
@@ -252,23 +253,18 @@ void ST7735_SetRotation(uint8_t m)
 #endif
     break;
   }
-  ST7735_Select();
+
   ST7735_WriteCommand(ST7735_MADCTL);
   ST7735_WriteData(&madctl,1);
-  ST7735_Unselect();
 }
 
 void ST7735_DrawPixel(uint16_t x, uint16_t y, uint16_t color) {
     if((x >= _width) || (y >= _height))
         return;
 
-    ST7735_Select();
-
     ST7735_SetAddressWindow(x, y, x+1, y+1);
     uint8_t data[] = { color >> 8, color & 0xFF };
     ST7735_WriteData(data, sizeof(data));
-
-    ST7735_Unselect();
 }
 
 void ST7735_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor) {
@@ -291,7 +287,6 @@ void ST7735_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t co
 }
 
 void ST7735_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor) {
-    ST7735_Select();
 
     while(*str) {
         if(x + font.width >= _width) {
@@ -312,8 +307,6 @@ void ST7735_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font, u
         x += font.width;
         str++;
     }
-
-    ST7735_Unselect();
 }
 
 void ST7735_FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
@@ -322,7 +315,6 @@ void ST7735_FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16
     if((x + w - 1) >= _width) w = _width - x;
     if((y + h - 1) >= _height) h = _height - y;
 
-    ST7735_Select();
     ST7735_SetAddressWindow(x, y, x+w-1, y+h-1);
 
     uint8_t data[] = { color >> 8, color & 0xFF };
@@ -332,8 +324,6 @@ void ST7735_FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16
             HAL_SPI_Transmit(&ST7735_SPI_PORT, data, sizeof(data), HAL_MAX_DELAY);
         }
     }
-
-    ST7735_Unselect();
 }
 
 void ST7735_DrawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t* data) {
@@ -341,16 +331,12 @@ void ST7735_DrawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint
     if((x + w - 1) >= _width) return;
     if((y + h - 1) >= _height) return;
 
-    ST7735_Select();
     ST7735_SetAddressWindow(x, y, x+w-1, y+h-1);
     ST7735_WriteData((uint8_t*)data, sizeof(uint16_t)*w*h);
-    ST7735_Unselect();
 }
 
 void ST7735_InvertColors(bool invert) {
-    ST7735_Select();
     ST7735_WriteCommand(invert ? ST7735_INVON : ST7735_INVOFF);
-    ST7735_Unselect();
 }
 
 
@@ -829,201 +815,167 @@ void ST7735_FillScreen(uint16_t color) {
     fillRect(0, 0, _width, _height, color);
 }
 
-void testLines(uint16_t color)
-{
-    int           x1, y1, x2, y2,
-                  w = _width,
-                  h = _height;
+#define CHAR_LEN 198                 // 11*18  i.e. width * height
 
-    fillScreen(BLACK);
+volatile uint16_t char_buffer[CHAR_LEN];
 
-    x1 = y1 = 0;
-    y2    = h - 1;
-    for (x2 = 0; x2 < w; x2 += 6) drawLine(x1, y1, x2, y2, color);
-    x2    = w - 1;
-    for (y2 = 0; y2 < h; y2 += 6) drawLine(x1, y1, x2, y2, color);
+static void sendCmd(uint8_t Cmd);
+static void sendData(uint8_t Data );
+static void setWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
+static void columnSet(uint8_t ColumnStart, uint8_t ColumnEnd);
+static void rowSet(uint8_t RowStart, uint8_t RowEnd);
+static void char_to_buffer(uint8_t x_pos, unsigned char ch, FontDef font, uint16_t fg_color, uint16_t bg_color);
 
-    fillScreen(BLACK);
+void draw_str_by_rows(uint8_t x, uint8_t y, char* str, FontDef font, uint16_t fg_color, uint16_t bg_color) {
+//	static uint16_t string_buff[ST7735_WIDTH * 18];
+	uint16_t string_buff[ST7735_WIDTH * font.height];
+	uint16_t pixel_index = 0;		//from 0 to BUF_LEN max
+    uint16_t row_in_char = 0;		//row in a particular character
+    uint8_t length = 0;
 
-    x1    = w - 1;
-    y1    = 0;
-    y2    = h - 1;
-    for (x2 = 0; x2 < w; x2 += 6) drawLine(x1, y1, x2, y2, color);
-    x2    = 0;
-    for (y2 = 0; y2 < h; y2 += 6) drawLine(x1, y1, x2, y2, color);
+    for(uint8_t i=0; str[i]!='\0'; i++)
+        {
+    		length++;
+        }
 
-    fillScreen(BLACK);
+    for (uint8_t row_in_str = 0; row_in_str < font.height; row_in_str++)	//successive enumeration rows in string (0 to FONT_11x18_HEIGHT-1)
+    {
+        for(uint8_t char_ind=0; char_ind<length; char_ind++)					//successive enumeration characters in string (0 to length-1)
+        {
+        	row_in_char = font.data[((uint16_t)str[char_ind] - 32)*font.height + row_in_str];
 
-    x1    = 0;
-    y1    = h - 1;
-    y2    = 0;
-    for (x2 = 0; x2 < w; x2 += 6) drawLine(x1, y1, x2, y2, color);
-    x2    = w - 1;
-    for (y2 = 0; y2 < h; y2 += 6) drawLine(x1, y1, x2, y2, color);
+        	for (uint8_t j=0; j<font.width;j++)		//filling pixels in a particular row of each character
+        	{
+        		string_buff[pixel_index++]=(row_in_char & (uint16_t)0x8000)? fg_color: bg_color;
+        		row_in_char = row_in_char<< 1;
+        	}
+		}
+	}
 
-    fillScreen(BLACK);
+    setWindow(x, y, (x + (font.width * length) - 1), (y + font.height - 1));
 
-    x1    = w - 1;
-    y1    = h - 1;
-    y2    = 0;
-    for (x2 = 0; x2 < w; x2 += 6) drawLine(x1, y1, x2, y2, color);
-    x2    = 0;
-    for (y2 = 0; y2 < h; y2 += 6) drawLine(x1, y1, x2, y2, color);
-
-}
-
-void testFastLines(uint16_t color1, uint16_t color2)
-{
-    int           x, y, w = _width, h = _height;
-
-    fillScreen(BLACK);
-    for (y = 0; y < h; y += 5) drawFastHLine(0, y, w, color1);
-    for (x = 0; x < w; x += 5) drawFastVLine(x, 0, h, color2);
-}
-
-void testRects(uint16_t color)
-{
-    int           n, i, i2,
-                  cx = _width  / 2,
-                  cy = _height / 2;
-
-    fillScreen(BLACK);
-    n     = min(_width, _height);
-    for (i = 2; i < n; i += 6) {
-        i2 = i / 2;
-        drawRect(cx - i2, cy - i2, i, i, color);
+    for (uint16_t i=0; i<(font.width * font.height * length); i++)
+    {
+        while (!(st7735_SPI->SR & SPI_SR_TXE));
+        *((__IO uint8_t *)&st7735_SPI->DR) = (string_buff[i] >> 8);
+        while (!(st7735_SPI->SR & SPI_SR_TXE));
+        *((__IO uint8_t *)&st7735_SPI->DR) = (string_buff[i] & 0xFF);
     }
-
+    while (!(st7735_SPI->SR & SPI_SR_TXE) || (st7735_SPI->SR & SPI_SR_BSY));
 }
 
-void testFilledRects(uint16_t color1, uint16_t color2)
-{
-    int           n, i, i2,
-                  cx = _width  / 2 - 1,
-                  cy = _height / 2 - 1;
+void draw_char(uint8_t x, uint8_t y, unsigned char ch, FontDef font, uint16_t fg_color, uint16_t bg_color) {
 
-    fillScreen(BLACK);
-    n = min(_width, _height);
-    for (i = n; i > 0; i -= 6) {
-        i2    = i / 2;
+    char_to_buffer(x, ch, font, fg_color,bg_color);
 
-        fillRect(cx - i2, cy - i2, i, i, color1);
+    setWindow(x, y, (x + font.width - 1), (y + font.height - 1));
 
-        drawRect(cx - i2, cy - i2, i, i, color2);
+    for (uint16_t i=0; i<(font.width * font.height); i++)
+    {
+           while (!(st7735_SPI->SR & SPI_SR_TXE));
+           *((__IO uint8_t *)&st7735_SPI->DR) = (char_buffer[i] >> 8);
+           while (!(st7735_SPI->SR & SPI_SR_TXE));
+           *((__IO uint8_t *)&st7735_SPI->DR) = (char_buffer[i] & 0xFF);
     }
+    while (!(st7735_SPI->SR & SPI_SR_TXE) || (st7735_SPI->SR & SPI_SR_BSY));
 }
 
-void testFilledCircles(uint8_t radius, uint16_t color)
+void fill_screen(uint16_t color)
 {
-    int x, y, w = _width, h = _height, r2 = radius * 2;
+	fill_rectgl(0, 0,  ST7735_WIDTH, ST7735_HEIGHT, color);
+}
 
-    fillScreen(BLACK);
-    for (x = radius; x < w; x += r2) {
-        for (y = radius; y < h; y += r2) {
-            fillCircle(x, y, radius, color);
+void fill_rectgl(uint8_t x0, uint16_t y0, uint8_t x1, uint16_t y1, uint16_t color)
+{
+	setWindow(x0, y0, x1-1, y1-1);
+
+   uint32_t len = (uint32_t)((x1-x0)*(y1-y0));
+
+   for (uint32_t i=0; i < len; i++)
+   {
+          while (!(st7735_SPI->SR & SPI_SR_TXE));
+          *((__IO uint8_t *)&st7735_SPI->DR) = (color >> 8);
+          while (!(st7735_SPI->SR & SPI_SR_TXE));
+          *((__IO uint8_t *)&st7735_SPI->DR) = (color & 0xFF);
+   }
+   while (!(st7735_SPI->SR & SPI_SR_TXE) || (st7735_SPI->SR & SPI_SR_BSY));
+}
+
+// static functions
+//==============================================================================
+static void char_to_buffer(uint8_t x_pos, unsigned char ch, FontDef font, uint16_t fg_color, uint16_t bg_color) {
+
+    uint16_t raw_index = (((uint16_t)ch - 32) * font.height);	//raw index in font array
+
+    for (uint8_t i = 0; i < font.height; i++)
+    {
+        uint16_t raw = font.data[raw_index+i];				//raw in character
+        uint16_t pixel= (i*font.width);						//color of pixel
+
+        for (uint8_t j=0; j<font.width;j++) {
+
+            char_buffer[pixel++]=(raw & (uint16_t)0x8000)? fg_color: bg_color;
+            raw = raw << 1;
         }
     }
-
 }
 
-void testCircles(uint8_t radius, uint16_t color)
+static void setWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
-    int           x, y, r2 = radius * 2,
-                        w = _width  + radius,
-                        h = _height + radius;
-
-    // Screen is not cleared for this one -- this is
-    // intentional and does not affect the reported time.
-    for (x = 0; x < w; x += r2) {
-        for (y = 0; y < h; y += r2) {
-            drawCircle(x, y, radius, color);
-        }
-    }
-
+	columnSet(x0, x1);
+	rowSet(y0, y1);
+	// write to RAM
+	sendCmd(ST7735_RAMWR);
 }
 
-void testTriangles()
-{
-    int           n, i, cx = _width  / 2 - 1,
-                        cy = _height / 2 - 1;
+static void columnSet(uint8_t ColumnStart, uint8_t ColumnEnd){
 
-    fillScreen(BLACK);
-    n     = min(cx, cy);
-    for (i = 0; i < n; i += 5) {
-        drawTriangle(
-            cx    , cy - i, // peak
-            cx - i, cy + i, // bottom left
-            cx + i, cy + i, // bottom right
-            color565(0, 0, i));
-    }
+  if (ColumnStart > ColumnEnd) return;
+  if (ColumnEnd > ST7735_WIDTH) return;
 
+  ColumnStart += _colstart;
+  ColumnEnd += _colstart;
+
+  sendCmd(ST7735_CASET);
+  sendData(ColumnStart >> 8);
+  sendData(ColumnStart & 0xFF);
+  sendData(ColumnEnd >> 8);
+  sendData(ColumnEnd & 0xFF);
 }
 
-void testFilledTriangles() {
-    int           i, cx = _width  / 2 - 1,
-                     cy = _height / 2 - 1;
+static void rowSet(uint8_t RowStart, uint8_t RowEnd){
 
-    fillScreen(BLACK);
-    for (i = min(cx, cy); i > 10; i -= 5) {
-    	fillTriangle(cx, cy - i, cx - i, cy + i, cx + i, cy + i,
-    	                         color565(0, i, i));
-    	drawTriangle(cx, cy - i, cx - i, cy + i, cx + i, cy + i,
-    	                         color565(i, i, 0));
-    }
+  if (RowStart > RowEnd) return;
+  if (RowEnd > ST7735_HEIGHT) return;
+
+  RowStart += _rowstart;
+  RowEnd += _rowstart;
+
+  sendCmd(ST7735_RASET);
+  sendData(RowStart >> 8);
+  sendData(RowStart & 0xFF);
+  sendData(RowEnd >> 8);
+  sendData(RowEnd & 0xFF);
 }
 
-void testRoundRects() {
-    int           w, i, i2, red, step,
-                  cx = _width  / 2 - 1,
-                  cy = _height / 2 - 1;
-
-    fillScreen(BLACK);
-    w     = min(_width, _height);
-    red = 0;
-    step = (256 * 6) / w;
-    for (i = 0; i < w; i += 6) {
-        i2 = i / 2;
-        red += step;
-        drawRoundRect(cx - i2, cy - i2, i, i, i / 8, color565(red, 0, 0));
-    }
-
+static void sendCmd(uint8_t Cmd){
+	// pin DC LOW
+	DC_GPIO_Port->BSRR = ( DC_Pin << 16 );
+	// TXE(Transmit buffer empty) – устанавливается когда буфер передачи(регистр SPI_DR) пуст, очищается при загрузке данных
+	while( (st7735_SPI->SR & SPI_SR_TXE) == RESET ){};
+	// заполняем буфер передатчика 1 байт информации--------------
+	*((__IO uint8_t *)&st7735_SPI->DR) = Cmd;
+	// TXE(Transmit buffer empty) – устанавливается когда буфер передачи(регистр SPI_DR) пуст, очищается при загрузке данных
+	while( (st7735_SPI->SR & (SPI_SR_TXE | SPI_SR_BSY)) != SPI_SR_TXE ){};
+	// pin DC HIGH
+	DC_GPIO_Port->BSRR = DC_Pin;
 }
 
-void testFilledRoundRects() {
-    int           i, i2, green, step,
-                  cx = _width  / 2 - 1,
-                  cy = _height / 2 - 1;
-
-    fillScreen(BLACK);
-    green = 256;
-    step = (256 * 6) / min(_width, _height);
-    for (i = min(_width, _height); i > 20; i -= 6) {
-        i2 = i / 2;
-        green -= step;
-        fillRoundRect(cx - i2, cy - i2, i, i, i / 8, color565(0, green, 0));
-    }
-
-}
-void testFillScreen()
-{
-    fillScreen(BLACK);
-    fillScreen(RED);
-    fillScreen(GREEN);
-    fillScreen(BLUE);
-    fillScreen(BLACK);
-}
-
-void testAll (void)
-{
-	testFillScreen();
-	testLines(CYAN);
-	testFastLines(RED, BLUE);
-	testRects(GREEN);
-	testFilledRects(YELLOW, MAGENTA);
-	testFilledCircles(10, MAGENTA);
-	testCircles(10, WHITE);
-	testTriangles();
-	testFilledTriangles();
-	testRoundRects();
-	testFilledRoundRects();
+static void sendData(uint8_t Data ){
+	// TXE(Transmit buffer empty) – устанавливается когда буфер передачи(регистр SPI_DR) пуст, очищается при загрузке данных
+	while( (st7735_SPI->SR & SPI_SR_TXE) == RESET ){};
+	// передаем 1 байт информации--------------
+	*((__IO uint8_t *)&st7735_SPI->DR) = Data;
+	// TXE(Transmit buffer empty) – устанавливается когда буфер передачи(регистр SPI_DR) пуст, очищается при загрузке данных
+	while( (st7735_SPI->SR & (SPI_SR_TXE | SPI_SR_BSY)) != SPI_SR_TXE ){};
 }

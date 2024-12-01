@@ -96,9 +96,9 @@ void send_ubx(uint8_t ubx_class, uint8_t ubx_id, uint8_t payload[], uint8_t len)
 	serialPrint(ubx_message, (len + 8));
 }
 
-uint8_t nav_pvt_ram_flag = 0;
-uint8_t out_ubx_ram_flag = 0;
-uint8_t out_nmea_ram_flag = 0;
+//uint8_t nav_pvt_ram_flag = 0;
+//uint8_t out_ubx_ram_flag = 0;
+//uint8_t out_nmea_ram_flag = 0;
 uint8_t new_options_flag = 0;
 
 const uint8_t ubx_mon_ver[] = {0xB5, 0x62, 0x0a, 0x04, 0x00, 0x00, 0x0e, 0x34};
@@ -176,28 +176,29 @@ void init_gnss(void)
 		pp_devices_gnss[p_settings_gnss->device_number]->flwtrek_flag = 1;
 	}
 #endif
-	if(GPSconfigureFlag)
+	if(main_flags.GPSconfigureFlag)
 	{
 		configure_gps();
 	}
 	else
 	{
-		GPScheckFlag = 1;					//check valid gnss settings: if "nav_pvt_ram_flag" has set
+		main_flags.GPScheckFlag = 1;					//check valid gnss settings: if "nav_pvt_ram_flag" has set
 		restart_uart(GPS_BAUDRATE_57600);
 		HAL_Delay(100);
 		serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
-		HAL_Delay(100);
+		HAL_Delay(400);
 	}
-	if(!nav_pvt_ram_flag)
+	if(!main_flags.nav_pvt_ram_flag)
 	{
 		led_blue_on();
-		send_ubx(UBX_CLASS_CFG, UBX_CFG_RST, &cfg_rst_cold_restart[0], sizeof(cfg_rst_cold_restart));
-		HAL_Delay(100);
-		GPScheckFlag = 1;					//check valid gnss settings: if "nav_pvt_ram_flag" has set
+//		send_ubx(UBX_CLASS_CFG, UBX_CFG_RST, &cfg_rst_cold_restart[0], sizeof(cfg_rst_cold_restart));
+//		HAL_Delay(100);
+		main_flags.GPScold_restarted = 1;
+		main_flags.GPScheckFlag = 1;					//check valid gnss settings: if "nav_pvt_ram_flag" has set
 		restart_uart(GPS_BAUDRATE_57600);
 		HAL_Delay(100);
 		serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
-		HAL_Delay(100);
+		HAL_Delay(400);
 	}
 }
 
@@ -208,7 +209,6 @@ uint16_t baudRate[BAUDRATE_MAX_IND +2] = {96, 192, 384, 576, 1152, 2304, 0};
 //led_red_on();
 //led_green_on();
 led_blue_off();			//just to off after start
-ST7735_SetRotation(0);
 
 HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
 
@@ -259,17 +259,13 @@ restart_configuration:
 			led_red_on();
 			led_green_off();
 		}
-		(nav_pvt_ram_flag && out_ubx_ram_flag && !out_nmea_ram_flag)? led_blue_on(): led_blue_off();
-//		sprintf(&Line[0][0], " GPS-");
-//		ST7735_WriteString(0, 0, &Line[0][0], Font_11x18, CYAN,BLACK);
-//		sprintf(&Line[1][4], "SETTINGS ");
-//		ST7735_WriteString(54, 6, &Line[1][4], Font_7x10, CYAN,BLACK);
+		(main_flags.nav_pvt_ram_flag && main_flags.out_ubx_ram_flag && !main_flags.out_nmea_ram_flag)? led_blue_on(): led_blue_off();
+
 		row	= 0;
 
 		if(baudRate[baudRateInd])
 		{
 			sprintf(&Line[row][0], "GNSS version M%d", ubx_hwVersion);
-//			sprintf(&Line[row+1][0], "    Current");
 			sprintf(&Line[row+1][0], "Baud rate %4d00", baudRate[baudRateInd]);
 			if(baudRateInd != GPS_BAUDRATE_57600) ST7735_WriteString(7, (row+1)*14+5, &Line[row+1][0], Font_7x10, RED,BLACK);
 		}else
@@ -284,14 +280,14 @@ restart_configuration:
 
 		char *boolean[] = {"false", "true"};
 
-		sprintf(&Line[row][0],   "Output NAVPVT%5s", boolean[nav_pvt_ram_flag]);
-		if(!nav_pvt_ram_flag) ST7735_WriteString(0, row*14+5, &Line[row][0], Font_7x10, RED,BLACK);
+		sprintf(&Line[row][0],   "Output NAVPVT%5s", boolean[main_flags.nav_pvt_ram_flag]);
+		if(!main_flags.nav_pvt_ram_flag) ST7735_WriteString(0, row*14+5, &Line[row][0], Font_7x10, RED,BLACK);
 
-		sprintf(&Line[row+1][0], "Output UBLOX %5s", boolean[out_ubx_ram_flag]); //", baudRate[baudRateInd]);
-		if(!out_ubx_ram_flag) ST7735_WriteString(0, (row+1)*14+5, &Line[row+1][0], Font_7x10, RED,BLACK);
+		sprintf(&Line[row+1][0], "Output UBLOX %5s", boolean[main_flags.out_ubx_ram_flag]); //", baudRate[baudRateInd]);
+		if(!main_flags.out_ubx_ram_flag) ST7735_WriteString(0, (row+1)*14+5, &Line[row+1][0], Font_7x10, RED,BLACK);
 
-		sprintf(&Line[row+2][0], "Output NMEA  %5s", boolean[out_nmea_ram_flag]);
-		if(out_nmea_ram_flag) ST7735_WriteString(0, (row+2)*14+5, &Line[row+2][0], Font_7x10, RED,BLACK);
+		sprintf(&Line[row+2][0], "Output NMEA  %5s", boolean[main_flags.out_nmea_ram_flag]);
+		if(main_flags.out_nmea_ram_flag) ST7735_WriteString(0, (row+2)*14+5, &Line[row+2][0], Font_7x10, RED,BLACK);
 
 		for (row; row < 5; row++) {
 			ST7735_WriteString(0, row*14+5, &Line[row][0], Font_7x10, GREENYELLOW,BLACK);
@@ -333,6 +329,7 @@ restart_configuration:
 			serialPrint(set_crucial_opts, sizeof(set_crucial_opts));
 			HAL_Delay(100);
 			serialPrint(set_agressive_pm, sizeof(set_agressive_pm));
+//			serialPrint(set_balanced_pm, sizeof(set_balanced_pm));
 			HAL_Delay(100);
 			serialPrint(to_ram_bbr_flash, sizeof(to_ram_bbr_flash));
 			HAL_Delay(100);
@@ -354,7 +351,6 @@ restart_configuration:
 //			goto restart_configuration;
 		}
 		HAL_Delay(200);
-//		led_blue_on();
 	}
 }
 

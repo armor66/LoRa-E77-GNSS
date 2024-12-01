@@ -4,7 +4,6 @@
 #ifdef __cplusplus
   extern "C" {
 #endif
-// #define FREERTOS_ENABLED true
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -272,7 +271,7 @@ enum bno055_axis_map_sign_t {
 
 void bno055_writeData(uint8_t reg, uint8_t data);
 void bno055_readData(uint8_t reg, uint8_t *data, uint8_t len);
-void bno055_delay(int time);
+void bno055_delay(uint32_t ms);
 
 void bno055_reset();
 bno055_opmode_t bno055_getOperationMode();

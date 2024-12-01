@@ -279,7 +279,7 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 {										//USART interrupt generated whenever ORE = 1 or RXNE = 1 in the USART_ISR register
     if (USART2->ISR & USART_ISR_RXNE_RXFNE)	//сброс аппаратный чтением регистра
     {
-    	if(GPSconfigureFlag || GPScheckFlag)	//GPSconfigureFlag or GPScheckFlag has set
+    	if(main_flags.GPSconfigureFlag || main_flags.GPScheckFlag)	//GPSconfigureFlag or GPScheckFlag has set
 		{
 			if(uartIdx > UBX_HW_VER_SIZE) uartIdx = 0;		//secure check
 			GNSSbuffer[uartIdx] = USART2->RDR;
@@ -288,26 +288,26 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 	   		{
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
 //	   			memset(GNSSbuffer, 0, UBX_HW_VER_SIZE);
-				GPScheckFlag = 0;	//after init_gnss one check only
+	   			main_flags.GPScheckFlag = 0;	//after init_gnss one check only
 	   		}
 			//if it is answer for UBX-CFG-UART1OUT
 			else if((uartIdx == UBX_CFG_SIZE) && GNSSbuffer[2] == 0x06 && GNSSbuffer[3] == 0x8B && GNSSbuffer[4] == 0x09)
 			{
 				if(GNSSbuffer[UBX_CFG_FLAG] == 0x07)
 				{
-					nav_pvt_ram_flag = GNSSbuffer[UBX_CFG_SIZE];
+					main_flags.nav_pvt_ram_flag = GNSSbuffer[UBX_CFG_SIZE];
 				}
 				else if(GNSSbuffer[UBX_CFG_FLAG] == 0x01)
 				{
-					out_ubx_ram_flag = GNSSbuffer[UBX_CFG_SIZE];
+					main_flags.out_ubx_ram_flag = GNSSbuffer[UBX_CFG_SIZE];
 				}
 				else if(GNSSbuffer[UBX_CFG_FLAG] == 0x02)
 				{
-					out_nmea_ram_flag= GNSSbuffer[UBX_CFG_SIZE];
+					main_flags.out_nmea_ram_flag= GNSSbuffer[UBX_CFG_SIZE];
 				}
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
 		   		memset(GNSSbuffer, 0, UBX_CFG_SIZE);
-				GPScheckFlag = 0;	//after init_gnss one check only
+		   		main_flags.GPScheckFlag = 0;	//after init_gnss one check only
 			}
 			//if it is answer for UBX_HV_VER
 	   		else if((uartIdx == UBX_HW_VER_SIZE) && GNSSbuffer[2] == 0x0A && GNSSbuffer[3] == 0x04)
@@ -446,7 +446,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 						if(pp_devices_phy[time_slot]->beacon_traced * (p_settings_phy->devices_on_air - 1) < 14) shortBeeps(1);	//do beeps if beacon was traced and lost gps fix
 						if(pp_devices_phy[time_slot]->beacon_lost)						//if beacon_traced became zero
 						{
-							memory_points_save();		//save beacon trace if it was traced and no validFixFlag[time_slot] for timeout_threshold
+//							memory_points_save();		//save beacon trace if it was traced and no validFixFlag[time_slot] for timeout_threshold
+							lost_device_save(time_slot);
 						//start long beep on next case 2 в слоте того устройства, которое пропало
 							pp_devices_phy[time_slot]->beeper_flag = 1;
 //							shortBeeps(time_slot);
