@@ -130,17 +130,16 @@ void set_fence_up(void);
 void set_fence_down(void);
 void set_fence_ok(void);
 void set_fence_esc(void);
+
 // SAVE SETTINGS
-//void settings_ok(void);
 void draw_confirm_settings(void);
 void confirm_settings_reboot(void);
 void donot_save_settings(void);
 void confirm_settings_restore(void);
+
 //ACTIONS MENU
 void draw_actions(void);
 void power_long(void);
-//void actions_up(void);
-//void actions_down(void);
 void actions_ok(void);
 void actions_esc(void);
 void draw_restore_defaults(void);
@@ -355,7 +354,6 @@ const struct
 	{M_POINTS,					BTN_ESC,				points_esc},
 	{M_POINTS_SUBMENU,			BTN_OK,					draw_clear_group},
 	{M_CONFIRM_CLEARGROUP,		BTN_OK,					confirm_clear_group},
-//	{M_ACTIONS,					BTN_UP,					actions_up},
 	{M_ACTIONS,					BTN_PWR_LONG,			power_long},
 	{M_ACTIONS,					BTN_OK,					actions_ok},
 	{M_ACTIONS,					BTN_ESC,				actions_esc},
@@ -396,16 +394,12 @@ const struct
 
 	{M_SETTINGS,				M_SETTINGS_I_DEVICE,				M_SET_DEVICE_NUMBER},
 	{M_SETTINGS,				M_SETTINGS_I_SPREADING_FACTOR,		M_SET_SPREADING_FACTOR},
-//	{M_SETTINGS,				M_SETTINGS_I_FREQ_REGION,			M_SET_FREQ_REGION},
 	{M_SETTINGS,				M_SETTINGS_I_CODING_RATE,			M_SET_CODING_RATE},
 	{M_SETTINGS,				M_SETTINGS_I_FREQ_CHANNEL,			M_SET_FREQ_CHANNEL},
 	{M_SETTINGS,				M_SETTINGS_I_TX_POWER,				M_SET_TX_POWER},
 	{M_SETTINGS,				M_SETTINGS_I_TIMEZONE,				M_SET_TIMEZONE},
 	{M_SETTINGS,				M_SETTINGS_I_TIMEOUT,				M_SET_TIMEOUT},
 	{M_SETTINGS,				M_SETTINGS_I_FENCE,					M_SET_FENCE},
-//	in actions_ok() implementation:
-//	{M_ACTIONS,					M_ACTIONS_I_DEL_POINTS,				M_CONFIRM_ERASING},
-//	{M_ACTIONS,					M_ACTIONS_I_SET_DEFAULTS,			M_CONFIRM_RESTORING},
     {0, 0, 0}   //end marker
 };
 
@@ -435,7 +429,6 @@ const struct
 	{M_CONFIRM_SETTINGS,		M_SETTINGS},
     {M_SET_DEVICE_NUMBER,       M_SETTINGS},
 	{M_SET_SPREADING_FACTOR,	M_SETTINGS},
-//	{M_SET_FREQ_REGION,			M_SETTINGS},
 	{M_SET_CODING_RATE,			M_SETTINGS},
 	{M_SET_FREQ_CHANNEL,		M_SETTINGS},
 	{M_SET_TX_POWER,			M_SETTINGS},
@@ -491,7 +484,6 @@ const struct
     {M_SETTINGS,                draw_settings},
     {M_SET_DEVICE_NUMBER,		draw_set_settings},
 	{M_SET_SPREADING_FACTOR,	draw_set_settings},
-//	{M_SET_FREQ_REGION,			draw_set_settings},
 	{M_SET_CODING_RATE,			draw_set_settings},
 	{M_SET_FREQ_CHANNEL,		draw_set_settings},
 	{M_SET_TX_POWER,			draw_set_settings},
@@ -957,8 +949,6 @@ void draw_main(void)
 		sprintf(&Line[row][0], "OnTheAir: %d/%d Nods", nods_on_the_air, p_settings_menu->devices_on_air);
 		draw_str_by_rows(0, 1+row*11, &Line[row][0], Font_7x10, WHITE,BLACK);
 	}
-//	sprintf(&Line[2][1], "    MENU    ");
-//	ST7735_WriteString(0, 10+2*19, &Line[2][1], Font_11x18, CYAN,BLACK);
 
 	sprintf(&Line[2][0], " Navigation");
 	sprintf(&Line[3][0], " Devices   ");
@@ -1101,10 +1091,7 @@ void draw_navigation(void)	//int8_t menu)
 		sprintf(&Line[1][13], "%4d%%", azimuth_relative_deg);
 		sprintf(&Line[2][13], "%4dm", ((uint16_t)distance[dev] & 0x1FFF));
 		sprintf(&Line[3][13], "%3ddB", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
-//		if((buffer[14] & 0x0F) == 0)
-//		{
-//			sprintf(&Line[4][13], " low");		//< 2.7 volt
-//		} else sprintf(&Line[4][13], " %d.%dV", ((buffer[14] & 0x0F)+27)/10, ((buffer[14] & 0x0F)+27)%10);
+
 		for (uint8_t k = 0; k < 4; k++) {
 			if(pp_devices_menu[dev]->valid_fix_flag) draw_str_by_rows(91, k*11, &Line[k][13], Font_7x10, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
 			else draw_str_by_rows(91, k*11, &Line[k][13], Font_7x10, MAGENTA,BLACK);
@@ -1823,8 +1810,6 @@ void draw_set_settings(void)
 		sprintf(&Line[0][0], " Device:%1d/%1d", settings_copy_menu.device_number, settings_copy_menu.devices_on_air);	//this_device);
 		sprintf(&Line[1][0], " SprFctr %02d", settings_copy_menu.spreading_factor);		//LORA_SPREADING_FACTOR);
 
-//		sprintf(&Line[2][0], " Region %d", (800 + p_freq_region_values[settings_copy_menu.freq_region_opt]));
-//		sprintf(&Line[3][0], " CodRate4/%d", p_coding_rate_values[settings_copy_menu.coding_rate_opt]);
 		sprintf(&Line[2][0], " CR_opt   %d", settings_copy_menu.coding_rate_opt);
 		sprintf(&Line[3][0], " Channel %2d", settings_copy_menu.freq_channel);
 		sprintf(&Line[4][0], " TxPower%3d", p_tx_power_values[settings_copy_menu.tx_power_opt]);	//settings_copy_menu.tx_power_opt);
@@ -2095,13 +2080,9 @@ void draw_confirm_settings(void)
 
     	draw_str_by_rows(0, 4*11, " Press OK  ", Font_11x18, YELLOW,BLACK);
 
-    	sprintf(&Line[5][0], " REBOOT AND APPLY ");
-	    sprintf(&Line[6][0], "            ");
-	   	for (uint8_t k = 5; k < 7; k++) {
-	   		draw_str_by_rows(0, 11+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
-	   	}
+   		draw_str_by_rows(0, 6*11, " REBOOT AND APPLY", Font_7x10, GREEN,BLACK);
 
-	   	draw_str_by_rows(0, 8*11, " Press ESC  ", Font_11x18, YELLOW,BLACK);
+	   	draw_str_by_rows(0, 8*11, " Press ESC ", Font_11x18, YELLOW,BLACK);
 
 	    sprintf(&Line[8][0], "  TO NOT SAVE ");
 	    sprintf(&Line[9][0], "   AND REBOOT ");
@@ -2113,8 +2094,8 @@ void draw_confirm_settings(void)
 void confirm_settings_reboot(void)
 {
 	fill_screen(BLACK);
-	row = 3;
-	draw_str_by_rows(0, row*18, "  Saving...", Font_11x18, YELLOW,BLACK);
+	row = 4;
+	draw_str_by_rows(0, row*18, " Saving...", Font_11x18, YELLOW,BLACK);
 
     flag_settings_changed = 0;
    	settings_save(&settings_copy_menu);
@@ -2139,7 +2120,6 @@ void donot_save_settings(void)
 void draw_actions(void)
 {
 //	current_device = this_device;
-//	sprintf(&Line[0][0], "     ACTIONS    ");
 	draw_str_by_rows(0, 0, "     ACTIONS    ", Font_7x10, CYAN,BLACK);
 
 	sprintf(&Line[0][0], " Power OFF");
@@ -2294,7 +2274,7 @@ void confirm_settings_restore(void)
 {
 	fill_screen(BLACK);
 
-	row = 3;
+	row = 4;
 	draw_str_by_rows(0, row*18, "Restoring..", Font_11x18, YELLOW,BLACK);
 
 	settings_save_default(p_settings_menu);

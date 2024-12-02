@@ -44,7 +44,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-//struct settings_struct *p_settings_main;
 
 /* USER CODE END PTD */
 
@@ -220,15 +219,7 @@ int main(void)
   			draw_current_menu();
   			main_flags.update_screen = 0;
   		}
-
   		__NOP();
-//  		if(GPIOA->ODR & GPIO_ODR_OD6)
-//  			{
-////  			led_red_on();		//RADIO_SWITCH_RFO_HP
-//  			}
-//  		else led_red_off();		//						//RADIO_SWITCH_RX
-
-//		if(HAL_GetTick() > main_flags.time_stamp + 10) led_w_off();
 	}
   /* USER CODE END 3 */
 }

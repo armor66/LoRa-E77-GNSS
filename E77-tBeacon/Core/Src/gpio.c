@@ -92,7 +92,7 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = RF_CTRL2_Pin|RF_CTRL1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PAPin PAPin PAPin */
@@ -132,16 +132,17 @@ void MX_GPIO_Init(void)
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
+
 /* USER CODE BEGIN 2 */
 void led_toggle(void){
 //GPIOB->ODR ^= GPIO_ODR_OD4;
 GPIOB->ODR ^= GPIO_ODR_OD3;
 }
 void led_red_on(void){
-	GPIOB->BSRR = GPIO_BSRR_BR4;	//gnd for custom pcb
+	GPIOB->BSRR = GPIO_BSRR_BR3;	//gnd for custom pcb
 }
 void led_red_off(void){
-	GPIOB->BSRR = GPIO_BSRR_BS4;
+	GPIOB->BSRR = GPIO_BSRR_BS3;
 }
 void led_green_on(void){
 //	GPIOB->BSRR = GPIO_BSRR_BR2;	//gnd for custom pcb
@@ -150,10 +151,10 @@ void led_green_off(void){
 //	GPIOB->BSRR = GPIO_BSRR_BS2;
 }
 void led_blue_on(void){
-	GPIOB->BSRR = GPIO_BSRR_BR3;	//gnd for custom pcb
+	GPIOB->BSRR = GPIO_BSRR_BR4;	//gnd for custom pcb
 }
 void led_blue_off(void){
-	GPIOB->BSRR = GPIO_BSRR_BS3;
+	GPIOB->BSRR = GPIO_BSRR_BS4;
 }
 
 void hold_power(void) {

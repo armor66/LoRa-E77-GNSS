@@ -1,8 +1,4 @@
-Core/Src/menu.o: ../Core/Src/menu.c ../Core/Inc/main.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h \
- ../Core/Inc/stm32wlxx_hal_conf.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h \
+Core/Src/eeprom.o: ../Core/Src/eeprom.c ../Core/Inc/eeprom.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wlxx.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h \
  ../Drivers/CMSIS/Include/core_cm4.h \
@@ -11,6 +7,10 @@ Core/Src/menu.o: ../Core/Src/menu.c ../Core/Inc/main.h \
  ../Drivers/CMSIS/Include/cmsis_gcc.h \
  ../Drivers/CMSIS/Include/mpu_armv7.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/system_stm32wlxx.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h \
+ ../Core/Inc/stm32wlxx_hal_conf.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dma.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dmamux.h \
@@ -45,16 +45,8 @@ Core/Src/menu.o: ../Core/Src/menu.c ../Core/Inc/main.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
- ../SubGHz_Phy/App/subghz_phy_app.h ../Core/Inc/settings.h \
- ../Core/Inc/main.h ../Core/Inc/gpio.h ../Core/Inc/menu.h \
- ../Core/Inc/buttons.h ../Core/Inc/tim.h ../Core/Inc/sys_app.h \
- ../Core/Inc/adc.h ../Core/Inc/settings.h ../Core/Inc/lrns.h \
- ../Core/Inc/gnss.h ../Core/Inc/ST7735.h ../Core/Inc/fonts.h
-../Core/Inc/main.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
-../Core/Inc/stm32wlxx_hal_conf.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h:
+ ../Core/Inc/bit_band.h
+../Core/Inc/eeprom.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wlxx.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
 ../Drivers/CMSIS/Include/core_cm4.h:
@@ -63,6 +55,10 @@ Core/Src/menu.o: ../Core/Src/menu.c ../Core/Inc/main.h \
 ../Drivers/CMSIS/Include/cmsis_gcc.h:
 ../Drivers/CMSIS/Include/mpu_armv7.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/system_stm32wlxx.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
+../Core/Inc/stm32wlxx_hal_conf.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dma.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dmamux.h:
@@ -97,17 +93,4 @@ Core/Src/menu.o: ../Core/Src/menu.c ../Core/Inc/main.h \
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
-../SubGHz_Phy/App/subghz_phy_app.h:
-../Core/Inc/settings.h:
-../Core/Inc/main.h:
-../Core/Inc/gpio.h:
-../Core/Inc/menu.h:
-../Core/Inc/buttons.h:
-../Core/Inc/tim.h:
-../Core/Inc/sys_app.h:
-../Core/Inc/adc.h:
-../Core/Inc/settings.h:
-../Core/Inc/lrns.h:
-../Core/Inc/gnss.h:
-../Core/Inc/ST7735.h:
-../Core/Inc/fonts.h:
+../Core/Inc/bit_band.h:

@@ -231,7 +231,7 @@ restart_configuration:
        	if(HAL_UART_GetState(&huart2) != HAL_UART_STATE_BUSY_RX)	//if gps module does not transmit
        	{
        		serialPrint(ubx_mon_ver, sizeof(ubx_mon_ver));
-       		HAL_Delay(50);
+       		HAL_Delay(200);
        	}
         if(ubx_hwVersion) break;
     }

@@ -46,7 +46,7 @@
 #include "gpio.h"		//#include "main.h"		//***main_flags_struct
 #include "radio_driver.h"
 #include "menu.h"
-//struct main_flags_struct main_flags = {0};
+
 /* USER CODE END Includes */
 
 /* External variables ---------------------------------------------------------*/
@@ -66,15 +66,13 @@ uint8_t pps_flag = 0;
 uint8_t time_slot = 0;
 uint8_t transmit_iq_inverted_flag = 0;
 uint8_t long_beep_ones = 0;
-//uint8_t time_slot_timer_ovf = 0;		//added to main flags
-//uint8_t gps_speed = 0;
-//int16_t gps_heading = 0;
+
 uint16_t no_PPS_gap1 = 2705;			// RX1 to PPS gap = 677after receive NODE_ID1 779mS = 30mS + (5slots + Processing) * 150mS
 uint16_t no_PPS_gap2 = 1705;			//368
 uint16_t no_PPS_gap3 = 705;			//68
 uint16_t endRX_2_TX = 0;
 int8_t find_nearest_trekpoint_flag = 0;
-//uint8_t *p_update_interval_values;
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -89,7 +87,6 @@ static RadioEvents_t RadioEvents;
 
 uint8_t bufferTx[BUFFER_AIR_SIZE];
 uint8_t bufferRx[BUFFER_RX];
-//uint8_t bufNode[NODES][BUFFER_RX];
 
 #define PVTsize 100
 uint8_t PVTbuffer[PVTsize] = {0};
@@ -101,8 +98,6 @@ uint8_t ubx_hwVersion = 0;
 uint8_t uartIdx = 0;
 
 static States_t State = RX_START;		//на первые 30 секунд ??? RX_DONE ???
-
-//static uint32_t WatchDogRx = WATCHDOG_RX_PERIOD;
 
 uint8_t button_code = 0;
 uint8_t processing_button = 0;

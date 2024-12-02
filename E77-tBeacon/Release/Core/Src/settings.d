@@ -1,6 +1,5 @@
-Core/Src/settings.o: ../Core/Src/settings.c ../Core/Inc/config.h \
- ../Core/Inc/settings.h ../Core/Inc/main.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h \
+Core/Src/settings.o: ../Core/Src/settings.c ../Core/Inc/settings.h \
+ ../Core/Inc/main.h ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h \
  ../Core/Inc/stm32wlxx_hal_conf.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h \
@@ -47,13 +46,7 @@ Core/Src/settings.o: ../Core/Src/settings.c ../Core/Inc/config.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
  ../SubGHz_Phy/App/subghz_phy_app.h ../Core/Inc/settings.h \
- ../Core/Inc/lrns.h ../Core/Inc/flash_if.h ../Core/Inc/platform.h \
- ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_gpio.h \
- ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.h \
- ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_errno.h \
- ../Core/Inc/stm32wlxx_nucleo_conf.h \
- ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo.h
-../Core/Inc/config.h:
+ ../Core/Inc/eeprom.h ../Core/Inc/lrns.h
 ../Core/Inc/settings.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
@@ -104,11 +97,5 @@ Core/Src/settings.o: ../Core/Src/settings.c ../Core/Inc/config.h \
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
 ../SubGHz_Phy/App/subghz_phy_app.h:
 ../Core/Inc/settings.h:
+../Core/Inc/eeprom.h:
 ../Core/Inc/lrns.h:
-../Core/Inc/flash_if.h:
-../Core/Inc/platform.h:
-../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_gpio.h:
-../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.h:
-../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_errno.h:
-../Core/Inc/stm32wlxx_nucleo_conf.h:
-../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo.h:

@@ -127,6 +127,7 @@ void  drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
 void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
 
+void drawCourse(int16_t x0, int16_t y0, double angle, uint16_t color);
 void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, uint16_t color1, uint16_t color2);
 void drawPosition(int16_t x0, int16_t y0, int16_t r1, double angle, int16_t r2, int16_t tag, uint16_t color);
 void drawTrace(int16_t x0, int16_t y0, int16_t r1, double angle, int16_t r2, uint16_t color);
@@ -143,19 +144,12 @@ void fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16
 void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
 void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
 void fillScreen(uint16_t color);
-void testLines(uint16_t color);
-void testFastLines(uint16_t color1, uint16_t color2);
-void testRects(uint16_t color) ;
-void testFilledRects(uint16_t color1, uint16_t color2);
-void testFilledCircles(uint8_t radius, uint16_t color);
-void testCircles(uint8_t radius, uint16_t color);
-void testTriangles();
-void testFilledTriangles();
-void testRoundRects();
-void testFilledRoundRects();
-void testFillScreen();
-void testAll (void);
 
+#define 	st7735_SPI 	SPI2
 
+void draw_str_by_rows(uint8_t x, uint8_t y, char *str, FontDef font, uint16_t fg_color, uint16_t bg_color);
+void draw_char(uint8_t x, uint8_t y, unsigned char ch, FontDef font, uint16_t fg_color, uint16_t bg_color);
+void fill_rectgl(uint8_t x0, uint16_t y0, uint8_t x1, uint16_t y1, uint16_t color);
+void fill_screen(uint16_t color);
 
 #endif // __ST7735_H__

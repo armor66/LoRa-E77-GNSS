@@ -33,6 +33,7 @@
 #include "app_version.h"
 #include "adc_if.h"
 #include "tim.h"
+//#include "lptim.h"
 #include "buttons.h"
 #include <stdlib.h>
 #include "settings.h"
@@ -41,7 +42,6 @@
 #include "lrns.h"
 #include "compass.h"
 #include "ST7735.h"
-
 #include "gnss.h"
 #include "gpio.h"		//#include "main.h"		//***main_flags_struct
 #include "radio_driver.h"
@@ -64,12 +64,14 @@
 uint8_t pps_counter = 0;
 uint8_t pps_flag = 0;
 uint8_t time_slot = 0;
+//uint8_t transmit_iq_inverted_flag = 0;
 uint8_t long_beep_ones = 0;
 
 uint16_t no_PPS_gap1 = 2705;			// RX1 to PPS gap = 677after receive NODE_ID1 779mS = 30mS + (5slots + Processing) * 150mS
 uint16_t no_PPS_gap2 = 1705;			//368
 uint16_t no_PPS_gap3 = 705;			//68
 uint16_t endRX_2_TX = 0;
+//int8_t find_nearest_trekpoint_flag = 0;
 
 /* USER CODE END PD */
 
@@ -97,8 +99,6 @@ uint8_t uartIdx = 0;
 
 static States_t State = RX_START;		//на первые 30 секунд ??? RX_DONE ???
 
-//static uint32_t WatchDogRx = WATCHDOG_RX_PERIOD;
-//int8_t find_nearest_trekpoint_flag = 0;
 uint8_t button_code = 0;
 uint8_t processing_button = 0;
 
@@ -283,7 +283,7 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 {										//USART interrupt generated whenever ORE = 1 or RXNE = 1 in the USART_ISR register
     if (USART2->ISR & USART_ISR_RXNE_RXFNE)	//сброс аппаратный чтением регистра
     {
-    	if(GPSconfigureFlag || GPScheckFlag)	//GPSconfigureFlag or GPScheckFlag has set
+    	if(main_flags.GPSconfigureFlag || main_flags.GPScheckFlag)	//GPSconfigureFlag or GPScheckFlag has set
 		{
 			if(uartIdx > UBX_HW_VER_SIZE) uartIdx = 0;		//secure check
 			GNSSbuffer[uartIdx] = USART2->RDR;
@@ -292,26 +292,26 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 	   		{
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
 //	   			memset(GNSSbuffer, 0, UBX_HW_VER_SIZE);
-				GPScheckFlag = 0;	//after init_gnss one check only
+	   			main_flags.GPScheckFlag = 0;	//after init_gnss one check only
 	   		}
 			//if it is answer for UBX-CFG-UART1OUT
 			else if((uartIdx == UBX_CFG_SIZE) && GNSSbuffer[2] == 0x06 && GNSSbuffer[3] == 0x8B && GNSSbuffer[4] == 0x09)
 			{
 				if(GNSSbuffer[UBX_CFG_FLAG] == 0x07)
 				{
-					nav_pvt_ram_flag = GNSSbuffer[UBX_CFG_SIZE];
+					main_flags.nav_pvt_ram_flag = GNSSbuffer[UBX_CFG_SIZE];
 				}
 				else if(GNSSbuffer[UBX_CFG_FLAG] == 0x01)
 				{
-					out_ubx_ram_flag = GNSSbuffer[UBX_CFG_SIZE];
+					main_flags.out_ubx_ram_flag = GNSSbuffer[UBX_CFG_SIZE];
 				}
 				else if(GNSSbuffer[UBX_CFG_FLAG] == 0x02)
 				{
-					out_nmea_ram_flag= GNSSbuffer[UBX_CFG_SIZE];
+					main_flags.out_nmea_ram_flag= GNSSbuffer[UBX_CFG_SIZE];
 				}
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
 		   		memset(GNSSbuffer, 0, UBX_CFG_SIZE);
-				GPScheckFlag = 0;	//after init_gnss one check only
+		   		main_flags.GPScheckFlag = 0;	//after init_gnss one check only
 			}
 			//if it is answer for UBX_HV_VER
 	   		else if((uartIdx == UBX_HW_VER_SIZE) && GNSSbuffer[2] == 0x0A && GNSSbuffer[3] == 0x04)
@@ -334,7 +334,7 @@ void USART2_IRQHandler(void)			//GNSS_StateHandle *GNSS An interrupt is generate
 	   		{
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
 	   			ublox_to_this_device(p_settings_phy->device_number);
-//	   			led_green_off();
+	   			led_green_off();
 	   		} else uartIdx++;	//do not increment index in case 1 or 2
 		}
 	}
@@ -548,7 +548,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if(htim->Instance == TIM17)			//started on last case BTN_UP
 	{
 		HAL_TIM_Base_Stop_IT(&htim17);
-		current_point_group = 0;
+//		current_point_group = 0;
 	}
 }
 /* USER CODE END EF */
@@ -715,19 +715,19 @@ void scan_channels(void)
 //	HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
 	while (1)//(GPIOA->IDR & BTN_2_Pin)		//wait for OK click to start cal
 	{
-	ST7735_SetRotation(0);
-		sprintf(&Lines[0][0], "     TO SCAN");
-		sprintf(&Lines[6][0], "    FREQUENCY");
-		sprintf(&Lines[7][0], "     CHANNELS");
-		sprintf(&Lines[8][0], "  Click ESC/DOWN");
-		sprintf(&Lines[9][0], "        OR");
-		sprintf(&Lines[10][0], " POWER FOR REBOOT");
-	ST7735_WriteString(3, 33, &Lines[0][0], Font_7x10, YELLOW,BLACK);
-	ST7735_WriteString(3, 44, &Lines[6][0], Font_7x10, YELLOW,BLACK);
-	ST7735_WriteString(0, 55, &Lines[7][0], Font_7x10, YELLOW,BLACK);
-	ST7735_WriteString(0, 77, &Lines[8][0], Font_7x10, GREEN,BLACK);
-	ST7735_WriteString(0, 99, &Lines[9][0], Font_7x10, YELLOW,BLACK);
-	ST7735_WriteString(3, 121, &Lines[10][0], Font_7x10, GREEN,BLACK);
+//	ST7735_SetRotation(0);
+//		sprintf(&Lines[0][0], "     TO SCAN");
+//		sprintf(&Lines[6][0], "    FREQUENCY");
+//		sprintf(&Lines[7][0], "     CHANNELS");
+//		sprintf(&Lines[8][0], "  Click ESC/DOWN");
+//		sprintf(&Lines[9][0], "        OR");
+//		sprintf(&Lines[10][0], " POWER FOR REBOOT");
+	draw_str_by_rows(3, 33, "     TO SCAN", Font_7x10, YELLOW,BLACK);
+	draw_str_by_rows(3, 44, "    FREQUENCY", Font_7x10, YELLOW,BLACK);
+	draw_str_by_rows(0, 55, "     CHANNELS", Font_7x10, YELLOW,BLACK);
+	draw_str_by_rows(0, 77, "  Click ESC/DOWN", Font_7x10, GREEN,BLACK);
+	draw_str_by_rows(0, 99, "        OR", Font_7x10, YELLOW,BLACK);
+	draw_str_by_rows(3, 121, " POWER FOR REBOOT", Font_7x10, GREEN,BLACK);
 
 		while (GPIOA->IDR & BTN_1_Pin)
 		{
@@ -748,16 +748,16 @@ void scan_channels(void)
 					sprintf(&Lines[0][0], "channels = %02d", channel_ind);
 //					for (uint8_t k = 0; k < 4; k++)
 //					{
-						ST7735_WriteString(0, 4+0*11, &Lines[0][0], Font_7x10, CYAN,BLACK);
+					draw_str_by_rows(0, 4+0*11, &Lines[0][0], Font_7x10, CYAN,BLACK);
 //					}
 					for (uint8_t j = 0; j < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); j++)		// j < 13
 					{
 						if(rssi_by_channel[0][j] < rssi_by_channel[1][j]) rssi_by_channel[0][j] = rssi_by_channel[1][j];
 						sprintf(&Lines[j + 1][0], "Ch %02d RSSI %04ddBm", (j*5 + FREQ_CHANNEL_FIRST), rssi_by_channel[0][j]);
 
-						if(rssi_by_channel[0][j] > -60) ST7735_WriteString(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, RED,BLACK);
-						else if(rssi_by_channel[0][j] < -80) ST7735_WriteString(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, GREEN,BLACK);
-						else ST7735_WriteString(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, YELLOW,BLACK);
+						if(rssi_by_channel[0][j] > -60) draw_str_by_rows(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, RED,BLACK);
+						else if(rssi_by_channel[0][j] < -80) draw_str_by_rows(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, GREEN,BLACK);
+						else draw_str_by_rows(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, YELLOW,BLACK);
 					}
 					channel_ind = 0;
 				}

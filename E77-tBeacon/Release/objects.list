@@ -4,6 +4,7 @@
 "./Core/Src/bno055.o"
 "./Core/Src/buttons.o"
 "./Core/Src/compass.o"
+"./Core/Src/eeprom.o"
 "./Core/Src/flash_if.o"
 "./Core/Src/fonts.o"
 "./Core/Src/gnss.o"

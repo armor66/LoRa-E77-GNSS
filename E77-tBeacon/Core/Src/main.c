@@ -43,10 +43,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-//struct settings_struct *p_settings_main;
 
-int8_t GPScheckFlag = 0;
-int8_t GPSconfigureFlag = 0;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -157,7 +154,7 @@ int main(void)
 
   	if(!(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin))
 	{
-		GPSconfigureFlag = 1;	//if DOWN button is pressed and  OK button is released upon power up
+  		main_flags.GPSconfigureFlag = 1;	//if DOWN button is pressed and  OK button is released upon power up
 		init_gnss();
 	}
   	else if(!(GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
@@ -174,13 +171,22 @@ int main(void)
 	{
 //		init_compass();
 		SubghzApp_Init();
-		memory_points_load();
+
+//		for(uint8_t i = 1; i < (DEVICES_ON_AIR_MAX+1); i++)
+//		{
+//			lost_device_load(i);
+//		}
+//		for(uint8_t i = 0; i < MEMORY_POINT_GROUPS; i++)
+//		{
+//			saved_group_load(i);
+//		}
+
 		init_gnss();
 		enable_buttons_interrupts();
 
 		EXTI->IMR1 |= EXTI_IMR1_IM4;				//interrupt enabled on PPS front
 		USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;
-//		HAL_TIM_Base_Start_IT(&htim1);				//timer1_start just for menu: main_flags.update_screen = 1;
+
 		init_menu();
 		main_flags.update_screen = 1;
 //		HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
@@ -211,7 +217,6 @@ int main(void)
   			draw_current_menu();
   			main_flags.update_screen = 0;
   		}
-
   		__NOP();
 	}
   /* USER CODE END 3 */
@@ -250,7 +255,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLN = 6;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV6;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
