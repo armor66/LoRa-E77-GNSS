@@ -131,7 +131,7 @@ const uint8_t req_out_ubx_ram[] = {0xB5, 0x62, 0x06, 0x8B, 0x08, 0x00, 0x00, 0x0
 //CFG-UART1OUTPROT-NMEA
 const uint8_t req_out_nmea_ram[] = {0xB5, 0x62, 0x06, 0x8B, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x74, 0x10, 0x1F, 0x91};
 //Power mode:
-const uint8_t set_agressive_pm[] = {0xB5, 0x62, 0x06, 0x86, 0x08, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x97, 0x6F};
+const uint8_t set_aggressive_pm[] = {0xB5, 0x62, 0x06, 0x86, 0x08, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x97, 0x6F};
 const uint8_t set_balanced_pm[] =  {0xB5, 0x62, 0x06, 0x86, 0x08, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x95, 0x61};
 //set to RAM only:  CFG-RATE-MEAS=3000, CFG-TP-PERIOD_TP1=3.000.000, CFG-TP-PERIOD_LOCK_TP1=3.000.000
 const uint8_t set_three_seconds[] = {0xB5, 0x62, 0x06, 0x8A, 0x1A, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 0x00, 0x21, 0x30, 0xB8, 0x0B, 0x02, 0x00, 0x05, 0x40, 0xC0, 0xC6,
@@ -200,6 +200,8 @@ void init_gnss(void)
 		serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
 		HAL_Delay(400);
 	}
+	//set aggressive 1Hz power mode:
+	serialPrint(set_aggressive_pm, sizeof(set_aggressive_pm));
 }
 
 void configure_gps(void)
@@ -267,50 +269,50 @@ restart_configuration:
 		{
 			sprintf(&Line[row][0], "GNSS version M%d", ubx_hwVersion);
 			sprintf(&Line[row+1][0], "Baud rate %4d00", baudRate[baudRateInd]);
-			if(baudRateInd != GPS_BAUDRATE_57600) ST7735_WriteString(7, (row+1)*14+5, &Line[row+1][0], Font_7x10, RED,BLACK);
+			if(baudRateInd != GPS_BAUDRATE_57600) draw_str_by_rows(7, (row+1)*14+5, &Line[row+1][0], Font_7x10, RED,BLACK);
 		}else
 		{
 			sprintf(&Line[row+0][0], "  GNSS module");
 			sprintf(&Line[row+1][0], "   NOT FOUND");
 		}
 		for (row; row < 2; row++) {
-			ST7735_WriteString(7, row*14+5, &Line[row][0], Font_7x10, YLWGRN,BLACK);
+			draw_str_by_rows(7, row*14+5, &Line[row][0], Font_7x10, YLWGRN,BLACK);
 		}
 		row	= 2;
 
 		char *boolean[] = {"false", "true"};
 
 		sprintf(&Line[row][0],   "Output NAVPVT%5s", boolean[main_flags.nav_pvt_ram_flag]);
-		if(!main_flags.nav_pvt_ram_flag) ST7735_WriteString(0, row*14+5, &Line[row][0], Font_7x10, RED,BLACK);
+		if(!main_flags.nav_pvt_ram_flag) draw_str_by_rows(0, row*14+5, &Line[row][0], Font_7x10, RED,BLACK);
 
 		sprintf(&Line[row+1][0], "Output UBLOX %5s", boolean[main_flags.out_ubx_ram_flag]); //", baudRate[baudRateInd]);
-		if(!main_flags.out_ubx_ram_flag) ST7735_WriteString(0, (row+1)*14+5, &Line[row+1][0], Font_7x10, RED,BLACK);
+		if(!main_flags.out_ubx_ram_flag) draw_str_by_rows(0, (row+1)*14+5, &Line[row+1][0], Font_7x10, RED,BLACK);
 
 		sprintf(&Line[row+2][0], "Output NMEA  %5s", boolean[main_flags.out_nmea_ram_flag]);
-		if(main_flags.out_nmea_ram_flag) ST7735_WriteString(0, (row+2)*14+5, &Line[row+2][0], Font_7x10, RED,BLACK);
+		if(main_flags.out_nmea_ram_flag) draw_str_by_rows(0, (row+2)*14+5, &Line[row+2][0], Font_7x10, RED,BLACK);
 
 		for (row; row < 5; row++) {
-			ST7735_WriteString(0, row*14+5, &Line[row][0], Font_7x10, GREENYELLOW,BLACK);
+			draw_str_by_rows(0, row*14+5, &Line[row][0], Font_7x10, GREENYELLOW,BLACK);
 		}
 
 		row	= 5;	//+=3;
 		if(1)
 		{
-			sprintf(&Line[row][0], "   Press PWR to  ");
-			ST7735_WriteString(0, (row)*14+7, &Line[row][0], Font_7x10, YELLOW,BLACK);
-			sprintf(&Line[row+=1][0], "  RESTART DEVICE ");	//" REVERT DEFAULTS "
-			ST7735_WriteString(0, (row)*14+5, &Line[row][0], Font_7x10, ORANGE,BLACK);
+//			sprintf(&Line[row][0], "   Press PWR to  ");
+			draw_str_by_rows(0, (row)*14+7, "   Press PWR to  ", Font_7x10, YELLOW,BLACK);
+//			sprintf(&Line[row+=1][0], "  RESTART DEVICE ");	//" REVERT DEFAULTS "
+			draw_str_by_rows(0, (row+=1)*14+5, "  RESTART DEVICE ", Font_7x10, ORANGE,BLACK);
 
-			sprintf(&Line[row+=1][0], "   Press OK to   ");
-			ST7735_WriteString(0, (row)*14+7, &Line[row][0], Font_7x10, YELLOW,BLACK);
-			sprintf(&Line[row+=1][0], "  SET NEW DATA   ");
-			ST7735_WriteString(0, (row)*14+5, &Line[row][0], Font_7x10, ORANGE,BLACK);
+//			sprintf(&Line[row+=1][0], "   Press OK to   ");
+			draw_str_by_rows(0, (row+=1)*14+7, "   Press OK to   ", Font_7x10, YELLOW,BLACK);
+//			sprintf(&Line[row+=1][0], "  SET NEW DATA   ");
+			draw_str_by_rows(0, (row+=1)*14+5, "  SET NEW DATA   ", Font_7x10, ORANGE,BLACK);
 
-			sprintf(&Line[row+=1][0], "   Press ESC to  ");
-			ST7735_WriteString(0, (row)*14+7, &Line[row][0], Font_7x10, YELLOW,BLACK);
+//			sprintf(&Line[row+=1][0], "   Press ESC to  ");
+			draw_str_by_rows(0, (row+=1)*14+7, "   Press ESC to  ", Font_7x10, YELLOW,BLACK);
 //			sprintf(&Line[row+=1][0], "     RE-CHECK    ");
-			sprintf(&Line[row+=1][0], "  SET BAUD RATE   ");	//" REVERT DEFAULTS "
-			ST7735_WriteString(0, (row)*14+5, &Line[row][0], Font_7x10, ORANGE,BLACK);
+//			sprintf(&Line[row+=1][0], "  SET BAUD RATE   ");	//" REVERT DEFAULTS "
+			draw_str_by_rows(0, (row+=1)*14+5, "  SET BAUD RATE   ", Font_7x10, ORANGE,BLACK);
 		}
 
 		if((new_options_flag != 1) && !(GPIOA->IDR & BTN_2_Pin) && !(GPIOA->IDR & BTN_3_Pin))
@@ -328,8 +330,8 @@ restart_configuration:
 //			while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_RX)	//if gps module does not transmit
 			serialPrint(set_crucial_opts, sizeof(set_crucial_opts));
 			HAL_Delay(100);
-			serialPrint(set_agressive_pm, sizeof(set_agressive_pm));
-//			serialPrint(set_balanced_pm, sizeof(set_balanced_pm));
+//			serialPrint(set_aggressive_pm, sizeof(set_agressive_pm));
+			serialPrint(set_balanced_pm, sizeof(set_balanced_pm));	//not need if aggressive was not saved
 			HAL_Delay(100);
 			serialPrint(to_ram_bbr_flash, sizeof(to_ram_bbr_flash));
 			HAL_Delay(100);
@@ -462,7 +464,7 @@ void manage_trekpoints(uint8_t range_ind)	//	if(pp_trekpoints[nearest_trekpoint_
 	if(trek_direction_old)		//erase line and distance
 	{
 		drawDirection(63, 97, 60, trek_direction_old, BLACK);
-		ST7735_WriteString(31, 7*18, &Line[7][3], Font_11x18, BLACK,BLACK);
+		draw_str_by_rows(31, 7*18, &Line[7][3], Font_11x18, BLACK,BLACK);
 	}
 
 	if(pp_trekpoints[nearest_trekpoint_idx]->distance < 1900)
@@ -520,7 +522,7 @@ void manage_trekpoints(uint8_t range_ind)	//	if(pp_trekpoints[nearest_trekpoint_
 			}
 		}
 		sprintf(&Line[6][4], "%3dm ", (uint16_t)pp_trekpoints[nearest_trekpoint_idx]->distance);
-		ST7735_WriteString(48, 6*19, &Line[6][4], Font_11x18, WHITE,BLACK);
+		draw_str_by_rows(48, 6*19, &Line[6][4], Font_11x18, WHITE,BLACK);
 
 		if(pp_trekpoints[nearest_trekpoint_idx]->distance > (8 * trekpoint_range_scale[range_ind]))
 		{
@@ -545,9 +547,9 @@ void manage_trekpoints(uint8_t range_ind)	//	if(pp_trekpoints[nearest_trekpoint_
 		trek_direction_old = pp_trekpoints[nearest_trekpoint_idx]->azimuth_relative_rad;
 
 		sprintf(&Line[6][2], "%4dm ", (uint16_t)pp_trekpoints[nearest_trekpoint_idx]->distance);
-		ST7735_WriteString(26, 6*19, &Line[6][2], Font_11x18, WHITE,BLACK);
+		draw_str_by_rows(26, 6*19, &Line[6][2], Font_11x18, WHITE,BLACK);
 	}
 
 	sprintf(&Line[7][4], "%d", nearest_trekpoint_idx);		//"%dm", (uint16_t)pp_trekpoints[nearest_trekpoint_idx]->distance);
-	ST7735_WriteString(54, 7*19, &Line[7][4], Font_11x18, WHITE,BLACK);
+	draw_str_by_rows(54, 7*19, &Line[7][4], Font_11x18, WHITE,BLACK);
 }

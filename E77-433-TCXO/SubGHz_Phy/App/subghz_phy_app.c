@@ -736,19 +736,19 @@ void scan_channels(void)
 	HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
 	while (1)//(GPIOA->IDR & BTN_2_Pin)		//wait for OK click to start cal
 	{
-	ST7735_SetRotation(0);
-		sprintf(&Lines[0][0], "     TO SCAN");
-		sprintf(&Lines[6][0], "    FREQUENCY");
-		sprintf(&Lines[7][0], "     CHANNELS");
-		sprintf(&Lines[8][0], "  Click ESC/DOWN");
-		sprintf(&Lines[9][0], "        OR");
-		sprintf(&Lines[10][0], " POWER FOR REBOOT");
-	ST7735_WriteString(3, 33, &Lines[0][0], Font_7x10, YELLOW,BLACK);
-	ST7735_WriteString(3, 44, &Lines[6][0], Font_7x10, YELLOW,BLACK);
-	ST7735_WriteString(0, 55, &Lines[7][0], Font_7x10, YELLOW,BLACK);
-	ST7735_WriteString(0, 77, &Lines[8][0], Font_7x10, GREEN,BLACK);
-	ST7735_WriteString(0, 99, &Lines[9][0], Font_7x10, YELLOW,BLACK);
-	ST7735_WriteString(3, 121, &Lines[10][0], Font_7x10, GREEN,BLACK);
+//	ST7735_SetRotation(0);
+//		sprintf(&Lines[0][0], "     TO SCAN");
+//		sprintf(&Lines[6][0], "    FREQUENCY");
+//		sprintf(&Lines[7][0], "     CHANNELS");
+//		sprintf(&Lines[8][0], "  Click ESC/DOWN");
+//		sprintf(&Lines[9][0], "        OR");
+//		sprintf(&Lines[10][0], " POWER FOR REBOOT");
+	draw_str_by_rows(3, 33, "     TO SCAN", Font_7x10, YELLOW,BLACK);
+	draw_str_by_rows(3, 44, "    FREQUENCY", Font_7x10, YELLOW,BLACK);
+	draw_str_by_rows(0, 55, "     CHANNELS", Font_7x10, YELLOW,BLACK);
+	draw_str_by_rows(0, 77, "  Click ESC/DOWN", Font_7x10, GREEN,BLACK);
+	draw_str_by_rows(0, 99, "        OR", Font_7x10, YELLOW,BLACK);
+	draw_str_by_rows(3, 121, " POWER FOR REBOOT", Font_7x10, GREEN,BLACK);
 
 		while (GPIOA->IDR & BTN_1_Pin)
 		{
@@ -769,16 +769,16 @@ void scan_channels(void)
 					sprintf(&Lines[0][0], "channels = %02d", channel_ind);
 //					for (uint8_t k = 0; k < 4; k++)
 //					{
-						ST7735_WriteString(0, 4+0*11, &Lines[0][0], Font_7x10, CYAN,BLACK);
+					draw_str_by_rows(0, 4+0*11, &Lines[0][0], Font_7x10, CYAN,BLACK);
 //					}
 					for (uint8_t j = 0; j < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); j++)		// j < 13
 					{
 						if(rssi_by_channel[0][j] < rssi_by_channel[1][j]) rssi_by_channel[0][j] = rssi_by_channel[1][j];
 						sprintf(&Lines[j + 1][0], "Ch %02d RSSI %04ddBm", (j*5 + FREQ_CHANNEL_FIRST), rssi_by_channel[0][j]);
 
-						if(rssi_by_channel[0][j] > -60) ST7735_WriteString(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, RED,BLACK);
-						else if(rssi_by_channel[0][j] < -80) ST7735_WriteString(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, GREEN,BLACK);
-						else ST7735_WriteString(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, YELLOW,BLACK);
+						if(rssi_by_channel[0][j] > -60) draw_str_by_rows(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, RED,BLACK);
+						else if(rssi_by_channel[0][j] < -80) draw_str_by_rows(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, GREEN,BLACK);
+						else draw_str_by_rows(0, 4+(j+1)*11, &Lines[j+1][0], Font_7x10, YELLOW,BLACK);
 					}
 					channel_ind = 0;
 				}

@@ -3,10 +3,10 @@ gnss.c:40:9:UBLOX_verify_checksum	3
 gnss.c:149:6:serialPrint	3
 gnss.c:64:6:send_ubx	2
 gnss.c:157:6:restart_uart	1
-gnss.c:205:6:configure_gps	28
+gnss.c:207:6:configure_gps	28
 gnss.c:167:6:init_gnss	2
-gnss.c:357:6:calc_trekpoint_position	3
-gnss.c:387:6:find_nearest_trekpoint	2
-gnss.c:415:8:is_point_ahead	3
-gnss.c:437:6:draw_trekpoints	2
-gnss.c:455:6:manage_trekpoints	19
+gnss.c:359:6:calc_trekpoint_position	3
+gnss.c:389:6:find_nearest_trekpoint	2
+gnss.c:417:8:is_point_ahead	3
+gnss.c:439:6:draw_trekpoints	2
+gnss.c:457:6:manage_trekpoints	19

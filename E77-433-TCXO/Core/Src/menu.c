@@ -1021,7 +1021,6 @@ void draw_navigation(void)	//int8_t menu)
 {
 	row = 0;
 	uint8_t dev = 0;
-//	ST7735_SetRotation(0);
 
 	if(pp_devices_menu[this_device]->gps_speed > GPS_SPEED_THRS)
 	{
@@ -1510,29 +1509,29 @@ void draw_navto_points(void)
 	sprintf(&Line[3][0], "%4s", get_points_group_short(points_group_ind));
 	for (row = 0; row < 3; row++)
 	{
-		ST7735_WriteString(0, row*12, &Line[row][0], Font_7x10, GREEN,BLACK);
+		draw_str_by_rows(0, row*12, &Line[row][0], Font_7x10, GREEN,BLACK);
 	}
-	ST7735_WriteString(3, 3*12, &Line[3][0], Font_7x10, CYAN,BLACK);
+	draw_str_by_rows(3, 3*12, &Line[3][0], Font_7x10, CYAN,BLACK);
 
 	row = 0;
 	if(pp_devices_menu[this_device]->gps_speed > GPS_SPEED_THRS)
 	{
 		sprintf(&Line[row][8], "%2d/h", pp_devices_menu[this_device]->gps_speed);
-		ST7735_WriteString(83, row*19, &Line[row][8], Font_11x18, GREEN,BLACK);
+		draw_str_by_rows(83, row*19, &Line[row][8], Font_11x18, GREEN,BLACK);
 		(heading_deg > -99)? (sprintf(&Line[row+=1][8], "%3d%%", heading_deg)): (sprintf(&Line[row+=1][8], "%3d", heading_deg));
-		ST7735_WriteString(83, (row)*19, &Line[row][8], Font_11x18, YELLOW,BLACK);
+		draw_str_by_rows(83, (row)*19, &Line[row][8], Font_11x18, YELLOW,BLACK);
 	}else if(is_north_ready())
 	{
-		sprintf(&Line[row][8], "Magn");		//"Axis%3d ", (p_settings_menu->accel_max.as_integer - p_acceleration_menu->acc_z.as_integer));
-		ST7735_WriteString(83, row*19, &Line[row][8], Font_11x18, CYANB,BLACK);
+//		sprintf(&Line[row][8], "Magn");		//"Axis%3d ", (p_settings_menu->accel_max.as_integer - p_acceleration_menu->acc_z.as_integer));
+		draw_str_by_rows(83, row*19, "Magn", Font_11x18, CYANB,BLACK);
 		(heading_deg > -99)? (sprintf(&Line[row+=1][8], "%3d%%", heading_deg)): (sprintf(&Line[row+=1][8], "%3d", heading_deg));
-		ST7735_WriteString(83, (row)*19, &Line[row][8], Font_11x18, GREEN,BLACK);
+		draw_str_by_rows(83, (row)*19, &Line[row][8], Font_11x18, GREEN,BLACK);
 	}else
 	{
-		sprintf(&Line[row][8], "TURN");
-		ST7735_WriteString(83, row*19, &Line[row][8], Font_11x18, RED,BLACK);
-		sprintf(&Line[row+=1][8], "ARND");
-		ST7735_WriteString(83, (row)*19, &Line[row][8], Font_11x18, RED,BLACK);
+//		sprintf(&Line[row][8], "TURN");
+		draw_str_by_rows(83, row*19, "TURN", Font_11x18, RED,BLACK);
+//		sprintf(&Line[row+=1][8], "ARND");
+		draw_str_by_rows(83, (row)*19, "ARND", Font_11x18, RED,BLACK);
 	}
 
 	if(is_north_ready())
@@ -1547,9 +1546,9 @@ void draw_navto_points(void)
 	sprintf(&Line[row][0], "%d.%02dV", (pp_devices_menu[this_device]->batt_voltage+270)/100,
   	   	    		 	 	 	 	 (pp_devices_menu[this_device]->batt_voltage+270)%100);
 										//(GetBatteryLevel()+270)/100, (GetBatteryLevel()+270)%100);
-	ST7735_WriteString(0, 7+row*11, &Line[row][0], Font_7x10, GREEN,BLACK);
+	draw_str_by_rows(0, 7+row*11, &Line[row][0], Font_7x10, GREEN,BLACK);
 	sprintf(&Line[row][13], "%4dm", range * range_scale[range_ind]);
-	ST7735_WriteString(92, 7+row*11, &Line[row][13], Font_7x10, WHITE,BLACK);
+	draw_str_by_rows(92, 7+row*11, &Line[row][13], Font_7x10, WHITE,BLACK);
 
 	drawCircle(63, 97, 60, WHITE);
 
@@ -1793,8 +1792,8 @@ void set_subpoint_esc(void) {
 //-----------------------------SETTINGS MENU---------------------------------
 void draw_settings(void)
 {
-	sprintf(&Line[0][0], "     SETTINGS    ");
-	ST7735_WriteString(0, 0, &Line[0][0], Font_7x10, CYAN,BLACK);
+//	sprintf(&Line[0][0], "     SETTINGS    ");
+	draw_str_by_rows(0, 0, "     SETTINGS     ", Font_7x10, CYAN,BLACK);
 //	todo? (p_settings_menu->) instead of (settings_copy_menu.)
 	sprintf(&Line[0][0], " Device:%1d/%1d", settings_copy_menu.device_number, settings_copy_menu.devices_on_air);	//this_device);
 	sprintf(&Line[1][0], " SprFctr %02d", settings_copy_menu.spreading_factor);		//LORA_SPREADING_FACTOR);
@@ -1809,17 +1808,17 @@ void draw_settings(void)
 	row = get_current_item();
 	for (uint8_t k = 0; k < 8; k++)
 	{
-		if(k == row) ST7735_WriteString(3, 10+k*19, &Line[k][0], Font_11x18, YELLOW,BLACK);
-		else ST7735_WriteString(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
+		if(k == row) draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, YELLOW,BLACK);
+		else draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
 	}
-	sprintf(&Line[row][0], ">");
-	ST7735_WriteString(3, 10+row*19, &Line[row][0], Font_11x18, YELLOW,BLACK);
+//	sprintf(&Line[row][0], ">");
+	draw_char(3, 10+row*19, 62, Font_11x18, YELLOW,BLACK);
 }
 
 void draw_set_settings(void)
 	{
-		sprintf(&Line[0][0], "  MODIFY THE VALUE");
-		ST7735_WriteString(0, 0, &Line[0][0], Font_7x10, CYAN,BLACK);
+//		sprintf(&Line[0][0], "  MODIFY THE VALUE");
+		draw_str_by_rows(0, 0, "  MODIFY THE VALUE", Font_7x10, CYAN,BLACK);
 
 		sprintf(&Line[0][0], " Device:%1d/%1d", settings_copy_menu.device_number, settings_copy_menu.devices_on_air);	//this_device);
 		sprintf(&Line[1][0], " SprFctr %02d", settings_copy_menu.spreading_factor);		//LORA_SPREADING_FACTOR);
@@ -1835,11 +1834,11 @@ void draw_set_settings(void)
 //		int8_t row = get_current_item();
 		for (uint8_t k = 0; k < 8; k++)
 		{
-			if(k == row) ST7735_WriteString(3, 10+k*19, &Line[k][0], Font_11x18, CYAN,BLACK);
-			else ST7735_WriteString(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
+			if(k == row) draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, CYAN,BLACK);
+			else draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
 		}
 		sprintf(&Line[row][0], ">");
-		ST7735_WriteString(3, 10+row*19, &Line[row][0], Font_11x18, CYAN,BLACK);
+		draw_char(3, 10+row*19, 62, Font_11x18, CYAN,BLACK);
 	}
 //---------------------------------SETTINGS SET-----------------------------------
 	void set_device_number_up(void)
@@ -2087,28 +2086,27 @@ void draw_confirm_settings(void)
 {
     if (flag_settings_changed)
     {
-    	ST7735_SetRotation(0);
     	sprintf(&Line[1][0], "    SETTINGS     ");
     	sprintf(&Line[2][0], "   HAS CHANGED   ");
    		sprintf(&Line[3][0], "            ");
     	for (uint8_t k = 1; k < 4; k++) {
-    		ST7735_WriteString(0, k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
+    		draw_str_by_rows(0, k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
     	}
 
-    	ST7735_WriteString(0, 4*11, " Press OK  ", Font_11x18, YELLOW,BLACK);
+    	draw_str_by_rows(0, 4*11, " Press OK  ", Font_11x18, YELLOW,BLACK);
 
     	sprintf(&Line[5][0], " REBOOT AND APPLY ");
 	    sprintf(&Line[6][0], "            ");
 	   	for (uint8_t k = 5; k < 7; k++) {
-	    	ST7735_WriteString(0, 11+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
+	   		draw_str_by_rows(0, 11+k*11, &Line[k][0], Font_7x10, GREEN,BLACK);
 	   	}
 
-	    ST7735_WriteString(0, 8*11, " Press ESC  ", Font_11x18, YELLOW,BLACK);
+	   	draw_str_by_rows(0, 8*11, " Press ESC  ", Font_11x18, YELLOW,BLACK);
 
 	    sprintf(&Line[8][0], "  TO NOT SAVE ");
 	    sprintf(&Line[9][0], "   AND REBOOT ");
 	    for (uint8_t k = 8; k < 10; k++) {
-	    	ST7735_WriteString(0, (k+2)*11, &Line[k][0], Font_7x10, GREEN,BLACK);
+	    	draw_str_by_rows(0, (k+2)*11, &Line[k][0], Font_7x10, GREEN,BLACK);
 	    }
     }else current_menu = M_MAIN;
 }
@@ -2116,7 +2114,7 @@ void confirm_settings_reboot(void)
 {
 	fill_screen(BLACK);
 	row = 3;
-	ST7735_WriteString(0, row*18, "  Saving...", Font_11x18, YELLOW,BLACK);
+	draw_str_by_rows(0, row*18, "  Saving...", Font_11x18, YELLOW,BLACK);
 
     flag_settings_changed = 0;
    	settings_save(&settings_copy_menu);
@@ -2130,7 +2128,7 @@ void donot_save_settings(void)
 	fill_screen(BLACK);
 
 	row = 4;
-	ST7735_WriteString(0, row*18, "Restoring..", Font_11x18, YELLOW,BLACK);
+	draw_str_by_rows(0, row*18, "Restoring..", Font_11x18, YELLOW,BLACK);
 //	settings_copy_menu = *p_settings_menu;   //reset to no changes state
 	HAL_Delay(1000);
 	NVIC_SystemReset();
@@ -2141,8 +2139,8 @@ void donot_save_settings(void)
 void draw_actions(void)
 {
 //	current_device = this_device;
-	sprintf(&Line[0][0], "     ACTIONS    ");
-	ST7735_WriteString(0, 0, &Line[0][0], Font_7x10, CYAN,BLACK);
+//	sprintf(&Line[0][0], "     ACTIONS    ");
+	draw_str_by_rows(0, 0, "     ACTIONS    ", Font_7x10, CYAN,BLACK);
 
 	sprintf(&Line[0][0], " Power OFF");
 	(pp_devices_menu[this_device]->emergency_flag)? sprintf(&Line[1][0], " Emerge  on"): sprintf(&Line[1][0], " Emerge off");
@@ -2164,14 +2162,14 @@ void draw_actions(void)
 	row = get_current_item();
 	for (uint8_t k = 0; k < 8; k++)
 	{
-		if(k == row) ST7735_WriteString(3, 10+k*19, &Line[k][0], Font_11x18, YELLOW,BLACK);
+		if(k == row) draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, YELLOW,BLACK);
 		else {
-			ST7735_WriteString(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
+			draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
 //			ST7735_WriteString(3, 10+k*19, &Line[k][0], Font_11x18, CYAN,BLACK);
 		}
 	}
-	sprintf(&Line[row][0], ">");
-	ST7735_WriteString(3, 10+row*19, &Line[row][0], Font_11x18, YELLOW,BLACK);
+//	sprintf(&Line[row][0], ">");
+	draw_char(3, 10+row*19, 62, Font_11x18, YELLOW,BLACK);
 }
 
 void power_long(void)
@@ -2280,16 +2278,16 @@ void draw_restore_defaults(void)
     	sprintf(&Line[2][0], "    DEFAULT      ");
    		sprintf(&Line[3][0], "    SETTINGS     ");
     	for (uint8_t k = 1; k < 4; k++) {
-    		ST7735_WriteString(0, k*11, &Line[k][0], Font_7x10, CYAN,BLACK);
+    		draw_str_by_rows(0, k*11, &Line[k][0], Font_7x10, CYAN,BLACK);
     	}
 
-    	ST7735_WriteString(0, 5*11, "Press OK to", Font_11x18, YELLOW,BLACK);
+    	draw_str_by_rows(0, 5*11, "Press OK to", Font_11x18, YELLOW,BLACK);
 
-	    ST7735_WriteString(0, 7*11, "RESTORE AND REBOOT", Font_7x10, GREEN,BLACK);
-    	ST7735_WriteString(0, 8*11, "CALIBRATE COMPASS!", Font_7x10, RED,BLACK);
+    	draw_str_by_rows(0, 7*11, "RESTORE AND REBOOT", Font_7x10, GREEN,BLACK);
+    	draw_str_by_rows(0, 8*11, "CALIBRATE COMPASS!", Font_7x10, RED,BLACK);
 
-	    ST7735_WriteString(0, 10*11, " Press ESC ", Font_11x18, YELLOW,BLACK);
-    	ST7735_WriteString(0, 12*11, "CALL MENU ACTIONS ", Font_7x10, GREEN,BLACK);
+    	draw_str_by_rows(0, 10*11, " Press ESC ", Font_11x18, YELLOW,BLACK);
+    	draw_str_by_rows(0, 12*11, "CALL MENU ACTIONS ", Font_7x10, GREEN,BLACK);
 }
 
 void confirm_settings_restore(void)
@@ -2297,7 +2295,7 @@ void confirm_settings_restore(void)
 	fill_screen(BLACK);
 
 	row = 3;
-	ST7735_WriteString(0, row*18, "Restoring..", Font_11x18, YELLOW,BLACK);
+	draw_str_by_rows(0, row*18, "Restoring..", Font_11x18, YELLOW,BLACK);
 
 	settings_save_default(p_settings_menu);
 
