@@ -223,7 +223,7 @@ restart_configuration:
 	}
 
 	ubx_hwVersion = 0;
-	fillScreen(BLACK);
+	fill_screen(BLACK);
 
 	for(baudRateInd = 0; baudRateInd < (5 + 1); baudRateInd++)
     {
@@ -278,8 +278,8 @@ restart_configuration:
 		for (row; row < 2; row++) {
 			draw_str_by_rows(7, row*14+5, &Line[row][0], Font_7x10, YLWGRN,BLACK);
 		}
-		row	= 2;
 
+		row	= 2;
 		char *boolean[] = {"false", "true"};
 
 		sprintf(&Line[row][0],   "Output NAVPVT%5s", boolean[main_flags.nav_pvt_ram_flag]);
@@ -440,14 +440,14 @@ void draw_trekpoints(uint16_t idx, uint8_t trekpoint_range_ind)	//, uint16_t col
 {
 	trekpoint_scaled_dist = (uint16_t)(pp_trekpoints[idx]->distance)*2  / trekpoint_range_scale[trekpoint_range_ind];
 
-	erasePosition(63, 97, trekpoint_distance_old[idx], trekpoint_azimuth_relative_rad_old[idx], 3);
+	erase_position(63, 97, trekpoint_distance_old[idx], trekpoint_azimuth_relative_rad_old[idx], 3);
 	if(trekpoint_scaled_dist > trekpoint_range * 2)
 	{
 		trekpoint_scaled_dist = trekpoint_range * 2;
-		drawTrace(63, 97, trekpoint_scaled_dist, pp_trekpoints[idx]->azimuth_relative_rad, 1, RED);
-		drawTrace(63, 97, trekpoint_scaled_dist, pp_trekpoints[idx]->azimuth_relative_rad, 2, RED);
-		drawTrace(63, 97, trekpoint_scaled_dist, pp_trekpoints[idx]->azimuth_relative_rad, 3, RED);
-	}else drawTrace(63, 97, trekpoint_scaled_dist, pp_trekpoints[idx]->azimuth_relative_rad, 3, CYAN);
+		draw_trace(63, 97, trekpoint_scaled_dist, pp_trekpoints[idx]->azimuth_relative_rad, 1, RED);
+		draw_trace(63, 97, trekpoint_scaled_dist, pp_trekpoints[idx]->azimuth_relative_rad, 2, RED);
+		draw_trace(63, 97, trekpoint_scaled_dist, pp_trekpoints[idx]->azimuth_relative_rad, 3, RED);
+	}else draw_trace(63, 97, trekpoint_scaled_dist, pp_trekpoints[idx]->azimuth_relative_rad, 3, CYAN);
 	trekpoint_distance_old[idx] = trekpoint_scaled_dist;
 	trekpoint_azimuth_relative_rad_old[idx] = pp_trekpoints[idx]->azimuth_relative_rad;
 }
@@ -463,7 +463,7 @@ void manage_trekpoints(uint8_t range_ind)	//	if(pp_trekpoints[nearest_trekpoint_
 
 	if(trek_direction_old)		//erase line and distance
 	{
-		drawDirection(63, 97, 60, trek_direction_old, BLACK);
+		draw_direction(63, 97, 60, trek_direction_old, BLACK);
 		draw_str_by_rows(31, 7*18, &Line[7][3], Font_11x18, BLACK,BLACK);
 	}
 
@@ -526,24 +526,24 @@ void manage_trekpoints(uint8_t range_ind)	//	if(pp_trekpoints[nearest_trekpoint_
 
 		if(pp_trekpoints[nearest_trekpoint_idx]->distance > (8 * trekpoint_range_scale[range_ind]))
 		{
-			drawDirection(63, 97, 60, pp_trekpoints[nearest_trekpoint_idx]->azimuth_relative_rad, WHITE);
+			draw_direction(63, 97, 60, pp_trekpoints[nearest_trekpoint_idx]->azimuth_relative_rad, WHITE);
 			trek_direction_old = pp_trekpoints[nearest_trekpoint_idx]->azimuth_relative_rad;
 		}else
 		{
 		if(index_increased)
 			{
-				drawDirection(63, 97, 60, pp_trekpoints[nearest_trekpoint_idx + 1]->azimuth_relative_rad, WHITE);
+				draw_direction(63, 97, 60, pp_trekpoints[nearest_trekpoint_idx + 1]->azimuth_relative_rad, WHITE);
 				trek_direction_old = pp_trekpoints[nearest_trekpoint_idx + 1]->azimuth_relative_rad;
 			}else
 			{
-				drawDirection(63, 97, 60, pp_trekpoints[nearest_trekpoint_idx - 1]->azimuth_relative_rad, WHITE);
+				draw_direction(63, 97, 60, pp_trekpoints[nearest_trekpoint_idx - 1]->azimuth_relative_rad, WHITE);
 				trek_direction_old = pp_trekpoints[nearest_trekpoint_idx - 1]->azimuth_relative_rad;
 			}
 		}
 
 	}else	//or if(pp_trekpoints[nearest_trekpoint_idx]->distance > 1900)
 	{
-		drawDirection(63, 97, 60, pp_trekpoints[nearest_trekpoint_idx]->azimuth_relative_rad, WHITE);
+		draw_direction(63, 97, 60, pp_trekpoints[nearest_trekpoint_idx]->azimuth_relative_rad, WHITE);
 		trek_direction_old = pp_trekpoints[nearest_trekpoint_idx]->azimuth_relative_rad;
 
 		sprintf(&Line[6][2], "%4dm ", (uint16_t)pp_trekpoints[nearest_trekpoint_idx]->distance);

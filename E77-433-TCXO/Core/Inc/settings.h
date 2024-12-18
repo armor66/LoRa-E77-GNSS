@@ -137,26 +137,6 @@ void settings_load(void);
 void settings_save(struct settings_struct *settings);
 void settings_save_default(struct settings_struct *settings);
 
-//struct lost_device_struct
-//{
-//	uint8_t exist_flag;             //does a device exist?
-//
-//    union
-//    {
-//        int32_t as_integer;         //latitude in decimal degrees (-90...+90)
-//        uint8_t as_array[4];
-//    } latitude;
-//
-//    union
-//    {
-//    	int32_t as_integer;         //longitude in decimal degrees (-180...+180)
-//        uint8_t as_array[4];
-//    } longitude;
-//
-////    uint32_t lost_device_address;
-//};
-//struct lost_device_struct **get_lost_device(void);
-//void lost_devices_init(void);
 void saved_group_load(uint8_t group);
 void points_group_save(uint8_t group);
 void lost_device_load(uint8_t device);
@@ -190,10 +170,6 @@ struct points_struct
 //Struct with all devices info
 struct points_struct **get_points(void);
 
-//void memory_points_load(void);
-//void memory_points_save(void);
-//void memory_points_erase(void);
-//void init_memory_points(void);
 void save_one_point(int8_t point_absolute_index);
 void clear_points_group(int8_t group);
 

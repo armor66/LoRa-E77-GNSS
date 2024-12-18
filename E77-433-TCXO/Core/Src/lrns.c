@@ -21,18 +21,10 @@ const double deg_to_rad = 0.0174532925199433;       //deg to rad multiplyer
 #define PACKET_LATITUDE_POS         (2)
 #define PACKET_LONGITUDE_POS        (6)
 #define PACKET_ALTITUDE_POS        	(10)
-//1 byte (0) device number and ID (single char)
-//1 byte (1) flags
-//4 bytes (2, 3, 4, 5) lat
-//4 bytes (6, 7, 8, 9) lon
-//2 bytes (10, 11) altitude
-//TOTAL 12 bytes - see radio.c for AIR_PACKET_LEN
 
 #define AIR_PACKET_LEN   (0x0D)	//payload len only, no syncword/crc included   (FSK_PP7_PLOAD_LEN_12_BYTE)
 
 struct settings_struct *p_settings_lrns;
-//uint8_t *p_air_packet_tx;
-//uint8_t *p_air_packet_rx;
 
 struct devices_struct devices[DEVICES_ON_AIR_MAX + 1];        //structures array for devices from 1 to DEVICES_IN_GROUP. Index 0 is invalid and always empty.
 struct devices_struct *p_devices[DEVICES_ON_AIR_MAX + 1];		//structure pointers array
@@ -212,65 +204,7 @@ void clear_fix_data(uint8_t device_number)
 	devices[device_number].valid_fix_flag = 0;			//bit0 only
 	devices[device_number].p_dop = 0;
 }
-/*
-void fill_air_packet(uint32_t current_uptime)
-{
-	p_air_packet_tx[PACKET_NUM_ID_POS] = 			(this_device << BYTE_NUM_POS) | (devices[this_device].device_num);	   //transmit dev id as A-Z, but with 0x41 ('A') shift resulting in 0-25 dec
-	devices[this_device].timestamp =				current_uptime;
 
-	p_air_packet_tx[PACKET_FLAGS_POS] = 			devices[this_device].alarm_flag;
-
-	p_air_packet_tx[PACKET_LATITUDE_POS] = 			devices[this_device].latitude.as_array[0];
-	p_air_packet_tx[PACKET_LATITUDE_POS + 1] = 		devices[this_device].latitude.as_array[1];
-	p_air_packet_tx[PACKET_LATITUDE_POS + 2] = 		devices[this_device].latitude.as_array[2];
-	p_air_packet_tx[PACKET_LATITUDE_POS + 3] = 		devices[this_device].latitude.as_array[3];
-
-	p_air_packet_tx[PACKET_LONGITUDE_POS] = 		devices[this_device].longitude.as_array[0];
-	p_air_packet_tx[PACKET_LONGITUDE_POS + 1] = 	devices[this_device].longitude.as_array[1];
-	p_air_packet_tx[PACKET_LONGITUDE_POS + 2] = 	devices[this_device].longitude.as_array[2];
-	p_air_packet_tx[PACKET_LONGITUDE_POS + 3] = 	devices[this_device].longitude.as_array[3];
-}
-
-void parse_air_packet(uint32_t current_uptime)
-{
-	uint8_t rx_device = (p_air_packet_rx[PACKET_NUM_ID_POS] & PACKET_NUM_MASK) >> BYTE_NUM_POS; //extract device number from received packet
-
-	devices[rx_device].exist_flag 				=	1;
-	devices[rx_device].device_num				=	(p_air_packet_rx[PACKET_NUM_ID_POS] & PACKET_ID_MASK);	//restore 0x41 shift
-	devices[rx_device].timestamp				=	current_uptime;
-
-	devices[rx_device].alarm_flag				=	p_air_packet_rx[PACKET_FLAGS_POS];
-
-	devices[rx_device].latitude.as_array[0]	=		p_air_packet_rx[PACKET_LATITUDE_POS];
-	devices[rx_device].latitude.as_array[1]	=		p_air_packet_rx[PACKET_LATITUDE_POS + 1];
-	devices[rx_device].latitude.as_array[2]	=		p_air_packet_rx[PACKET_LATITUDE_POS + 2];
-	devices[rx_device].latitude.as_array[3]	=		p_air_packet_rx[PACKET_LATITUDE_POS + 3];
-
-	devices[rx_device].longitude.as_array[0]	=	p_air_packet_rx[PACKET_LONGITUDE_POS];
-	devices[rx_device].longitude.as_array[1]	=	p_air_packet_rx[PACKET_LONGITUDE_POS + 1];
-	devices[rx_device].longitude.as_array[2]	=	p_air_packet_rx[PACKET_LONGITUDE_POS + 2];
-	devices[rx_device].longitude.as_array[3]	=	p_air_packet_rx[PACKET_LONGITUDE_POS + 3];
-}
-
-void process_all_devices(void)
-{
-	for (uint8_t dev = 1; dev <= DEVICES_ON_AIR_MAX; dev++)
-	{
-		if (dev == this_device)	//except this device
-		{
-			continue;
-		}
-
-		if (devices[dev].exist_flag == 1)	//all existing
-		{
-			calc_relative_position(dev);
-		}
-	}
-}
-*/
-
-//pp_devices_lrns[another_device]->latitude.as_integer
-//pp_devices_lrns[another_device]->longitude.as_integer
 void calc_point_position(uint8_t point)		//MEMORY_POINTS_TOTAL = 8 * 28 = 224
 {
 //	pp_points_lrns = get_points();
@@ -334,43 +268,6 @@ void calc_relative_position(uint8_t another_device)
 //	}
 }
 
-//void calc_timeout(uint32_t current_uptime)
-//{
-//	for (uint8_t dev = DEVICE_NUMBER_FIRST; dev < DEVICE_NUMBER_LAST + 1; dev++)	//calculated even for this device and used to alarm about own timeout upon lost of PPS signal
-//	{
-//		if (devices[dev].exist_flag == 1)
-//		{
-//			devices[dev].timeout = current_uptime - devices[dev].timestamp; //calc timeout for each active device
-//
-//        	if (p_settings_lrns->timeout_threshold != TIMEOUT_ALARM_DISABLED) //if enabled
-//        	{
-//				if (devices[dev].timeout > p_settings_lrns->timeout_threshold)
-//				{
-//					if (dev == p_settings_lrns->device_number)
-//					{
-//						if (get_abs_pps_cntr() <= PPS_SKIP)	//if this is a timeout right after power up, ignore timeout alarm, do not set the flag
-//						{									//feature, not a bug: once first PPS appeared, a short beep occurs (do "<= PPS_SKIP" to disable this, #TBD)
-//							devices[dev].timeout_flag = 0;
-//						}
-//						else
-//						{
-//							devices[dev].timeout_flag = 1;
-//						}
-//					}
-//					else
-//					{
-//						devices[dev].timeout_flag = 1; //set flag for alarm
-//					}
-//				}
-//				else
-//				{
-//					devices[dev].timeout_flag = 0;
-//				}
-//        	}
-//        }
-//    }
-//}
-
 void calc_fence(void)		//all devices should be processed before calling this func
 {
 	if (p_settings_lrns->fence_threshold != FENCE_ALARM_DISABLED)
@@ -407,27 +304,6 @@ uint8_t check_any_alarm_fence_timeout(void)
 
 	return 0;
 }
-
-//void toggle_emergency(void) {
-//	(devices[this_device].emergency_flag == 0)? (devices[this_device].emergency_flag = 1): (devices[this_device].emergency_flag = 0);
-//}
-//void toggle_alarm(void) {
-//	(devices[this_device].alarm_flag == 0)? (devices[this_device].alarm_flag = 1): (devices[this_device].alarm_flag = 0);
-//}
-//void toggle_gather(void) {
-//	(devices[this_device].gather_flag == 0)? (devices[this_device].gather_flag = 1): (devices[this_device].gather_flag = 0);
-//}
-//void toggle_trigger(void) {
-//	(devices[this_device].trigger_flag == 0)? (devices[this_device].trigger_flag = 1): (devices[this_device].trigger_flag = 0);
-//}
-//void toggle_rxOnly(void) {
-//	(devices[this_device].rxOnly_flag == 0)? (devices[this_device].rxOnly_flag = 1): (devices[this_device].rxOnly_flag = 0);
-//}
-//
-//uint8_t get_my_alarm_status(void)
-//{
-//	return devices[this_device].alarm_flag;
-//}
 
 void getADC_sensors(uint8_t device)
 {

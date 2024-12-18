@@ -7,8 +7,8 @@
 ../Core/Src/compass.c:36:9:maxv	0	static
 ../Core/Src/compass.c:42:9:minv	0	static
 ../Core/Src/compass.c:48:9:limit_to	0	static
-../Core/Src/compass.c:94:6:calibrate_compass	880	static
-../Core/Src/compass.c:55:6:init_compass	8	static
-../Core/Src/compass.c:267:9:read_north	40	static
-../Core/Src/compass.c:295:9:is_north_ready	0	static
-../Core/Src/compass.c:301:9:reset_north	0	static
+../Core/Src/compass.c:93:6:calibrate_compass	440	static
+../Core/Src/compass.c:55:6:init_compass	16	static
+../Core/Src/compass.c:266:9:read_north	40	static
+../Core/Src/compass.c:294:9:is_north_ready	0	static
+../Core/Src/compass.c:300:9:reset_north	0	static

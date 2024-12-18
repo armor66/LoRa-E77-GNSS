@@ -48,7 +48,7 @@ Core/Src/ST7735.o: ../Core/Src/ST7735.c ../Core/Inc/ST7735.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
  ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
  ../SubGHz_Phy/App/subghz_phy_app.h ../Core/Inc/settings.h \
- ../Core/Inc/fonts.h ../Core/Inc/lrns.h
+ ../Core/Inc/fonts.h
 ../Core/Inc/ST7735.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
@@ -102,4 +102,3 @@ Core/Src/ST7735.o: ../Core/Src/ST7735.c ../Core/Inc/ST7735.h \
 ../SubGHz_Phy/App/subghz_phy_app.h:
 ../Core/Inc/settings.h:
 ../Core/Inc/fonts.h:
-../Core/Inc/lrns.h:

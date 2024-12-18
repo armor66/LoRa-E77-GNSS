@@ -86,9 +86,8 @@ void init_compass(void)
 	calData.radius.mag = p_settings->magn_radius.as_integer;			//buffer + 20, 2
 //left compass in reset state and turn around in navigation modes
 //	bno055_setCalibrationData(calData);
-
 //here to check if calibration values has been saved
-	if(main_flags.calibrateCompassFlag) calibrate_compass();
+	(main_flags.calibrateCompassFlag)? calibrate_compass(): bno055_setCalibrationData(calData);
 }
 
 void calibrate_compass(void)
@@ -98,7 +97,7 @@ void calibrate_compass(void)
 	struct settings_struct settings_copy;
 	settings_copy = *p_settings;
 
-	char Line[24][32];
+	char Line[18][18];
 	int8_t accel_ok;
 	int8_t magn_ok;
 	int8_t gyro_ok;
@@ -115,7 +114,7 @@ void calibrate_compass(void)
 	  led_red_off();
 	  led_green_off();
 	  led_blue_off();
-	fillScreen(BLACK);
+	fill_screen(BLACK);
 	HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
 
 	while(1)
@@ -125,70 +124,70 @@ void calibrate_compass(void)
 		if((calState.gyro == 3) && !gyro_ok)
 		{
 			gyro_ok = 1;
-			ST7735_WriteString(0, row*11, "            ", Font_7x10, BLACK,BLACK);
-			ST7735_WriteString(0, (row+1)*11, " Gyroscope OK", Font_7x10, GREEN,BLACK);
-			ST7735_WriteString(78, (row+1)*11, "OK", Font_7x10, CYANB,BLACK);
+			draw_str_by_rows(0, row*11, "            ", Font_7x10, BLACK,BLACK);
+			draw_str_by_rows(0, (row+1)*11, " Gyroscope OK", Font_7x10, GREEN,BLACK);
+			draw_str_by_rows(78, (row+1)*11, "OK", Font_7x10, CYANB,BLACK);
 			led_w_on();
 			HAL_Delay(10);
 			led_w_off();
 			led_blue_on();
 		}else if(!gyro_ok) {
-			ST7735_WriteString(0, row*11, " Do not move", Font_7x10, YELLOW,BLACK);
-			ST7735_WriteString(0, (row+1)*11, " Gyroscope --", Font_7x10, CYAN,BLACK);
+			draw_str_by_rows(0, row*11, " Do not move", Font_7x10, YELLOW,BLACK);
+			draw_str_by_rows(0, (row+1)*11, " Gyroscope --", Font_7x10, CYAN,BLACK);
 		}
 		row+=2;	//2
 		if((calState.accel == 3) && !accel_ok)
 		{
 			accel_ok = 1;
-			ST7735_WriteString(0, row*11, "                  ", Font_7x10, BLACK,BLACK);
-			ST7735_WriteString(0, (row+1)*11, " Accelerometer OK", Font_7x10, GREEN,BLACK);
+			draw_str_by_rows(0, row*11, "                  ", Font_7x10, BLACK,BLACK);
+			draw_str_by_rows(0, (row+1)*11, " Accelerometer OK", Font_7x10, GREEN,BLACK);
 			led_w_on();
 			HAL_Delay(10);
 			led_w_off();
 			led_green_on();
 		}else if(!accel_ok){
-			ST7735_WriteString(0, row*11, " Place 6 positions", Font_7x10, YELLOW,BLACK);
-			ST7735_WriteString(0, (row+1)*11, " Accelerometer --", Font_7x10, CYAN,BLACK);
+			draw_str_by_rows(0, row*11, " Place 6 positions", Font_7x10, YELLOW,BLACK);
+			draw_str_by_rows(0, (row+1)*11, " Accelerometer --", Font_7x10, CYAN,BLACK);
 		}
 		row+=2;	//4
 		if((calState.mag == 3) && !magn_ok){
 			magn_ok = 1;
-			ST7735_WriteString(0, row*11, "              ", Font_7x10, BLACK,BLACK);
-			ST7735_WriteString(0, (row+1)*11, " Magnetometer OK", Font_7x10, GREEN,BLACK);
-			ST7735_WriteString(98, (row+1)*11, "OK", Font_7x10, RED,BLACK);
+			draw_str_by_rows(0, row*11, "              ", Font_7x10, BLACK,BLACK);
+			draw_str_by_rows(0, (row+1)*11, " Magnetometer OK", Font_7x10, GREEN,BLACK);
+			draw_str_by_rows(98, (row+1)*11, "OK", Font_7x10, RED,BLACK);
 			led_w_on();
 			HAL_Delay(10);
 			led_w_off();
 			led_red_on();
 		}else if(!magn_ok) {
-			ST7735_WriteString(0, row*11, " Draw figure 8", Font_7x10, YELLOW,BLACK);
-			ST7735_WriteString(0, (row+1)*11, " Magnetometer --", Font_7x10, CYAN,BLACK);
+			draw_str_by_rows(0, row*11, " Draw figure 8", Font_7x10, YELLOW,BLACK);
+			draw_str_by_rows(0, (row+1)*11, " Magnetometer --", Font_7x10, CYAN,BLACK);
 		}
 		row+=3;	//6
 		if(!sys_ok && !(GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin) && accel_ok && magn_ok && gyro_ok)
 		{
-			ST7735_FillRectangle(0, 70, 128, 90, BLACK);
+			fill_rectgl(0, 70, 128, 160, BLACK);
 
 			sys_ok = 1;
 			sprintf(&Line[row][0], "Calibrated!");
-			ST7735_WriteString(5, row*11, &Line[row][0], Font_11x18, CYAN,BLACK);
+			draw_str_by_rows(5, row*11, &Line[row][0], Font_11x18, CYAN,BLACK);
 			led_w_on();
 			HAL_Delay(50);
 			led_w_off();
 
-			ST7735_WriteString(0, (row+2)*11+5, "   Press OK to", Font_7x10, YELLOW,BLACK);
-			ST7735_WriteString(0, (row+3)*11+5, " APPLY AND REBOOT ", Font_7x10, RED,BLACK);
+			draw_str_by_rows(0, (row+2)*11+5, "   Press OK to", Font_7x10, YELLOW,BLACK);
+			draw_str_by_rows(0, (row+3)*11+5, " APPLY AND REBOOT ", Font_7x10, RED,BLACK);
 
-			ST7735_WriteString(0, (row+5)*11, "  Press ESC to", Font_7x10, YELLOW,BLACK);
-			ST7735_WriteString(0, (row+6)*11, "   TO CLARIFY ", Font_7x10, MAGENTA,BLACK);
+			draw_str_by_rows(0, (row+5)*11, "  Press ESC to", Font_7x10, YELLOW,BLACK);
+			draw_str_by_rows(0, (row+6)*11, "   TO CLARIFY ", Font_7x10, MAGENTA,BLACK);
 		}
 
 		HAL_Delay(300);
 
 		if(!(GPIOA->IDR & BTN_1_Pin) && (GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
 		{
-		    fillScreen(BLACK);
-		    ST7735_WriteString(0, row*11, " Just Restarting", Font_7x10, YELLOW,BLACK);
+		    fill_screen(BLACK);
+		    draw_str_by_rows(0, row*11, " Just Restarting", Font_7x10, YELLOW,BLACK);
 		    HAL_Delay(1000);
 		    NVIC_SystemReset();
 		}
@@ -209,29 +208,29 @@ void calibrate_compass(void)
 		row = 7;
 		(calState.sys == 3)? sprintf(&Line[row][0]," system calibr OK"):
 							 sprintf(&Line[row][0]," system calibr %d", calState.sys);
-		ST7735_WriteString(0, (row)*11-3, &Line[row][0], Font_7x10, CYAN,BLACK);
+		draw_str_by_rows(0, (row)*11-3, &Line[row][0], Font_7x10, CYAN,BLACK);
 		row++;
-		ST7735_WriteString(0, (row)*11, "off", Font_7x10, YELLOW,BLACK);
-		ST7735_WriteString(28, (row)*11, "GYR  ACC   MAG", Font_7x10, CYAN,BLACK);
+		draw_str_by_rows(0, (row)*11, "off", Font_7x10, YELLOW,BLACK);
+		draw_str_by_rows(28, (row)*11, "GYR  ACC   MAG", Font_7x10, CYAN,BLACK);
 		row++;
 		sprintf(&Line[row][0],"X%5d %5d %5d", calData.offset.gyro.x, calData.offset.accel.x, calData.offset.mag.x);		//buffer, 6
-		ST7735_WriteString(0, (row)*11, &Line[row][0], Font_7x10, YELLOW,BLACK);
+		draw_str_by_rows(0, (row)*11, &Line[row][0], Font_7x10, YELLOW,BLACK);
 		row++;
 		sprintf(&Line[row][0],"Y%5d %5d %5d", calData.offset.gyro.y, calData.offset.accel.y, calData.offset.mag.y);		//buffer, 6
-		ST7735_WriteString(0, (row)*11, &Line[row][0], Font_7x10, YELLOW,BLACK);
+		draw_str_by_rows(0, (row)*11, &Line[row][0], Font_7x10, YELLOW,BLACK);
 		row++;
 		sprintf(&Line[row][0],"Z%5d %5d %5d", calData.offset.gyro.z, calData.offset.accel.z, calData.offset.mag.z);
-		ST7735_WriteString(0, (row)*11, &Line[row][0], Font_7x10, YELLOW,BLACK);
+		draw_str_by_rows(0, (row)*11, &Line[row][0], Font_7x10, YELLOW,BLACK);
 		row++;
-		if(accel_ok && magn_ok && gyro_ok) ST7735_WriteString(0, row*11+3, "Press ESC ifZeroes", Font_7x10, RED,BLACK);
+		if(accel_ok && magn_ok && gyro_ok) draw_str_by_rows(0, row*11+3, "Press ESC ifZeroes", Font_7x10, RED,BLACK);
 		row++;
-		if(accel_ok && magn_ok && gyro_ok) ST7735_WriteString(0, row*11+7, " Press OK if Not", Font_7x10, RED,BLACK);
+		if(accel_ok && magn_ok && gyro_ok) draw_str_by_rows(0, row*11+7, " Press OK if Not", Font_7x10, RED,BLACK);
 //		row++;
 //		sprintf(&Line[row][0],"Radius     %4d %5d", calData.radius.accel, calData.radius.mag);		//buffer + 18, 2
-//		ST7735_WriteString(0, (row)*11, &Line[row][0], Font_7x10, MAGENTA,BLACK);
+//		draw_str_by_rows(0, (row)*11, &Line[row][0], Font_7x10, MAGENTA,BLACK);
 //		row++;
 //		sprintf(&Line[row][0],"State   %d    %d     %d", calState.gyro, calState.accel, calState.mag);
-//		ST7735_WriteString(0, (row)*11, &Line[row][0], Font_7x10, MAGENTA,BLACK);
+//		draw_str_by_rows(0, (row)*11, &Line[row][0], Font_7x10, MAGENTA,BLACK);
 
 	}
 }
@@ -252,8 +251,8 @@ void calibrate_compass(void)
     settings_copy.accel_radius.as_integer = calData.radius.accel;		//buffer + 18, 2
     settings_copy.magn_radius.as_integer  = calData.radius.mag;			//buffer + 20, 2
 
-    fillScreen(BLACK);
-	ST7735_WriteString(0, (row-3)*18, "  Saving...", Font_11x18, YELLOW,BLACK);
+    fill_screen(BLACK);
+	draw_str_by_rows(0, (row-3)*18, "  Saving...", Font_11x18, YELLOW,BLACK);
 	settings_save(&settings_copy);
     HAL_Delay(1000);
     NVIC_SystemReset();

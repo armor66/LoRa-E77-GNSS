@@ -151,8 +151,8 @@ int main(void)
   settings_load();
   init_lrns();
 
-  ST7735_Init(0);
-  fillScreen(BLACK);
+  st7735_init(0);
+  fill_screen(BLACK);
 
   	if(!(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin))
 	{

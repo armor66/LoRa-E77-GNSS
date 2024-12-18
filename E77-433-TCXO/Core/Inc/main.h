@@ -180,7 +180,7 @@ extern double comp_y;
 //extern uint8_t this_device;
 extern int8_t current_point_group;
 extern int8_t brightness;
-extern char Line[24][32];
+extern char Line[20][28];
 extern int8_t find_nearest_trekpoint_flag;
 //extern uint16_t nearest_trekpoint_idx;
 

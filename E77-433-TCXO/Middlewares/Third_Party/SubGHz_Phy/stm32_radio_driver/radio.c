@@ -37,7 +37,7 @@
 #include "radio_fw.h"
 #include "radio_driver.h"
 #include "radio_conf.h"
-#include "mw_log_conf.h"
+//#include "mw_log_conf.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* ST_WORKAROUND_BEGIN: Replace global variables by typedef struct */

@@ -38,7 +38,7 @@
 #include <stdlib.h>
 #include "settings.h"
 #include "spi.h"
-#include "stdio.h"
+#include <stdio.h>
 #include "lrns.h"
 #include "compass.h"
 #include "ST7735.h"
@@ -362,10 +362,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	  if(!scanRadioFlag)
 	  {
 		  main_flags.time_slot_timer_ovf++;	//0...59
-
-//		if (pps_flag)
-//		{
-			(p_settings_phy->spreading_factor == 12)? (pattern_index = 1): (pattern_index = 0);
+		  (p_settings_phy->spreading_factor == 12)? (pattern_index = 1): (pattern_index = 0);
 			switch (timeslot_pattern[pattern_index][main_flags.time_slot_timer_ovf])
 			{
 			case 0:			//do nothing
@@ -727,17 +724,10 @@ void scan_channels(void)
 	HAL_TIM_Base_Stop_IT(&htim1);
 	  __HAL_TIM_SET_COUNTER(&htim1, 0);
 	  __HAL_TIM_CLEAR_FLAG(&htim1, TIM_SR_UIF); // очищаем флаг
-	fillScreen(BLACK);
+	fill_screen(BLACK);
 	HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
 	while (1)//(GPIOA->IDR & BTN_2_Pin)		//wait for OK click to start cal
 	{
-//	ST7735_SetRotation(0);
-//		sprintf(&Lines[0][0], "     TO SCAN");
-//		sprintf(&Lines[6][0], "    FREQUENCY");
-//		sprintf(&Lines[7][0], "     CHANNELS");
-//		sprintf(&Lines[8][0], "  Click ESC/DOWN");
-//		sprintf(&Lines[9][0], "        OR");
-//		sprintf(&Lines[10][0], " POWER FOR REBOOT");
 	draw_str_by_rows(3, 33, "     TO SCAN", Font_7x10, YELLOW,BLACK);
 	draw_str_by_rows(3, 44, "    FREQUENCY", Font_7x10, YELLOW,BLACK);
 	draw_str_by_rows(0, 55, "     CHANNELS", Font_7x10, YELLOW,BLACK);
@@ -753,7 +743,7 @@ void scan_channels(void)
 				{
 					rssi_by_channel[0][i] = -127;
 				}
-				fillScreen(BLACK);
+				fill_screen(BLACK);
 //				sprintf(&Lines[0][0], "pressPWR to reboot");
 //				sprintf(&Lines[1][0], "pressESC to rescan");
 				for(int8_t i = 0; i < 7; i++)
@@ -762,10 +752,8 @@ void scan_channels(void)
 					HAL_Delay(700);
 					HAL_TIM_Base_Stop_IT(&htim1);
 					sprintf(&Lines[0][0], "channels = %02d", channel_ind);
-//					for (uint8_t k = 0; k < 4; k++)
-//					{
 					draw_str_by_rows(0, 4+0*11, &Lines[0][0], Font_7x10, CYAN,BLACK);
-//					}
+
 					for (uint8_t j = 0; j < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); j++)		// j < 13
 					{
 						if(rssi_by_channel[0][j] < rssi_by_channel[1][j]) rssi_by_channel[0][j] = rssi_by_channel[1][j];

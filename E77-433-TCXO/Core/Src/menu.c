@@ -17,7 +17,7 @@
 #include "lptim.h"
 #include "gnss.h"
 
-char Line[24][32];	//[14][24]
+char Line[20][28];	//[14][24]
 
 char *fixType[] = {"NoFix", "DReck", "2DFix", "3DFix", "DReck", "Time"}; 	//only 2 bits used to transmit (first 4 items)
 
@@ -500,17 +500,16 @@ const struct
 int8_t row;
 int8_t this_device;								//device number of this device, see init_menu()
 int8_t current_device;
-//uint8_t navigate_to_device;							//a device number that we are navigating to right now
+
 uint8_t current_menu;                               		//Actually Current Menu value (real-time)
 uint8_t return_from_power_menu; 							//Menu to return to after exit from power menu. Power menu can be accessed from different menus, therefore we have to store menu to return.
 uint8_t return_from_points_menu;
-char tmp_buf[16];                                   		//temporary char buffer for screen text fragments
 uint8_t flag_settings_changed = 0;							//Have settings been changed?
-int8_t current_point_group = 0;		//MEMORY_POINT_FIRST;		//Current number of memory point to save
+
 int8_t brightness = 11;
+int8_t current_point_group = 0;		//Current number of memory point to save
 uint8_t current_mem_subpoint = 0;
 
-//uint8_t *p_freq_region_values;
 uint8_t *p_coding_rate_values;
 uint8_t *p_tx_power_values;
 
@@ -522,9 +521,6 @@ struct devices_struct **pp_devices_menu;
 struct point_groups_struct **pp_point_groups_menu;
 struct points_struct **pp_points_menu;
 
-//struct acc_data *p_acceleration_menu;
-//struct mag_data *p_magnetic_field_menu;
-
 struct settings_struct *p_settings_menu;
 struct settings_struct settings_copy_menu;
 
@@ -535,7 +531,6 @@ void init_menu(void)
 	settings_copy_menu = *p_settings_menu;
 	this_device = p_settings_menu->device_number;
 //	current_device = p_settings_menu->device_number;
-//	navigate_to_device = this_device;
 	current_device = this_device;
 	//Load all devices
 	pp_devices_menu = get_devices();
@@ -962,9 +957,7 @@ void draw_main(void)
 		if(k == row) draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, YELLOW,BLACK);
 		else draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
 	}
-	draw_char(3, 10+row*19, 62, Font_11x18, YELLOW,BLACK);	//">"
-//	sprintf(&Line[row][0], ">");
-//	ST7735_WriteString(3, 10+row*19, &Line[row][0], Font_11x18, YELLOW,BLACK);
+	draw_char(3, 10+row*19, *">", Font_11x18, YELLOW,BLACK);
 }
 
 void main_ok(void)
@@ -1020,32 +1013,28 @@ void draw_navigation(void)	//int8_t menu)
 	 	draw_str_by_rows(37, (row)*19, &Line[row][4], Font_11x18, YELLOW,BLACK);
 	}else if(is_north_ready())
 	{
-//		sprintf(&Line[row][4], );	//"Axis%3d ", (p_settings_menu->accel_max.as_integer - p_acceleration_menu->acc_z.as_integer));
 		draw_str_by_rows(37, row*19, " Magn", Font_11x18, CYANB,BLACK);
 	 	(heading_deg < 100)? (sprintf(&Line[row+=1][4], "%3d%% ", heading_deg)): (sprintf(&Line[row+=1][4], " %3d%%", heading_deg));	//just shift->
 	 	draw_str_by_rows(37, (row)*19, &Line[row][4], Font_11x18, GREEN,BLACK);
 	}else
 	{
-//		sprintf(&Line[row][4], );
 		draw_str_by_rows(37, row*19, " TURN", Font_11x18, RED,BLACK);
-//		sprintf(&Line[row+=1][4], );
 		draw_str_by_rows(37, (row+=1)*19, " ARND", Font_11x18, RED,BLACK);
 	}
 
 	if(is_north_ready())
 	{
 		(heading_rad < 0)? (north_rad = -heading_rad): (north_rad = 2*M_PI - heading_rad);
-		drawArrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
-		drawArrow(63, 97, 57, north_rad, 28, CYANB, RED);
+		draw_arrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
+		draw_arrow(63, 97, 57, north_rad, 28, CYANB, RED);
 		north_rad_old = north_rad;
-	}else drawArrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
+	}else draw_arrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
 
 	for(dev = 1; dev < (p_settings_menu->devices_on_air + 1); dev++)
 	{
 		if(dev != this_device)
 		{
 			if(pp_devices_menu[dev]->valid_fix_flag) break;
-//			if(dev == p_settings_menu->devices_on_air) break;
 		}
 		if(dev == p_settings_menu->devices_on_air)
 		{
@@ -1053,20 +1042,16 @@ void draw_navigation(void)	//int8_t menu)
 			break;			//do not exceed "devices_on_air" on exit
 		}
 	}
-//	(this_device == 1)? (dev = 2): (dev = 1);
+
 	pp_devices_menu[dev]->beacon_flag? sprintf(&Line[0][0], "Bcn:%d", dev): sprintf(&Line[0][0], "Dev:%d", dev);	//if is beacon
-//		(buffer[0] >> 7)? sprintf(&Line[0][0], "Bcn:%d", dev): sprintf(&Line[0][0], "Dev:%d", dev);	//if is beacon
-	//show azimuth and distance to remote
+
 		azimuth_relative_deg = azimuth_deg_signed[dev] - heading_deg;
 		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
 		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
 		sprintf(&Line[1][0], "%4d%%", azimuth_relative_deg);
 		sprintf(&Line[2][0], "%4dm", ((uint16_t)distance[dev] & 0x1FFF));
 		sprintf(&Line[3][0], "%3ddB", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
-//		if((buffer[14] & 0x0F) == 0)
-//		{
-//			sprintf(&Line[4][0], "low");		//< 2.7 volt
-//		} else sprintf(&Line[4][0], "%d.%dV", ((buffer[14] & 0x0F)+27)/10, ((buffer[14] & 0x0F)+27)%10);
+
 		for (uint8_t k = 0; k < 4; k++) {
 			if(pp_devices_menu[dev]->valid_fix_flag) draw_str_by_rows(0, k*11, &Line[k][0], Font_7x10, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
 			else draw_str_by_rows(0, k*11, &Line[k][0], Font_7x10, MAGENTA,BLACK);
@@ -1077,13 +1062,11 @@ void draw_navigation(void)	//int8_t menu)
 		if(dev != this_device)
 		{
 			if(pp_devices_menu[dev]->valid_fix_flag) break;
-//			if(dev == 1) break;	"dev = 0" if no "valid_fix_flag" received
 		}
 	}
-//	(this_device == 3)? (dev = 2): (dev = 3);
+
 	pp_devices_menu[dev]->beacon_flag? sprintf(&Line[0][13], "Bcn:%d", dev): sprintf(&Line[0][13], "Dev:%d", dev);	//if is beacon
-//		(buffer[0] >> 7)? sprintf(&Line[0][13], "Bcn:%d", dev): sprintf(&Line[0][13], "Dev:%d", dev);	//if is beacon
-	//show azimuth and distance to remote
+
 		azimuth_relative_deg = azimuth_deg_signed[dev] - heading_deg;
 		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
 		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
@@ -1104,29 +1087,30 @@ void draw_navigation(void)	//int8_t menu)
 
 	for(uint8_t i = 0; i < (p_settings_menu->devices_on_air + 1); i++) {						//devises on the air = 3
 		if(i == this_device) {										//if this device
-			drawPosition(63, 97, 0, 0, 7, i, GREEN);
-		}else if (pp_devices_menu[i]->valid_fix_flag) {									//if remote fix valid
+			draw_position(63, 97, 0, 0, 7, i, GREEN);
+		}
+		else if (pp_devices_menu[i]->valid_fix_flag) {									//if remote fix valid
 			scaled_dist = ((int16_t)distance[i] & 0x1FFF)*2  / range_scale[range_ind];
 			azimuth_relative_rad = azimuth_rad[i] - heading_rad;
-			erasePosition(63, 97, distance_old[i], azimuth_relative_rad_old[i], 8);
+			erase_position(63, 97, distance_old[i], azimuth_relative_rad_old[i], 7);
 			if(scaled_dist > range * 2)
 			{
 				scaled_dist = range * 2;
-				drawPosition(63, 97, scaled_dist, azimuth_relative_rad, 7, i, RED);
-			}else drawPosition(63, 97, scaled_dist, azimuth_relative_rad, 7, i, YELLOW);
+				draw_position(63, 97, scaled_dist, azimuth_relative_rad, 7, i, RED);
+			}else draw_position(63, 97, scaled_dist, azimuth_relative_rad, 7, i, YELLOW);
 			distance_old[i] = scaled_dist;
 			azimuth_relative_rad_old[i] = azimuth_relative_rad;
-		}else if(distance_old[i] > 3) erasePosition(63, 97, distance_old[i], azimuth_relative_rad_old[i], 8);	//erase or change CYAN to MAGENTA
+		}
+		else if(distance_old[i] > 3) erase_position(63, 97, distance_old[i], azimuth_relative_rad_old[i], 7);	//erase or change CYAN to MAGENTA
 	}		//if(distance_old[i] > 3) -> don't erase this device (yellow number)
 
-	drawCircle(63, 97, 60, WHITE);
+	draw_circle(63, 97, 60, WHITE);
 	row = 13;
 	sprintf(&Line[row][0], "%d.%02dV", (pp_devices_menu[this_device]->batt_voltage+270)/100,
 		  	   	   	   	   	    		 (pp_devices_menu[this_device]->batt_voltage+270)%100);
 	draw_str_by_rows(0, 7+row*11, &Line[row][0], Font_7x10, GREEN,BLACK);
 	sprintf(&Line[row][13], "%4dm", range * range_scale[range_ind]);
 	draw_str_by_rows(92, 7+row*11, &Line[row][13], Font_7x10, WHITE,BLACK);
-//	GPIOB->BSRR = GPIO_BSRR_BR3;	//blue led off DRAW MENU END
 }
 void draw_beacons(void)
 {
@@ -1172,7 +1156,7 @@ void draw_beacons(void)
 
 		if(is_north_ready())
 		{
-//show azimuth and distance to remote
+			//show azimuth and distance to remote
 			if(pp_devices_menu[current_device]->valid_fix_flag)
 			{
 				azimuth_relative_deg = azimuth_deg_signed[current_device] - heading_deg;
@@ -1184,25 +1168,19 @@ void draw_beacons(void)
 
 			if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
 			if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
-//		sprintf(&Line[++row][0], "%4d%% %4dm", azimuth_relative_deg, ((uint16_t)distance[dev] & 0x1FFF))
+
 			sprintf(&Line[++row][0], "%4d%%%5dm", azimuth_relative_deg, (uint16_t)distance[current_device]);
 			if(pp_devices_menu[current_device]->valid_fix_flag) draw_str_by_rows(0, row*18, &Line[row][0], Font_11x18, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
 			else draw_str_by_rows(0, row*18, &Line[row][0], Font_11x18, MAGENTA,BLACK);
-//draw magnet arrow
+			//draw magnet arrow
 			(heading_rad < 0)? (north_rad = -heading_rad): (north_rad = 2*M_PI - heading_rad);
-			drawArrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
-			drawArrow(63, 97, 57, north_rad, 28, CYANB, RED);
+			draw_arrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
+			draw_arrow(63, 97, 57, north_rad, 28, CYANB, RED);
 			north_rad_old = north_rad;
 		}else
 		{
-//			sprintf(&Line[++row][0], "TURN AROUND");
 			draw_str_by_rows(0, (row+=1)*18, "TURN AROUND", Font_11x18, RED,BLACK);
-//erase magnet arrow
-			drawArrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
-//		sprintf(&Line[3][4], "TURN");
-//		ST7735_WriteString(42, 3*18, &Line[3][4], Font_11x18, RED,BLACK);
-//		sprintf(&Line[4][3], "AROUND");
-//		ST7735_WriteString(31, 4*18, &Line[4][3], Font_11x18, RED,BLACK);
+			draw_arrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
 		}
 
 		if(pp_devices_menu[current_device]->batt_voltage < 32)
@@ -1224,7 +1202,7 @@ void draw_beacons(void)
 		sprintf(&Line[row][13], "%4dm", range * range_scale[range_ind]);
 		draw_str_by_rows(92, 7+row*11, &Line[row][13], Font_7x10, WHITE,BLACK);
 
-		drawCircle(63, 97, 60, WHITE);
+		draw_circle(63, 97, 60, WHITE);
 
 		for(uint8_t i = 1; i < MEMORY_SUBPOINTS; i++)
 		{
@@ -1237,31 +1215,32 @@ void draw_beacons(void)
 			if(pp_points_menu[beacons_group_start + i]->exist_flag == 1) {
 				scaled_dist = (uint16_t)(pp_points_menu[beacons_group_start + i]->distance)*2  / range_scale[range_ind];
 				azimuth_relative_rad = pp_points_menu[beacons_group_start + i]->azimuth_rad - heading_rad;
-				erasePosition(63, 97, distance_old[i], azimuth_relative_rad_old[i], 8);
+				erase_position(63, 97, distance_old[i], azimuth_relative_rad_old[i], 7);
 				if(scaled_dist > range * 2)
 				{
 					scaled_dist = range * 2;
-					drawTrace(63, 97, scaled_dist, azimuth_relative_rad, (8 - i), RED);
-				}else drawTrace(63, 97, scaled_dist, azimuth_relative_rad, (8 - i), CYAN);
+					draw_trace(63, 97, scaled_dist, azimuth_relative_rad, (8 - i), RED);
+				}else draw_trace(63, 97, scaled_dist, azimuth_relative_rad, (8 - i), CYAN);
 				distance_old[i] = scaled_dist;
 				azimuth_relative_rad_old[i] = azimuth_relative_rad;
-			}//else if(i == this_device) drawPosition(63, 97, 0, 0, 7, i, YELLOW);
+			}//else if(i == this_device) draw_position(63, 97, 0, 0, 7, i, YELLOW);
 		}
 
-			if (pp_devices_menu[current_device]->valid_fix_flag) {									//if remote fix valid
+			if(pp_devices_menu[current_device]->valid_fix_flag)
+			{									//if remote fix valid
 				scaled_dist = ((int16_t)distance[current_device] & 0x1FFF)*2  / range_scale[range_ind];
 				azimuth_relative_rad = azimuth_rad[current_device] - heading_rad;
-				erasePosition(63, 97, distance_old[current_device], azimuth_relative_rad_old[current_device], 8);
+				erase_position(63, 97, distance_old[current_device], azimuth_relative_rad_old[current_device], 7);
 				if(scaled_dist > range * 2)
 				{
 					scaled_dist = range * 2;
-					drawPosition(63, 97, scaled_dist, azimuth_relative_rad, 7, current_device, RED);
-				}else drawPosition(63, 97, scaled_dist, azimuth_relative_rad, 7, current_device, YELLOW);
+					draw_position(63, 97, scaled_dist, azimuth_relative_rad, 7, current_device, RED);
+				}else draw_position(63, 97, scaled_dist, azimuth_relative_rad, 7, current_device, YELLOW);
 				distance_old[current_device] = scaled_dist;
 				azimuth_relative_rad_old[current_device] = azimuth_relative_rad;
-			}else if(distance_old[current_device] > 3) erasePosition(63, 97, distance_old[current_device], azimuth_relative_rad_old[current_device], 8);	//erase or change CYAN to MAGENTA
-//		}		//if(distance_old[i] > 3) -> don't erase this device (yellow number)
-		drawPosition(63, 97, 0, 0, 7, this_device, GREEN);
+			}else if(distance_old[current_device] > 3) erase_position(63, 97, distance_old[current_device], azimuth_relative_rad_old[current_device], 7);	//erase or change CYAN to MAGENTA
+
+		draw_position(63, 97, 0, 0, 7, this_device, GREEN);
 //	GPIOB->BSRR = GPIO_BSRR_BR3;	//blue led off DRAW MENU END
 }
 //--------------------------------NAVIGATION MENU SET--------------------------------
@@ -1282,23 +1261,15 @@ void navigation_down(void) {
 void navigation_ok(void) {		//other points on loop
 	current_menu = M_BEACONS;
 }
-//void navigation_esc(void) {
-////	timer4_stop();	//stop compass activity
-//	current_menu = M_MAIN;
-//}
 void beacons_ok(void)
 {
 	if(current_device == p_settings_menu->devices_on_air) current_device = 1;
 	else current_device++;
-//	distance_old[i] = 0;
-//	draw_beacons();
 }
 void beacons_esc(void)
 {
-//	if(current_device == 1) current_device = p_settings_menu->devices_on_air;
-//	else current_device--;
-//	distance_old[i] = 0;
-	if(pp_devices_menu[this_device]->valid_fix_flag && pp_devices_menu[this_device]->flwtrek_flag) find_nearest_trekpoint_flag = 1;
+	if(pp_devices_menu[this_device]->valid_fix_flag && pp_devices_menu[this_device]->flwtrek_flag)
+		find_nearest_trekpoint_flag = 1;
 	current_menu = M_NAVIGATION;
 }
 //--------------------------------NAVIGATION MENU END--------------------------------
@@ -1447,7 +1418,6 @@ void devices_ok(void) {
 	current_menu = M_DEVICE_SUBMENU;
 }
 void devices_esc(void) {
-//	timer4_start();	//stop compass activity
 	current_menu = M_MAIN;
 }
 //---------------------------------DEVICES MENU END---------------------------------
@@ -1524,10 +1494,10 @@ void draw_navto_points(void)
 	if(is_north_ready())
 	{
 		(heading_rad < 0)? (north_rad = -heading_rad): (north_rad = 2*M_PI - heading_rad);
-		drawArrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
-		drawArrow(63, 97, 57, north_rad, 28, CYANB, RED);
+		draw_arrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
+		draw_arrow(63, 97, 57, north_rad, 28, CYANB, RED);
 		north_rad_old = north_rad;
-	}else drawArrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
+	}else draw_arrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
 
 	row = 13;
 	sprintf(&Line[row][0], "%d.%02dV", (pp_devices_menu[this_device]->batt_voltage+270)/100,
@@ -1537,24 +1507,24 @@ void draw_navto_points(void)
 	sprintf(&Line[row][13], "%4dm", range * range_scale[range_ind]);
 	draw_str_by_rows(92, 7+row*11, &Line[row][13], Font_7x10, WHITE,BLACK);
 
-	drawCircle(63, 97, 60, WHITE);
+	draw_circle(63, 97, 60, WHITE);
 
 	for(uint8_t i = 1; i < MEMORY_SUBPOINTS; i++)
 	{
 		if(pp_points_menu[points_group_start + i]->exist_flag == 1) {
 			scaled_dist = ((uint16_t)(pp_points_menu[points_group_start + i]->distance & 0x1FFF))*2  / range_scale[range_ind];
 			azimuth_relative_rad = pp_points_menu[points_group_start + i]->azimuth_rad - heading_rad;
-			erasePosition(63, 97, distance_old[i], azimuth_relative_rad_old[i], 8);
+			erase_position(63, 97, distance_old[i], azimuth_relative_rad_old[i], 7);
 			if(scaled_dist > range * 2)
 			{
 				scaled_dist = range * 2;
-				drawPosition(63, 97, scaled_dist, azimuth_relative_rad, 7, i, RED);
-			}else drawPosition(63, 97, scaled_dist, azimuth_relative_rad, 7, i, YELLOW);
+				draw_position(63, 97, scaled_dist, azimuth_relative_rad, 7, i, RED);
+			}else draw_position(63, 97, scaled_dist, azimuth_relative_rad, 7, i, YELLOW);
 			distance_old[i] = scaled_dist;
 			azimuth_relative_rad_old[i] = azimuth_relative_rad;
-		}//else if(i == this_device) drawPosition(63, 97, 0, 0, 7, i, YELLOW);
+		}//else if(i == this_device) draw_position(63, 97, 0, 0, 7, i, YELLOW);
 	}
-	drawPosition(63, 97, 0, 0, 7, this_device, GREEN);
+	draw_position(63, 97, 0, 0, 7, this_device, GREEN);
 //	GPIOB->BSRR = GPIO_BSRR_BR3;	//blue led off DRAW MENU END
 }
 //------------------------------NAV TO POINTS MENU SET----------------------------
@@ -1603,9 +1573,8 @@ void draw_points(void)
 		if(k == row) draw_str_by_rows(21, 14+k*12, &Line[k][0], Font_7x10, YELLOW,BLACK);		//active points group
 		else draw_str_by_rows(21, 14+k*12, &Line[k][0], Font_7x10, GREEN,BLACK);				//other points groups
 	}
-//	sprintf(&Line[row][0], ">");
-//	ST7735_WriteString(21, 14+row*12, &Line[row][0], Font_7x10, YELLOW,BLACK);					//marker
-	draw_char(21, 14+row*12, 62, Font_7x10, YELLOW,BLACK);	//">"
+
+	draw_char(21, 14+row*12, *">", Font_7x10, YELLOW,BLACK);
 }
 void points_esc(void)
 {
@@ -1702,8 +1671,8 @@ void draw_device_submenu(void)
 			if(k == row) draw_str_by_rows(3, 24+k*18, &Line[k][0], Font_11x18, YELLOW,BLACK);		//active points group
 			else draw_str_by_rows(3, 24+k*18, &Line[k][0], Font_11x18, GREEN,BLACK);				//other points groups
 		}
-//		sprintf(&Line[row][0], ">");
-		draw_char(3, 24+row*18, 62, Font_11x18, YELLOW,BLACK);					//marker
+
+		draw_char(3, 24+row*18, *">", Font_11x18, YELLOW,BLACK);
 
 	}else {
 		draw_str_by_rows(0, 54, "  NOTHING ", Font_11x18, CYAN,BLACK);
@@ -1730,8 +1699,8 @@ void draw_set_points(void)
 			}
 		}else draw_str_by_rows(3, 24+k*18, &Line[k][0], Font_11x18, GREEN,BLACK);									//other points groups
 	}
-//	sprintf(&Line[row][0], ">");
-	draw_char(3, 24+row*18, 62, Font_11x18, CYAN,BLACK);										//marker
+
+	draw_char(3, 24+row*18, *">", Font_11x18, CYAN,BLACK);
 }
 //-------------------------MEMORY POINTS SET----------------------------
 void set_subpoint_up(void) {
@@ -1798,8 +1767,8 @@ void draw_settings(void)
 		if(k == row) draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, YELLOW,BLACK);
 		else draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
 	}
-//	sprintf(&Line[row][0], ">");
-	draw_char(3, 10+row*19, 62, Font_11x18, YELLOW,BLACK);
+
+	draw_char(3, 10+row*19, *">", Font_11x18, YELLOW,BLACK);
 }
 
 void draw_set_settings(void)
@@ -1822,8 +1791,8 @@ void draw_set_settings(void)
 			if(k == row) draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, CYAN,BLACK);
 			else draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
 		}
-		sprintf(&Line[row][0], ">");
-		draw_char(3, 10+row*19, 62, Font_11x18, CYAN,BLACK);
+
+		draw_char(3, 10+row*19, *">", Font_11x18, CYAN,BLACK);
 	}
 //---------------------------------SETTINGS SET-----------------------------------
 	void set_device_number_up(void)
@@ -2148,8 +2117,8 @@ void draw_actions(void)
 //			ST7735_WriteString(3, 10+k*19, &Line[k][0], Font_11x18, CYAN,BLACK);
 		}
 	}
-//	sprintf(&Line[row][0], ">");
-	draw_char(3, 10+row*19, 62, Font_11x18, YELLOW,BLACK);
+
+	draw_char(3, 10+row*19, *">", Font_11x18, YELLOW,BLACK);
 }
 
 void power_long(void)

@@ -61,6 +61,9 @@ default.size.stdout \
 OBJDUMP_LIST += \
 E77-433-TCXO.list \
 
+OBJCOPY_BIN += \
+E77-433-TCXO.bin \
+
 
 # All Target
 all: main-build
@@ -84,12 +87,17 @@ E77-433-TCXO.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
+E77-433-TCXO.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "E77-433-TCXO.bin"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
-	-$(RM) E77-433-TCXO.elf E77-433-TCXO.list E77-433-TCXO.map default.size.stdout
+	-$(RM) E77-433-TCXO.bin E77-433-TCXO.elf E77-433-TCXO.list E77-433-TCXO.map default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_BIN)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'

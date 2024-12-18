@@ -65,7 +65,7 @@ Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver/radio.o: \
  ../Core/Inc/stm32wlxx_nucleo_conf.h \
  ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo.h ../Core/Inc/subghz.h \
  ../SubGHz_Phy/Target/mw_log_conf.h ../SubGHz_Phy/Target/radio_board_if.h \
- ../Core/Inc/utilities_def.h ../SubGHz_Phy/Target/mw_log_conf.h
+ ../Core/Inc/utilities_def.h
 ../SubGHz_Phy/Target/timer.h:
 ../Utilities/timer/stm32_timer.h:
 ../Drivers/CMSIS/Include/cmsis_compiler.h:
@@ -139,4 +139,3 @@ Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver/radio.o: \
 ../SubGHz_Phy/Target/mw_log_conf.h:
 ../SubGHz_Phy/Target/radio_board_if.h:
 ../Core/Inc/utilities_def.h:
-../SubGHz_Phy/Target/mw_log_conf.h:
