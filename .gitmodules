@@ -1,6 +1,0 @@
-[submodule "E77-128x160"]
-	path = E77-128x160
-	url = https://github.com/armor66/LoRa-E77-GNSS.git
-[submodule "E77-t-beacon"]
-	path = E77-t-beacon
-	url = https://github.com/armor66/LoRa-E77-GNSS.git
