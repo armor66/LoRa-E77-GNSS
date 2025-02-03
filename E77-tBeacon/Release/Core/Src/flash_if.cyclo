@@ -1,7 +1,0 @@
-flash_if.c:166:9:FLASH_IF_Write64	3
-flash_if.c:246:16:FLASH_IF_Write_Buffer	4
-flash_if.c:183:9:FLASH_IF_EraseByPages	3
-flash_if.c:89:9:FLASH_IF_Write	16
-flash_if.c:212:6:HAL_FLASH_EndOfOperationCallback	1
-flash_if.c:227:6:HAL_FLASH_OperationErrorCallback	1
-flash_if.c:234:6:HWCB_FLASH_EndOfCleanup	1

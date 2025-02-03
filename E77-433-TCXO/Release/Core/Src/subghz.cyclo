@@ -1,3 +1,0 @@
-subghz.c:30:6:MX_SUBGHZ_Init	2
-subghz.c:51:6:HAL_SUBGHZ_MspInit	1
-subghz.c:68:6:HAL_SUBGHZ_MspDeInit	1

@@ -1,7 +1,0 @@
-../Core/Src/lrns.c:40:25:get_devices	0	static
-../Core/Src/lrns.c:71:6:init_lrns	16	static
-../Core/Src/lrns.c:91:6:ublox_to_this_device	8	static
-../Core/Src/lrns.c:113:6:rx_to_devices	12	static
-../Core/Src/lrns.c:203:6:clear_fix_data	0	static
-../Core/Src/lrns.c:241:6:calc_relative_position	88	static
-../Core/Src/lrns.c:371:6:getADC_sensors	16	static

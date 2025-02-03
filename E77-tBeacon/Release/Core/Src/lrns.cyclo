@@ -1,7 +1,0 @@
-lrns.c:40:25:get_devices	1
-lrns.c:71:6:init_lrns	2
-lrns.c:91:6:ublox_to_this_device	2
-lrns.c:113:6:rx_to_devices	1
-lrns.c:203:6:clear_fix_data	1
-lrns.c:241:6:calc_relative_position	3
-lrns.c:371:6:getADC_sensors	2

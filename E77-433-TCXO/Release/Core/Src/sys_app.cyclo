@@ -1,6 +1,0 @@
-sys_app.c:69:6:SystemApp_Init	1
-sys_app.c:88:9:GetBatteryLevel	1
-sys_app.c:123:10:GetTemperatureLevel	2
-sys_app.c:145:19:HAL_InitTick	1
-sys_app.c:164:10:HAL_GetTick	2
-sys_app.c:196:6:HAL_Delay	1

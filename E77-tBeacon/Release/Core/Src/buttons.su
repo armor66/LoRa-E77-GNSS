@@ -1,3 +1,0 @@
-../Core/Src/buttons.c:30:6:enable_buttons_interrupts	0	static
-../Core/Src/buttons.c:40:6:disable_buttons_interrupts	0	static
-../Core/Src/buttons.c:51:9:scan_button	16	static

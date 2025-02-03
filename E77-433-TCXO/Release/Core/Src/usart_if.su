@@ -1,8 +1,0 @@
-../Core/Src/usart_if.c:95:25:vcom_Init	8	static
-../Core/Src/usart_if.c:109:25:vcom_DeInit	8	static
-../Core/Src/usart_if.c:132:6:vcom_Trace	0	static
-../Core/Src/usart_if.c:143:25:vcom_Trace_DMA	8	static
-../Core/Src/usart_if.c:155:25:vcom_ReceiveInit	16	static
-../Core/Src/usart_if.c:191:6:vcom_Resume	8	static
-../Core/Src/usart_if.c:212:6:HAL_UART_TxCpltCallback	0	static
-../Core/Src/usart_if.c:227:6:HAL_UART_RxCpltCallback	8	static

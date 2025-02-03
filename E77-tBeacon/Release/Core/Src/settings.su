@@ -1,7 +1,0 @@
-../Core/Src/settings.c:111:10:get_coding_rate_values	0	static
-../Core/Src/settings.c:116:10:get_tx_power_values	0	static
-../Core/Src/settings.c:121:25:get_settings	0	static
-../Core/Src/settings.c:126:9:find_settins	16	static
-../Core/Src/settings.c:211:6:settings_save_default	8	static
-../Core/Src/settings.c:153:6:settings_load	8	static
-../Core/Src/settings.c:260:6:settings_save	8	static
