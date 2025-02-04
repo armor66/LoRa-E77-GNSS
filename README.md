@@ -7,6 +7,8 @@ E77-tBeacon is new tiny 36x26mm pcb design.
 ##### Some photos
 ![module photo](Photos/module.jpg)
 
+52x36mm PCB Beacon
 ![beacon photo](Photos/beacon.jpg)
+
 Two tBeacons and st7735 PCB
 ![beacon photo](Photos/pcb.png)
