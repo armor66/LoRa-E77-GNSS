@@ -23,6 +23,8 @@
 #include "timer_if.h"
 #include "main.h" /*for STM32CubeMX generated RTC_N_PREDIV_S and RTC_N_PREDIV_A*/
 #include "rtc.h"
+#include "stm32_lpm.h"
+#include "utilities_def.h"
 #include "stm32wlxx_ll_rtc.h"
 
 /* USER CODE BEGIN Includes */
@@ -60,6 +62,14 @@ const UTIL_TIMER_Driver_s UTIL_TimerDriver =
 /**
   * @brief SysTime driver callbacks handler
   */
+const UTIL_SYSTIM_Driver_s UTIL_SYSTIMDriver =
+{
+  TIMER_IF_BkUp_Write_Seconds,
+  TIMER_IF_BkUp_Read_Seconds,
+  TIMER_IF_BkUp_Write_SubSeconds,
+  TIMER_IF_BkUp_Read_SubSeconds,
+  TIMER_IF_GetTime,
+};
 
 /* USER CODE BEGIN EV */
 

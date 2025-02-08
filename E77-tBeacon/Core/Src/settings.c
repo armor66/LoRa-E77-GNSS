@@ -286,7 +286,7 @@ void settings_load(void)
 
     if(settings.spreading_factor == 12)
     {
-    	settings.device_number = 3;	//RX only (slot1 and slot2), Radio.SetRxConfig IQ inverted, TX on demand
+//    	settings.device_number = 3;	//device number should be beacon1 or beacon2
     	settings.devices_on_air = 3;
     	settings.coding_rate_opt = 3;
     }
@@ -420,7 +420,7 @@ void settings_save(struct settings_struct *p_settings)
 	    flash_lock();
 	}
 }
-
+#ifndef BEACON
 //------------------------memory points----------------------------
 //uint8_t points_array[MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE];	//1024(MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE) (size % sizeof(uint64_t)) != 0)
 
@@ -903,3 +903,4 @@ void lost_device_save(uint8_t device)	// executed when "case 3" TIM1-IRQ occurs
    	    flash_lock();
    	}
 }
+#endif

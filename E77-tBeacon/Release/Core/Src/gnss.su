@@ -1,0 +1,6 @@
+../Core/Src/gnss.c:41:9:UBLOX_verify_checksum	20	static
+../Core/Src/gnss.c:153:6:serialPrint	0	static
+../Core/Src/gnss.c:65:6:send_ubx	288	static
+../Core/Src/gnss.c:161:6:restart_uart	0	static
+../Core/Src/gnss.c:213:6:configure_gps	64	static,ignoring_inline_asm
+../Core/Src/gnss.c:171:6:init_gnss	16	static

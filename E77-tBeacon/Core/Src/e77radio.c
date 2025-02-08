@@ -3,15 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include "e77radio.h"
+#include "radio.h"
 #include "main.h"
 #include "settings.h"
 #include "lrns.h"
 #include "gpio.h"
-#include "ST7735.h"
 #include "spi.h"
 #include "tim.h"
 
-#include "radio.h"
+#include "ST7735.h"
 
 static RadioEvents_t RadioEvents;
 static States_t State = RX_START;
@@ -31,7 +31,6 @@ static void OnRxTimeout(void);
 
 struct settings_struct *p_settings_rf;
 struct devices_struct **pp_devices_rf;
-
 
 void radio_init(void)
 {
@@ -103,7 +102,20 @@ void set_transmit_data(void)
 {
 	int8_t beeper_flag_to_transmit;
 
+
+
 	(pp_devices_rf[p_settings_rf->device_number]->beeper_flag)? (beeper_flag_to_transmit = 1): (beeper_flag_to_transmit = 0);
+
+
+
+
+
+
+
+
+
+
+
 
    	  bufferTx[0] =	(IS_BEACON << 7) +
     		  (pp_devices_rf[p_settings_rf->device_number]->emergency_flag << 6) +

@@ -23,6 +23,7 @@
 
 /* USER CODE BEGIN 0 */
 #include "bit_band.h"
+//#include "stm32wle5xx.h"
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
@@ -92,7 +93,7 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = RF_CTRL1_Pin|RF_CTRL2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PAPin PAPin PAPin */
@@ -149,22 +150,22 @@ void interrupt_init(void)
 
 void enable_buttons_interrupts(void)
 {
-	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 1;		//unmask interrupt
-//	EXTI->IMR1 |= EXTI_IMR1_IM4;
-	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 1;		//unmask interrupt
-//	EXTI->IMR1 |= EXTI_IMR1_IM1;
-	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 1;		//unmask interrupt
-//	EXTI->IMR1 |= EXTI_IMR1_IM0;
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 1;		//unmask interrupt
+	EXTI->IMR1 |= EXTI_IMR1_IM5;
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 1;		//unmask interrupt
+	EXTI->IMR1 |= EXTI_IMR1_IM1;
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 1;		//unmask interrupt
+	EXTI->IMR1 |= EXTI_IMR1_IM0;
 }
 
 void disable_buttons_interrupts(void)
 {
-	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 0;		//mask interrupt
-//	EXTI->IMR1 &= ~EXTI_IMR1_IM4;
-	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 0;		//mask interrupt
-//	EXTI->IMR1 &= ~EXTI_IMR1_IM1;
-	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 0;		//mask interrupt
-//	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 0;		//mask interrupt
+	EXTI->IMR1 &= ~EXTI_IMR1_IM5;
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 0;		//mask interrupt
+	EXTI->IMR1 &= ~EXTI_IMR1_IM1;
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 0;		//mask interrupt
+	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
 }
 
 void led_toggle(void){

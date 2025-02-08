@@ -1,7 +1,6 @@
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
-
 #include "main.h"
 #include "gpio.h"
 #include "menu.h"
@@ -24,11 +23,9 @@ void scroll_up(void);
 void scroll_down(void);
 void switch_forward(void);
 void switch_backward(void);
-
 // MAIN MENU
 void draw_main(void);
 //void main_ok(void);
-
 // NAVIGATION MENU
 //SUB NAVIGATION MENU
 void draw_navigation(void);
@@ -41,24 +38,21 @@ void navigation_ok(void);
 //void beacons_esc(void);
 
 void draw_navto_points(void);
-void navto_points_ok(void);
+//void navto_points_ok(void);
 void navto_points_esc(void);
-
 // DEVICES MENU
 void draw_devices(void);
 void draw_this_device(void);
 void draw_device_submenu(void);
 void draw_set_points(void);
-
 //SUB DEVICES MENU
 void scroll_devices_up(void);
 void scroll_devices_down(void);
 void devices_ok(void);
 void devices_esc(void);
-
 // POINTS MENU
 void draw_points(void);
-//void points_esc(void);
+void points_esc(void);
 //void draw_show_points(void);
 
 //SUB POINTS MENU
@@ -261,7 +255,7 @@ const struct
 //	{M_NAVTO_POINTS,			BTN_UP,					navigation_up},
 //	{M_NAVTO_POINTS,			BTN_DOWN,				navigation_down},
 //	{M_NAVTO_POINTS,			BTN_OK,					navto_points_ok},
-//	{M_NAVTO_POINTS,			BTN_ESC,				navto_points_esc},
+	{M_NAVTO_POINTS,			BTN_ESC,				navto_points_esc},
 
 	{M_SET_DEVICE_NUMBER,		BTN_UP,                 set_device_number_up},
 	{M_SET_DEVICE_NUMBER,		BTN_DOWN,               set_device_number_down},
@@ -311,7 +305,7 @@ const struct
 	{M_DEVICES,					BTN_PWR_LONG,			power_long},
 	{M_NAVTO_POINTS,			BTN_PWR_LONG,			power_long},
 	{M_POINTS,					BTN_PWR_LONG,			power_long},
-//	{M_POINTS,					BTN_ESC,				points_esc},
+	{M_POINTS,					BTN_ESC,				points_esc},
 //	{M_POINTS_SUBMENU,			BTN_OK,					draw_clear_group},
 //	{M_CONFIRM_CLEARGROUP,		BTN_OK,					confirm_clear_group},
 	{M_ACTIONS,					BTN_PWR_LONG,			power_long},
@@ -495,7 +489,8 @@ void init_menu(void)
 //    return_from_power_menu = M_MAIN;
     set_current_item(M_MAIN_I_NAVIGATION);
 
-    main_flags.display_status = 1;
+    lcd_off();		//hence BEACON defined
+    main_flags.display_status = 0;
 	main_flags.update_screen = 1;
 }
 
@@ -783,6 +778,7 @@ void draw_main(void)
 //	draw_char(3, 10+row*19, *">", Font_11x18, YELLOW,BLACK);	//">"
 	int8_t slot = main_flags.time_slot + 1;
 	if(main_flags.time_slot == p_settings_menu->devices_on_air) slot = 1;
+	if((p_settings_menu->spreading_factor == 12) && (main_flags.time_slot == 2)) slot = 1;
 	sprintf(&Line[row][0], "%d",slot);
 	draw_str_by_rows(3, 10+row*19,  &Line[row][0], Font_11x18, YELLOW,BLACK);
 }
@@ -1064,7 +1060,8 @@ void devices_esc(void) {
 int8_t ind = 0;
 void draw_navto_points(void)
 {
-	draw_str_by_rows(0, 0, "   Nothing Here", Font_7x10, CYAN,BLACK);
+	draw_str_by_rows(0, 70, "  Nothing ", Font_11x18, CYAN,BLACK);
+	draw_str_by_rows(6, 90, "   Here   ", Font_11x18, CYAN,BLACK);
 }
 //------------------------------NAV TO POINTS MENU SET----------------------------
 void navto_points_ok(void)
@@ -1080,7 +1077,8 @@ void navto_points_esc(void)
 //----------------------------------POINTS MENU--------------------------------
 void draw_points(void)
 {
-	draw_str_by_rows(0, 0, "   Nothing Here", Font_7x10, CYAN,BLACK);
+	draw_str_by_rows(0, 70, "  Nothing ", Font_11x18, CYAN,BLACK);
+	draw_str_by_rows(6, 90, "   Here   ", Font_11x18, CYAN,BLACK);
 }
 void points_esc(void)
 {

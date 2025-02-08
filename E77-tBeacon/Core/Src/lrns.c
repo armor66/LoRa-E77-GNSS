@@ -61,7 +61,7 @@ void init_lrns(void)
 {
 	//Get external things
 	p_settings_lrns = get_settings();
-	pp_points_lrns = get_points();
+//	pp_points_lrns = get_points();
 //	pp_lost_device_lrns = get_lost_device();
 //	pp_trekpoints_lrns = get_tekpoints();
 	pp_devices = get_devices();
@@ -137,7 +137,7 @@ void rx_to_devices(uint8_t device_number)
 
 	devices[device_number].rssi = buffer[BUFFER_AIR_SIZE];
 	devices[device_number].snr = buffer[BUFFER_AIR_SIZE + 1];
-
+#ifndef BEACON
 	if(pp_devices[p_settings_lrns->device_number]->valid_fix_flag)
 	{							// ignore 7 point groups to get 7, 8, 9 ,10, 11 - 5 device groups
 		int8_t group_start_index = (MEMORY_POINT_GROUPS + device_number - 1) * MEMORY_SUBPOINTS;
@@ -187,7 +187,9 @@ void rx_to_devices(uint8_t device_number)
 			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
 		}
 	}
+#endif
 }
+#ifndef BEACON
 void check_traced(uint8_t device_number)
 {
 	if(--devices[device_number].beacon_traced <= 0)	//may be decremented below 0
@@ -196,13 +198,14 @@ void check_traced(uint8_t device_number)
 		devices[device_number].beacon_lost = 1;
 	}
 }
+#endif
 void clear_fix_data(uint8_t device_number)
 {
 	devices[device_number].fix_type_opt = 0;			//only 2 bits used to transmit
 	devices[device_number].valid_fix_flag = 0;			//bit0 only
 	devices[device_number].p_dop = 0;
 }
-
+#ifndef BEACON
 void calc_point_position(uint8_t point)		//MEMORY_POINTS_TOTAL = 8 * 28 = 224
 {
 //	pp_points_lrns = get_points();
@@ -230,7 +233,7 @@ void calc_point_position(uint8_t point)		//MEMORY_POINTS_TOTAL = 8 * 28 = 224
 	    if(pp_points_lrns[point]->distance == 0) pp_points_lrns[point]->azimuth_rad = 0;
 //	}
 }
-
+#endif
 void calc_relative_position(uint8_t another_device)
 {
 		//my position

@@ -9,6 +9,8 @@
 #include "lrns.h"
 #include "e77radio.h"
 #include "radio.h"
+//#include "gnss.h"		//for trek points
+//#include "compass.h"
 
 int8_t pattern_index = 0;
 int8_t long_beep_ones = 0;
@@ -48,7 +50,10 @@ const uint8_t timeslot_pattern[2][103] =
 //  | PVT|Slot1 		OnRxDone time		<1200mS		  |draw menu| |Slot2 			OnRxDone time		<1200mS	   |draw menu|
 //	|----|-----------------------------------|------------|---------|-----------------|------------------------------|---------|
 //	0 50 100mS	                             1000		 1300mS						  2000				    	  	2750	   3000
-   {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,3,4,5,4,7,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,1 }};
+   {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,0, 0,0,0,0,3,4,5,4,7,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,6,0,0,0,0,0,0,0,0,0,3,4,5,4,7,1 }};
+//	|----|---------------------------|--------------------|-----------|----------------------------|-------------------|-------|
+//	0 50 100mS	                    +700     			+1200mS	     1600				  	      +700				 +1200	   3000
+//case 6: end of received packet from device №3, IQ inverted
 
 static void restartPattern(void)
 {
@@ -69,31 +74,30 @@ void TIM1_UP_IRQHandler(void)
 	if(!main_flags.scanRadioFlag)
     {
 		main_flags.time_slot_timer_ovf++;
-//		(p_settings_tim->spreading_factor == 12)? (pattern_index = 1): (pattern_index = 0);
+		(p_settings_tim->spreading_factor == 12)? (pattern_index = 1): (pattern_index = 0);
 		switch (timeslot_pattern[pattern_index][main_flags.time_slot_timer_ovf])
 		{
 		case 0:			//do nothing
 			break;
 
 		case 1:			//50mS
+			if(p_settings_tim->spreading_factor == 12) main_flags.time_slot++;
 			if(p_settings_tim->devices_on_air == main_flags.time_slot)	//if PPS did not come, but cycle completed + 50mS
 			{
 				restartPattern();
 				break;
 			}
-			main_flags.time_slot++;
-			//clear what should be received or not in this slot after draw menu has finished
+			if(p_settings_tim->spreading_factor != 12) main_flags.time_slot++;
+//clear what should be received or not in this slot after draw menu has finished
 			if(p_settings_tim->device_number != main_flags.time_slot) clear_fix_data(main_flags.time_slot);
 			if(p_settings_tim->spreading_factor == 12)
-			{
-				//set TX iq_inversion = 0 so that module №3 can receive data
+			{	//set TX iq_inversion = 0 so that module №3 can receive data
 				if(p_settings_tim->device_number == main_flags.time_slot)	//transmit LORA_IQ_NORMAL
 				{
 					Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_tim[p_settings_tim->tx_power_opt], 0,
 					LORA_BANDWIDTH,	p_settings_tim->spreading_factor, p_settings_tim->coding_rate_opt,
 					LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);
-				}
-				//set RX iq_inversion = 1 to not receive from other beacon but receive from module №3
+				}//set RX iq_inversion = 1 to not receive from other beacon but receive from module №3
 				if(p_settings_tim->device_number != main_flags.time_slot)	//receive LORA_IQ_INVERTED
 				{
 					Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_tim->spreading_factor,
@@ -106,6 +110,7 @@ void TIM1_UP_IRQHandler(void)
 			break;
 
 		case 2:			//100mS
+
 			if(main_flags.time_slot == p_settings_tim->device_number)	//this device:
 			{	//if this device doesn't get gnss fix via uart 100mS after PPS, delay for full pattern time
 				if(!pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag)	main_flags.fix_valid--;
@@ -117,26 +122,36 @@ void TIM1_UP_IRQHandler(void)
 						timer17_stop();
 					}
 					main_flags.permit_actions = 0;
-					led_red_on();			//start transmitting, end by OnTxDone
-					set_transmit_data();		//State = TX_START;
+					led_red_on();					//start transmitting, end by OnTxDone
+					set_transmit_data();			//State = TX_START;
 				}else main_flags.fix_valid = 0;		//just to avoid negative values
 			}
 			else//if(time_slot != p_settings_tim->device_number)	other devices:
-			{	//manage (pp_devices_phy[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
+			{
+
+
+
+
+
+
+
+
+
+//manage (pp_devices_phy[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
 				if(p_settings_tim->spreading_factor != 12)
-				{	//manage (pp_devices_tim[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
+				{
 					if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
 					{
 						led_w_on();
 						pp_devices_tim[main_flags.time_slot]->beeper_flag = 0;
 						long_beep_ones = 1;	//set here to finish on case 3 after starts here only
 					}
-					Radio.Rx(0);			//start to receive if SF != 12
 				}
+				Radio.Rx(0);			//start to receive SF=12 or not
 			}
 			break;
 
-		case 3:	//check if remote devices on the air, draw menu items
+		case 3:				//check if remote devices on the air, draw menu items
 			led_red_off();	//650ms after OnRxDone
 			if(long_beep_ones)
 			{
@@ -169,6 +184,14 @@ void TIM1_UP_IRQHandler(void)
 			}
 			break;
 
+		case 6:	//on the alien slot only (device 3 choose in witch slot to transmit)
+			if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
+			{
+				led_w_on();		//500mS to case 3
+				pp_devices_tim[main_flags.time_slot]->beeper_flag = 0;
+				long_beep_ones = 1;
+			}
+			break;
 		default:
 			break;
 		}

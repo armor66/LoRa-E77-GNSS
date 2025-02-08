@@ -1,10 +1,13 @@
 #include <string.h>
 #include <math.h>
+#include "config.h"
 #include "lrns.h"
 #include "settings.h"
-//#include "radio.h"
+#include "radio.h"
 #include "menu.h"
 #include "gpio.h"
+#include "adc_if.h"
+//#include "gnss.h"
 
 const double rad_to_deg = 57.29577951308232;        //rad to deg multiplyer
 const double deg_to_rad = 0.0174532925199433;       //deg to rad multiplyer
@@ -18,10 +21,18 @@ const double deg_to_rad = 0.0174532925199433;       //deg to rad multiplyer
 #define PACKET_LATITUDE_POS         (2)
 #define PACKET_LONGITUDE_POS        (6)
 #define PACKET_ALTITUDE_POS        	(10)
+//1 byte (0) device number and ID (single char)
+//1 byte (1) flags
+//4 bytes (2, 3, 4, 5) lat
+//4 bytes (6, 7, 8, 9) lon
+//2 bytes (10, 11) altitude
+//TOTAL 12 bytes - see radio.c for AIR_PACKET_LEN
 
 #define AIR_PACKET_LEN   (0x0D)	//payload len only, no syncword/crc included   (FSK_PP7_PLOAD_LEN_12_BYTE)
 
 struct settings_struct *p_settings_lrns;
+uint8_t *p_air_packet_tx;
+uint8_t *p_air_packet_rx;
 
 struct devices_struct devices[DEVICES_ON_AIR_MAX + 1];        //structures array for devices from 1 to DEVICES_IN_GROUP. Index 0 is invalid and always empty.
 struct devices_struct *p_devices[DEVICES_ON_AIR_MAX + 1];		//structure pointers array
@@ -35,46 +46,55 @@ struct devices_struct **get_devices(void)
 	return &p_devices[0];
 }
 
-struct point_groups_struct point_groups[MEMORY_POINT_GROUPS];
-struct point_groups_struct *p_point_groups[MEMORY_POINT_GROUPS];
-
-struct point_groups_struct **get_point_groups(void)
-{
-	for (uint8_t grp = 0; grp < MEMORY_POINT_GROUPS; grp++)
-	{
-		p_point_groups[grp] = &point_groups[grp];
-	}
-	return &p_point_groups[0];
-}
+//uint8_t air_packet_tx[AIR_PACKET_LEN];
+//uint8_t air_packet_rx[AIR_PACKET_LEN];
+//
+//uint8_t *get_air_packet_tx(void) {return &air_packet_tx[0];}
+//uint8_t *get_air_packet_rx(void) {return &air_packet_rx[0];}
 
 double distance[DEVICES_ON_AIR_MAX + 1];
 double arc_length[DEVICES_ON_AIR_MAX + 1];
 int16_t azimuth_deg_signed[DEVICES_ON_AIR_MAX + 1];
 int16_t azimuth_deg_unsigned[DEVICES_ON_AIR_MAX + 1];
 double azimuth_rad[DEVICES_ON_AIR_MAX + 1];
-
 struct devices_struct **pp_devices;
-struct point_groups_struct **pp_point_groups;
 struct points_struct **pp_points_lrns;
+//struct trekpoints_struct **pp_trekpoints_lrns;
 
+/*struct gps_num_struct gps_num;
+struct gps_num_struct *get_gps_num(void)
+{
+	return &gps_num;
+}
+*/
 void init_lrns(void)
 {
 	//Get external things
 	p_settings_lrns = get_settings();
-//	pp_points_lrns = get_points();
-//	pp_lost_device_lrns = get_lost_device();
+	pp_points_lrns = get_points();
 //	pp_trekpoints_lrns = get_tekpoints();
 	pp_devices = get_devices();
-	pp_point_groups = get_point_groups();
+//	p_air_packet_tx = get_air_packet_tx();
+//	p_air_packet_rx = get_air_packet_rx();
 	//Clear mem
     for (uint8_t dev = 1; dev <= p_settings_lrns->devices_on_air; dev++)		//DEVICES_ON_AIR_MAX
     {
         memset(&devices[dev], 0, sizeof(devices[dev]));
     }
-//    for (uint8_t grp = 0; grp < MEMORY_POINT_GROUPS; grp++)		//DEVICES_ON_AIR_MAX
-//    {
-//        memset(&point_groups[grp], 0, sizeof(point_groups[grp]));
-//    }
+
+	//This device number
+//	this_device = p_settings_lrns->device_number;		//not used
+
+    //Activate this device
+//	devices[this_device].exist_flag = 1;				//not used
+//	devices[this_device].device_id = p_settings_lrns->device_id;
+
+//instead of memset (str83-86)
+//	for(int8_t i = 0; i < (p_settings_lrns->devices_on_air + 1); i++)
+//   {
+//	   devices[i].beacon_traced = 0;
+//	   devices[i].beacon_lost = 0;
+//   }
 }
 
 void ublox_to_this_device(uint8_t device_number)
@@ -93,7 +113,7 @@ void ublox_to_this_device(uint8_t device_number)
 		devices[device_number].latitude.as_array[2] = PVTbuffer[36];
 		devices[device_number].latitude.as_array[3] = PVTbuffer[37];
 
-		devices[device_number].gps_speed = ((PVTbuffer[63+6]<<24)+(PVTbuffer[62+6]<<16)+(PVTbuffer[61+6]<<8)+PVTbuffer[60+6])/278 & 0xFF;		// 0 - 255 km/h
+		devices[device_number].gps_speed = ((PVTbuffer[63+6]<<24)+(PVTbuffer[62+6]<<16)+(PVTbuffer[61+6]<<8)+PVTbuffer[60+6])/278 & 0xFF;			// 0 - 255 km/h
 		devices[device_number].gps_heading = ((PVTbuffer[67+6]<<24)+(PVTbuffer[66+6]<<16)+(PVTbuffer[65+6]<<8)+PVTbuffer[64+6])/100000 & 0x1FF;	// 0 - 511 degrees
 		devices[device_number].p_dop = (PVTbuffer[77+6]<<8)+PVTbuffer[76+6];
 
@@ -137,12 +157,11 @@ void rx_to_devices(uint8_t device_number)
 
 	devices[device_number].rssi = buffer[BUFFER_AIR_SIZE];
 	devices[device_number].snr = buffer[BUFFER_AIR_SIZE + 1];
-#ifndef BEACON
+
 	if(pp_devices[p_settings_lrns->device_number]->valid_fix_flag)
 	{							// ignore 7 point groups to get 7, 8, 9 ,10, 11 - 5 device groups
 		int8_t group_start_index = (MEMORY_POINT_GROUPS + device_number - 1) * MEMORY_SUBPOINTS;
-
-		if(buffer[1] & 0x80)		//round robin if remote device is moving
+		if(bufferRx[3] & 0x01)		//round robin if remote device is moving
 		{
 			for(int8_t ind = 6; ind > 0; ind--)	//6->7, 5->6, 4->5, 3->4, 2->3, 1->2
 			{
@@ -151,15 +170,10 @@ void rx_to_devices(uint8_t device_number)
 				pp_points_lrns[group_start_index + ind + 1]->longitude.as_integer = pp_points_lrns[group_start_index + ind]->longitude.as_integer;
 			}
 		}		//fill subpoint1 new data in any case
-/*		pp_lost_device_lrns[device_number][0].exist_flag = 1;
-		pp_lost_device_lrns[device_number][0].latitude.as_integer = devices[device_number].latitude.as_integer;
-		pp_lost_device_lrns[device_number][0].longitude.as_integer = devices[device_number].longitude.as_integer;
-*/
 		pp_points_lrns[group_start_index + 1]->exist_flag = 1;
 		pp_points_lrns[group_start_index + 1]->latitude.as_integer = devices[device_number].latitude.as_integer;
 		pp_points_lrns[group_start_index + 1]->longitude.as_integer = devices[device_number].longitude.as_integer;
-
-/*beacon_traced always zero if timeout_threshold=0*/
+//beacon_traced always zero if timeout_threshold=0
 		devices[device_number].beacon_traced = p_settings_lrns->timeout_threshold / p_settings_lrns->devices_on_air;		//!validFixFlag[time_slot] delay
 		if(devices[device_number].beacon_flag) devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
 		devices[device_number].beacon_lost = 0;
@@ -170,7 +184,7 @@ void rx_to_devices(uint8_t device_number)
 			pp_points_lrns[0 + device_number]->latitude.as_integer = devices[device_number].latitude.as_integer;
 			pp_points_lrns[0 + device_number]->longitude.as_integer = devices[device_number].longitude.as_integer;
 			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
-			if(!main_flags.display_status) shortBeeps(device_number);				//emergency_flag received
+			if(!pp_devices[p_settings_lrns->device_number]->display_status) shortBeeps(device_number);				//emergency_flag received
 		}
 		if(devices[device_number].alarm_flag)
 		{	//Alarms group = 0, sub point 1
@@ -187,25 +201,24 @@ void rx_to_devices(uint8_t device_number)
 			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
 		}
 	}
-#endif
 }
-#ifndef BEACON
 void check_traced(uint8_t device_number)
 {
 	if(--devices[device_number].beacon_traced <= 0)	//may be decremented below 0
 	{
-		devices[device_number].beacon_traced = 0;
 		devices[device_number].beacon_lost = 1;
 	}
 }
-#endif
 void clear_fix_data(uint8_t device_number)
 {
 	devices[device_number].fix_type_opt = 0;			//only 2 bits used to transmit
+//	if(devices[device_number].valid_fix_flag > 0) devices[device_number].valid_fix_flag--;
 	devices[device_number].valid_fix_flag = 0;			//bit0 only
 	devices[device_number].p_dop = 0;
 }
-#ifndef BEACON
+
+//pp_devices_lrns[another_device]->latitude.as_integer
+//pp_devices_lrns[another_device]->longitude.as_integer
 void calc_point_position(uint8_t point)		//MEMORY_POINTS_TOTAL = 8 * 28 = 224
 {
 //	pp_points_lrns = get_points();
@@ -233,9 +246,13 @@ void calc_point_position(uint8_t point)		//MEMORY_POINTS_TOTAL = 8 * 28 = 224
 	    if(pp_points_lrns[point]->distance == 0) pp_points_lrns[point]->azimuth_rad = 0;
 //	}
 }
-#endif
+
 void calc_relative_position(uint8_t another_device)
 {
+//	pp_devices = get_devices();							//uint8_t *buffer = bufNode[another_device];
+//	//valid GPS fix - pDop and accuracy
+//	if(PVTbuffer[21+6] & 0x01)	//&& (pp_devices[another_device]->valid_fix_flag)) has checked previously in "OnRxDone() -> rx_to_devices(time_slot)"
+//	{
 		//my position
 		double Latitude0 = ((double)(PVTbuffer[37]<<24)+(PVTbuffer[36]<<16)+(PVTbuffer[35]<<8)+PVTbuffer[34]) / 10000000 * deg_to_rad;
 		double Longitude0 = ((double)(PVTbuffer[33]<<24)+(PVTbuffer[32]<<16)+(PVTbuffer[31]<<8)+PVTbuffer[30]) /10000000 * deg_to_rad;
@@ -262,6 +279,44 @@ void calc_relative_position(uint8_t another_device)
 	    if(distance[another_device] == 0) azimuth_rad[another_device] = 0;
 
 	    azimuth_deg_unsigned[another_device] = (int16_t)(azimuth_rad[another_device] * rad_to_deg);		//convert to deg
+//	}
+}
+
+void calc_timeout(uint32_t current_uptime)
+{
+	for (uint8_t dev = DEVICE_NUMBER_FIRST; dev < DEVICE_NUMBER_LAST + 1; dev++)	//calculated even for this device and used to alarm about own timeout upon lost of PPS signal
+	{
+		if (devices[dev].exist_flag == 1)
+		{
+			devices[dev].timeout = current_uptime - devices[dev].timestamp; //calc timeout for each active device
+
+        	if (p_settings_lrns->timeout_threshold != TIMEOUT_ALARM_DISABLED) //if enabled
+        	{
+				if (devices[dev].timeout > p_settings_lrns->timeout_threshold)
+				{
+					if (dev == p_settings_lrns->device_number)
+					{
+						if (get_abs_pps_cntr() <= PPS_SKIP)	//if this is a timeout right after power up, ignore timeout alarm, do not set the flag
+						{									//feature, not a bug: once first PPS appeared, a short beep occurs (do "<= PPS_SKIP" to disable this, #TBD)
+							devices[dev].timeout_flag = 0;
+						}
+						else
+						{
+							devices[dev].timeout_flag = 1;
+						}
+					}
+					else
+					{
+						devices[dev].timeout_flag = 1; //set flag for alarm
+					}
+				}
+				else
+				{
+					devices[dev].timeout_flag = 0;
+				}
+        	}
+        }
+    }
 }
 
 void calc_fence(void)		//all devices should be processed before calling this func
@@ -301,117 +356,34 @@ uint8_t check_any_alarm_fence_timeout(void)
 	return 0;
 }
 
-/**********************ADC conversion stuff******************/
-uint16_t adc_buffer[3];
+//void toggle_emergency(void) {
+//	(devices[this_device].emergency_flag == 0)? (devices[this_device].emergency_flag = 1): (devices[this_device].emergency_flag = 0);
+//}
+//void toggle_alarm(void) {
+//	(devices[this_device].alarm_flag == 0)? (devices[this_device].alarm_flag = 1): (devices[this_device].alarm_flag = 0);
+//}
+//void toggle_gather(void) {
+//	(devices[this_device].gather_flag == 0)? (devices[this_device].gather_flag = 1): (devices[this_device].gather_flag = 0);
+//}
+//void toggle_trigger(void) {
+//	(devices[this_device].trigger_flag == 0)? (devices[this_device].trigger_flag = 1): (devices[this_device].trigger_flag = 0);
+//}
+//void toggle_rxOnly(void) {
+//	(devices[this_device].rxOnly_flag == 0)? (devices[this_device].rxOnly_flag = 1): (devices[this_device].rxOnly_flag = 0);
+//}
+//
+//uint8_t get_my_alarm_status(void)
+//{
+//	return devices[this_device].alarm_flag;
+//}
 
-int8_t getADC_calibration(void)
+void getADC_sensors(uint8_t device)
 {
-	uint8_t calibration_index;
-	uint16_t calibration_factor_accumulated = 0;
+	uint16_t coreVoltage = (uint16_t)SYS_GetBatteryLevel();
+	uint32_t battVoltage = GetChannelLevel() * coreVoltage /2053;		//~4096/2
 
-	// the ADC voltage regulator is enabled (ADVREGEN=1 and LDORDY=1)
-	if(ADC->CR & ADC_CR_ADVREGEN)
-	{
-		ADC->CFGR1 &= ~(ADC_CFGR1_AUTOFF | ADC_CFGR1_DMACFG | ADC_CFGR1_DMAEN);
-		ADC->CR	   &= ~(ADC_CR_ADSTP | ADC_CR_ADSTART | ADC_CR_ADDIS | ADC_CR_ADEN);
-		ADC->CR	|= ADC_CR_ADCAL;
-	}else return -1;
+	devices[device].core_voltage = (uint8_t)(coreVoltage /10 - 270);	//2700-:-4200 -> 0...150	(coreVoltage - 2700) / 10
+	devices[device].batt_voltage = (uint8_t)(battVoltage /10 - 270);	//2700-:-4200 -> 0...150	(battVoltage - 2700) / 10
 
-    for (calibration_index = 0; calibration_index < 8; calibration_index++)
-    {
-    	/* Start ADC calibration */
-    	ADC->CR |= ADC_CR_ADCAL;
-
-    	/* Wait for calibration completion */
-    	while (ADC->CR & ADC_CR_ADCAL);
-
-    	calibration_factor_accumulated += (uint16_t)(ADC->CALFACT);
-    }
-    /* Compute average */
-    calibration_factor_accumulated /= calibration_index;
-    /* Apply calibration factor */
-    ADC->CR |= ADC_CR_ADEN;
-    ADC->CALFACT = calibration_factor_accumulated;
-
-    /* Enable ADC AUTOFF and DMA mode */
-    ADC->CFGR1 |= ADC_CFGR1_AUTOFF | ADC_CFGR1_DMAEN;
-
-    /* Disable peripheral for the first DMA configuration*/
-	DMA1_Channel1->CCR &= ~DMA_CCR_EN;
-
-	return calibration_factor_accumulated;
-}
-
-void getADC_sensors(void)
-{
-//	HAL_ADC_Start_DMA(&hadc,(uint32_t*)adc_buffer, 3);
-//  ADC->CFGR1 |= ADC_CFGR1_DMAEN; (enabled after calibration)
-
-    /* Clear regular group conversion flag and overrun flag */
-	ADC->ISR |= ADC_ISR_EOC | ADC_ISR_EOS | ADC_ISR_OVR;
-
-/****************HAL_DMA_Start_IT (to Start the DMA channel)*/
-//	DMA1_Channel1->CCR &= ~DMA_CCR_EN; (peripheral already disabled in the handler)*/
-    /* Configure the source, destination address and the data length & clear flags*/
-		/* Clear all flags (if channel transfer error occurs)*/
-		DMA1->IFCR = 0xFFFFFFFF;
-		/* Configure DMA Channel data length */
-		DMA1_Channel1->CNDTR = 3;
-		/* Peripheral to Memory */
-		DMA1_Channel1->CPAR = (uint32_t)&ADC->DR;
-		DMA1_Channel1->CMAR = (uint32_t)&adc_buffer;
-
-	/* Enable the transfer complete interrupt */
-	DMA1_Channel1->CCR |= DMA_CCR_TCIE;
-    /* Enable the Peripheral */
-    DMA1_Channel1->CCR |= DMA_CCR_EN;
-/***************HAL_DMA_Start_IT (DMA channel started)*/
-
-    /* Start ADC group regular conversion */
-	ADC->CR |= ADC_CR_ADSTART;
-}
-
-//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
-void DMA1_Channel1_IRQHandler(void)
-{
-	if(DMA1->ISR & DMA_ISR_TCIF1)	//Transfer Complete Interrupt
-	{
-//		main_flags.adc_calibration_factor = ADC->CALFACT; check if lost when AUTOFF has set
-		/* Disable peripheral to clear transfer complete interrupt here after*/
-		DMA1_Channel1->CCR &= ~DMA_CCR_EN;
-	    DMA1_Channel1->CCR &= ~DMA_CCR_TCIE;
-	    /* Clear the transfer complete flag */
-	    DMA1->IFCR = DMA_IFCR_CTCIF1;
-
-		uint16_t coreVoltage = 0;//(VREFINT_CAL_VREF * 1510) / adc_buffer[2];
-		int16_t temperatureDegreeC = 0;
-
-	    if ((uint32_t)*VREFINT_CAL_ADDR != (uint32_t)0xFFFFU)
-	    {
-	      /* Device with Reference voltage calibrated in production: use device optimized parameters */
-	    	coreVoltage = __LL_ADC_CALC_VREFANALOG_VOLTAGE(adc_buffer[2], ADC_RESOLUTION_12B);
-	    }
-	    else
-	    {
-	      /* Device with Reference voltage not calibrated in production: use generic parameters */
-	    	coreVoltage = 0;//(VREFINT_CAL_VREF * 1510) / measuredLevel;
-	    }
-		devices[p_settings_lrns->device_number].core_voltage = (uint8_t)(coreVoltage /10 - 270);	//2700-:-4200 -> 0...150
-
-		if (((int32_t)*TEMPSENSOR_CAL2_ADDR - (int32_t)*TEMPSENSOR_CAL1_ADDR) != 0)
-		{
-		    /* Device with temperature sensor calibrated in production: use device optimized parameters */
-		    temperatureDegreeC = __LL_ADC_CALC_TEMPERATURE(coreVoltage,	adc_buffer[1], LL_ADC_RESOLUTION_12B);
-		}
-		else
-		{
-		    /* Device with temperature sensor not calibrated in production: use generic parameters */
-		    temperatureDegreeC = 0;/*__LL_ADC_CALC_TEMPERATURE_TYP_PARAMS(TEMPSENSOR_TYP_AVGSLOPE, TEMPSENSOR_TYP_CAL1_V,
-		    								TEMPSENSOR_CAL1_TEMP, coreVoltage, adc_buffer[1], LL_ADC_RESOLUTION_12B);*/
-		}
-		devices[p_settings_lrns->device_number].core_temperature = (int8_t)((temperatureDegreeC << 8) / 256);	//from int16 to q8.7
-
-		uint32_t battVoltage = adc_buffer[0] * coreVoltage /2053;									//~4096/2
-		devices[p_settings_lrns->device_number].batt_voltage = (uint8_t)(battVoltage /10 - 270);	//2700-:-4200 -> 0...150
-	}
+	devices[device].core_temperature = (int8_t)(SYS_GetTemperatureLevel() /256);
 }

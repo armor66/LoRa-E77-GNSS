@@ -2,6 +2,8 @@
 #include "buttons.h"
 #include "gpio.h"
 #include "tim.h"
+#include "bit_band.h"
+//#include "settings.h"
 
 #define BUTTONS_NUM             (3)     //three buttons total
 
@@ -25,10 +27,30 @@ uint8_t button_pressed_counter = 0;
 uint8_t timeout_state = TIMEOUT_NO_OVERFLOW;
 uint8_t timeout_prev_state = TIMEOUT_NO_OVERFLOW;
 
+void enable_buttons_interrupts(void)
+{
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM8) = 1;		//button1
+//	EXTI->IMR1 |= EXTI_IMR1_IM8;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 1;		//button3
+//	EXTI->IMR1 |= EXTI_IMR1_IM5;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 1;		//button2
+//	EXTI->IMR1 |= EXTI_IMR1_IM0;
+}
+
+void disable_buttons_interrupts(void)
+{
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM8) = 0;		//button1
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM8;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 0;		//button3
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM5;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 0;		//button2
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
+}
+
 //button return code = {ButtonNumber(0...BUTTONS_NUM-1) * BUTTON_ACTIONS_NUM + BUTTON_ACTION(_SHORT)(_LONG)} + 1
 uint8_t scan_button(uint8_t button)
 {
-	if ((GPIOA->IDR & BTN_1_Pin) && (GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
+	if ((GPIOB->IDR & BTN_1_Pin) && (GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
 		{
 		button_prev_state = button_state;
 			button_state = BUTTON_RELEASED;
@@ -60,32 +82,28 @@ uint8_t scan_button(uint8_t button)
 			if (button_pressed_counter < BUTTON_PRESSED_COUNTER_MIN)	//lower than min, skip this
 			{
 				button_pressed_counter = 0;
-				timer2_stop();
-				//HAL_TIM_Base_Stop_IT(&htim2);
+				HAL_TIM_Base_Stop_IT(&htim2);
 				enable_buttons_interrupts();
 				return BTN_NO_ACTION;
 			}
 			else if (button_pressed_counter < BUTTON_PRESSED_COUNTER_THRESHOLD)	//released before overflow, then short click
 			{
 				button_pressed_counter = 0;
-				timer2_stop();
-				//HAL_TIM_Base_Stop_IT(&htim2);
+				HAL_TIM_Base_Stop_IT(&htim2);
 				enable_buttons_interrupts();
 				return (button * BUTTON_ACTIONS_NUM + BUTTON_ACTION_SHORT) - 1;
 			}
 			else	//released after overflow or timeout, just switch timer off with no action
 			{
 				button_pressed_counter = 0;
-				timer2_stop();
-				//HAL_TIM_Base_Stop_IT(&htim2);
+				HAL_TIM_Base_Stop_IT(&htim2);
 				enable_buttons_interrupts();
 				return BTN_NO_ACTION;
 			}
 		}
 		else	//two "released" states in a row = fast button release right after interrupt, skip this
 		{
-			timer2_stop();
-			//HAL_TIM_Base_Stop_IT(&htim2);
+			HAL_TIM_Base_Stop_IT(&htim2);
 			enable_buttons_interrupts();
 			return BTN_NO_ACTION;
 		}

@@ -1,3 +1,11 @@
+/*
+	SPOKE
+    
+    file: buttons.h
+*/
+
+
+
 #ifndef BUTTONS_HEADER
 #define BUTTONS_HEADER
 
@@ -22,6 +30,9 @@
 
 #define BTN_DOWN			(5)     //PB4
 #define BTN_ESC				(6)
+
+void enable_buttons_interrupts(void);
+void disable_buttons_interrupts(void);
 
 uint8_t scan_button(uint8_t button);
 

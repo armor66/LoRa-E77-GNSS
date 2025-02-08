@@ -3,6 +3,9 @@
 
 #include "main.h"
 #include "fonts.h"
+#include "stm32wlxx_hal.h"
+#include <stdbool.h>
+
 
 extern SPI_HandleTypeDef hspi2;
 #define ST7735_SPI_PORT hspi2
@@ -106,22 +109,53 @@ extern SPI_HandleTypeDef hspi2;
 #define GREENYELLOW 	0xAFE5
 #define PINK        	0xF81F
 
-#define	st7735_SPI 		SPI2
+// call before initializing any SPI devices
+void ST7735_Unselect();
 
-void st7735_init(uint8_t rotation);
-void draw_str_by_rows(uint8_t x, uint8_t y, char *str, FontDef font, uint16_t color, uint16_t bg_color);
-void draw_char(uint8_t x, uint8_t y, char ch, FontDef font, uint16_t color, uint16_t bg_color);
-void draw_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color);
-void draw_circle(uint8_t x0, uint8_t y0, uint8_t r, uint16_t color);
-void draw_position(uint8_t x0, uint8_t y0, uint8_t r1, double angle, uint8_t r2, uint8_t tag, uint16_t color);
-void erase_position(uint8_t x0, uint8_t y0, uint8_t r1, double angle, uint8_t r2);
-void fill_rectgl(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color);
-void fill_screen(uint16_t color);
-void draw_course(uint8_t x0, uint8_t y0, double angle, uint16_t color);
-void draw_arrow(uint8_t x0, uint8_t y0, uint8_t r, double angle, uint8_t length, uint16_t color1, uint16_t color2);
-void draw_trace(uint8_t x0, uint8_t y0, uint8_t r1, double angle, uint8_t r2, uint16_t color);
-void draw_direction(uint8_t x0, uint8_t y0, uint8_t r, double angle, uint16_t color);
+void ST7735_Init(uint8_t rotation);
+void ST7735_SetRotation(uint8_t m);
+void ST7735_DrawPixel(uint16_t x, uint16_t y, uint16_t color);
+void ST7735_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor);
+void ST7735_FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+void ST7735_FillScreen(uint16_t color);
+void ST7735_DrawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t* data);
+void ST7735_InvertColors(bool invert);
+void drawPixel(int16_t x, int16_t y, uint16_t color);
+void writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
+void  drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+void  drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
+void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
 
-void draw_image(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t* data);
+void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, uint16_t color1, uint16_t color2);
+void drawPosition(int16_t x0, int16_t y0, int16_t r1, double angle, int16_t r2, int16_t tag, uint16_t color);
+void drawTrace(int16_t x0, int16_t y0, int16_t r1, double angle, int16_t r2, uint16_t color);
+void drawDirection(int16_t x0, int16_t y0, int16_t r, double angle, uint16_t color);
+void erasePosition(int16_t x0, int16_t y0, int16_t r1, double angle, int16_t r2);
+void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+
+void drawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color);
+void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t corners, int16_t delta, uint16_t color);
+void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+void drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
+void fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
+void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+void fillScreen(uint16_t color);
+void testLines(uint16_t color);
+void testFastLines(uint16_t color1, uint16_t color2);
+void testRects(uint16_t color) ;
+void testFilledRects(uint16_t color1, uint16_t color2);
+void testFilledCircles(uint8_t radius, uint16_t color);
+void testCircles(uint8_t radius, uint16_t color);
+void testTriangles();
+void testFilledTriangles();
+void testRoundRects();
+void testFilledRoundRects();
+void testFillScreen();
+void testAll (void);
+
+
 
 #endif // __ST7735_H__

@@ -11,8 +11,6 @@
 #define LORA_IQ_INVERTED			1
 #define TX_TIMEOUT_VALUE            0		//3000
 //#define TCXO_WORKAROUND_TIME_MARGIN	50
-#define BUFFER_AIR_SIZE            	13  	/* Define the payload size here */
-#define BUFFER_RX                  	15		//BUFFER_SIZE + 2 rssi and snr
 
 typedef enum
 {

@@ -28,6 +28,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32_timer.h"
+#include "stm32_systime.h"
 
 /* USER CODE BEGIN Includes */
 

@@ -1,8 +1,8 @@
 Core/Src/buttons.o: ../Core/Src/buttons.c ../Core/Inc/main.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h \
  ../Core/Inc/stm32wlxx_hal_conf.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wlxx.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h \
  ../Drivers/CMSIS/Include/core_cm4.h \
@@ -11,45 +11,48 @@ Core/Src/buttons.o: ../Core/Src/buttons.c ../Core/Inc/main.h \
  ../Drivers/CMSIS/Include/cmsis_gcc.h \
  ../Drivers/CMSIS/Include/mpu_armv7.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/system_stm32wlxx.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dma.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dmamux.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_adc.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_cortex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_exti.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_bus.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_subghz.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_spi.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
- ../Core/Inc/buttons.h ../Core/Inc/gpio.h ../Core/Inc/main.h \
- ../Core/Inc/tim.h
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dma.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dmamux.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma_ex.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_adc.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc_ex.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_cortex.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_exti.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_lptim.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr_ex.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_bus.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc_ex.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi_ex.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_subghz.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_spi.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim_ex.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
+ ../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
+ ../SubGHz_Phy/App/subghz_phy_app.h ../Core/Inc/settings.h \
+ ../Core/Inc/main.h ../Core/Inc/buttons.h ../Core/Inc/gpio.h \
+ ../Core/Inc/tim.h ../Core/Inc/bit_band.h
 ../Core/Inc/main.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
 ../Core/Inc/stm32wlxx_hal_conf.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wlxx.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
 ../Drivers/CMSIS/Include/core_cm4.h:
@@ -58,39 +61,44 @@ Core/Src/buttons.o: ../Core/Src/buttons.c ../Core/Inc/main.h \
 ../Drivers/CMSIS/Include/cmsis_gcc.h:
 ../Drivers/CMSIS/Include/mpu_armv7.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/system_stm32wlxx.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dma.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dmamux.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_adc.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_cortex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_exti.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_bus.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_subghz.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_spi.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dma.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dmamux.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma_ex.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_adc.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc_ex.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_cortex.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_exti.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_lptim.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr_ex.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_bus.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc_ex.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi_ex.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_subghz.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_spi.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim_ex.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h:
+../Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
+../SubGHz_Phy/App/subghz_phy_app.h:
+../Core/Inc/settings.h:
+../Core/Inc/main.h:
 ../Core/Inc/buttons.h:
 ../Core/Inc/gpio.h:
-../Core/Inc/main.h:
 ../Core/Inc/tim.h:
+../Core/Inc/bit_band.h:
