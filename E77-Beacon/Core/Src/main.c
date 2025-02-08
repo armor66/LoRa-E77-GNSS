@@ -19,34 +19,29 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
-#include "iwdg.h"
-#include "lptim.h"
+#include "dma.h"
 #include "spi.h"
-#include "app_subghz_phy.h"
+#include "subghz.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-//#include "stm32wlxx_nucleo_radio.h"
-#include "sys_app.h"
-#include "menu.h"
-#include "ST7735.h"
-//#include <stdio.h>			//for 'sprintf'
-#include "subghz_phy_app.h"
-#include "lrns.h"
-//#include "compass.h"
+#include "bitmap.h"
 #include "buttons.h"
+#include "timer_it.h"
+#include "settings.h"
+#include "lrns.h"
+#include "ST7735.h"
+#include "menu.h"
 #include "gnss.h"
+#include "e77radio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-//struct settings_struct *p_settings_main;
 
-int8_t GPScheckFlag = 0;
-int8_t GPSconfigureFlag = 0;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -102,118 +97,100 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-//!!--comment MX_SubGHz_Phy_Init(); with SystemApp_Init(); line after reconfiguration--!!
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  SystemApp_Init();		//MX_SubGHz_Phy_Init();
-
+  MX_DMA_Init();
+  MX_USART2_UART_Init();
+  MX_SPI2_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM16_Init();
   MX_TIM17_Init();
-//  MX_LPTIM1_Init();
-
   MX_ADC_Init();
-  MX_SPI2_Init();
-  MX_USART2_UART_Init();
-//  MX_IWDG_Init();
+  MX_SUBGHZ_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_Base_Stop_IT(&htim1);
-  __HAL_TIM_SET_COUNTER(&htim1, 0);
-  __HAL_TIM_CLEAR_FLAG(&htim1, TIM_SR_UIF); // очищаем флаг
-  HAL_TIM_Base_Stop_IT(&htim2);
-  HAL_TIM_Base_Stop_IT(&htim16);		//starts onRxDone if no PPS
-  disable_buttons_interrupts();
-
-  EXTI->IMR1 &= ~EXTI_IMR1_IM4;			//interrupt disabled on PPS front
+//  disable_buttons_interrupts();
+//  EXTI->IMR1 &= ~EXTI_IMR1_IM8;			//interrupt disabled on PPS front
 
   hold_power();
   led_w_off();
   led_red_off();
-  led_green_off();
+//  led_green_off();
   led_blue_off();
 
-    if(!(RCC->CSR & RCC_CSR_SFTRSTF))	// || !(RCC->CSR & RCC_CSR_IWDGRSTF))	//if the reset is not caused by software (save & restart after settings changed)
-    {																		//or not independent watchdog reset occurs
-	   release_power();					//initially set off position
-	   HAL_Delay(1000); 				//startup delay ~2sec
-	   NVIC_SystemReset();
-	}else								//if Software reset or Independent watchdog reset occurred
-	{
-		RCC->CSR |= RCC_CSR_RMVF;		//clear the reset flags IWDGRSTF, SFTRSTF by writing bit to the RMVF
-	    led_w_on();
-	}
+  if(!(RCC->CSR & RCC_CSR_SFTRSTF))	// || !(RCC->CSR & RCC_CSR_IWDGRSTF))	//if the reset is not caused by software (save & restart after settings changed)
+  {																		//or not independent watchdog reset occurs
+	  release_power();					//initially set off position
+	  HAL_Delay(1000); 				//startup delay ~2sec
+	  NVIC_SystemReset();
+  }else								//if Software reset or Independent watchdog reset occurred
+  {
+	  RCC->CSR |= RCC_CSR_RMVF;		//clear the reset flags IWDGRSTF, SFTRSTF by writing bit to the RMVF
+	  led_w_on();
+  }
+  HAL_Delay(10);
+  led_w_off();
 
-   HAL_Delay(10);
-   led_w_off();
-
-  settings_load();
-  init_lrns();
-
-  ST7735_Init(0);
-  fillScreen(BLACK);
+	settings_load();
+	st7735_init(0);
+    fill_screen(BLACK);
 
   	if(!(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin))
 	{
-		GPSconfigureFlag = 1;	//if DOWN button is pressed and  OK button is released upon power up
+		main_flags.GPSconfigureFlag = 1;	//if DOWN button is pressed and  OK button is released upon power up
 		init_gnss();
 	}
   	else if(!(GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
 	{
-		scanRadioFlag = 1;		//if OK button is pressed and DOWN button is released upon power up
-		SubghzApp_Init();
-	}
-  	else if(!(GPIOA->IDR & BTN_2_Pin) && !(GPIOA->IDR & BTN_3_Pin))
-	{
-//		calibrateCompassFlag = 1;//if both buttons is pressed
-//		init_compass();
+  		TIM1->CR1 |= TIM_CR1_URS;		//Only counter overflow/underflow generates an update interrupt
+  		TIM1->SR &= ~TIM_SR_UIF;                //clear update interrupt
+  		TIM1->DIER |= TIM_DIER_UIE;             //update interrupt enable
+  	    NVIC_EnableIRQ(TIM1_UP_IRQn);
+		main_flags.scanRadioFlag = 1;		//if OK button is pressed and DOWN button is released upon power up
+		radio_init();
 	}
   	else
-	{
-//		init_compass();
-		SubghzApp_Init();
-		memory_points_load();
-		init_gnss();
-		enable_buttons_interrupts();
+  	{
+  		main_flags.adc_calibration_factor = getADC_calibration();
+  		init_menu();
 
-		EXTI->IMR1 |= EXTI_IMR1_IM4;				//interrupt enabled on PPS front
-		USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;
+  		timer_it_init();
+  		interrupt_init();
+  		enable_buttons_interrupts();
 
-		init_menu();
-		main_flags.update_screen = 1;
-//		HAL_LPTIM_PWM_Start(&hlptim1, 16, brightness);
-		HAL_TIM_Base_Start_IT(&htim1);
-//	    MX_IWDG_Init();
-	}
+  		init_lrns();
+  		init_gnss();
+  		radio_init();
+  		timer1_start();
+  		main_flags.update_screen = 1;
+  	}
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  	while (1)
-  	{
+  while (1)
+  {
     /* USER CODE END WHILE */
-//    MX_SubGHz_Phy_Process();
 
     /* USER CODE BEGIN 3 */
-//restrict buttons actions when data is transmitting, permit_actions always on case 3 (radio tx or rx finished)
-  		if((main_flags.buttons_scanned) && (main_flags.permit_actions))
-  		{
-  			change_menu(button_code);
-  			main_flags.buttons_scanned = 0;
-  			main_flags.update_screen = 1;
-  		}
+		if((main_flags.buttons_scanned) && (main_flags.permit_actions))
+		{
+			change_menu(main_flags.button_code);
+			main_flags.buttons_scanned = 0;
+			main_flags.update_screen = 1;
+		}
 
-  		if (main_flags.update_screen)	//buttons processed or on case 3 or if no PPS signal
-  		{
-//  	  	HAL_IWDG_Refresh(&hiwdg);
-  			draw_current_menu();
-  			main_flags.update_screen = 0;
-  		}
-
-  		__NOP();
-	}
+		if (main_flags.update_screen)	//buttons processed or on case 3 or if no PPS signal
+		{
+//			HAL_IWDG_Refresh(&hiwdg);
+			draw_current_menu();
+			main_flags.update_screen = 0;
+		}
+		__NOP();
+  }
   /* USER CODE END 3 */
 }
 
@@ -237,13 +214,10 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE
-                              |RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS_PWR;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
-  RCC_OscInitStruct.LSIDiv = RCC_LSI_DIV1;
   RCC_OscInitStruct.HSEDiv = RCC_HSE_DIV1;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV2;
@@ -274,7 +248,10 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+//struct main_flags_struct *get_main_flags(void)
+//{
+//	return &main_flags;
+//}
 /* USER CODE END 4 */
 
 /**

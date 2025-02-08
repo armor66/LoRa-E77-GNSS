@@ -1,0 +1,14 @@
+../Drivers/CMSIS/Include/core_cm4.h:1933:34:__NVIC_SystemReset	0	static,ignoring_inline_asm
+../Core/Inc/bno055_stm32.h:29:23:bno055_timeout.constprop	8	static
+../Core/Inc/bno055_stm32.h:18:13:bno055_delay	16	static
+../Core/Inc/bno055_stm32.h:37:6:bno055_writeData	24	static
+../Core/Inc/bno055_stm32.h:69:6:bno055_readData	24	static
+../Core/Src/compass.c:26:10:absv	0	static
+../Core/Src/compass.c:32:9:maxv	0	static
+../Core/Src/compass.c:38:9:minv	0	static
+../Core/Src/compass.c:44:9:limit_to	0	static
+../Core/Src/compass.c:89:6:calibrate_compass	104	static
+../Core/Src/compass.c:51:6:init_compass	16	static
+../Core/Src/compass.c:260:9:read_north	40	static
+../Core/Src/compass.c:288:9:is_north_ready	0	static
+../Core/Src/compass.c:294:9:reset_north	0	static

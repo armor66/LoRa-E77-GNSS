@@ -51,7 +51,7 @@ void EXTI9_5_IRQHandler(void)		//(PPS_Pin)
 		main_flags.time_slot = 0;			// from TIM1_IRQ case: 2
 		main_flags.time_slot_timer_ovf = 0;
 
-		if(p_settings->spreading_factor == 12) led_blue_on();
+//		if(p_settings->spreading_factor == 12) led_blue_on();
 
 //		main_flags.pattern_started = 1;
 		led_red_on();
@@ -59,7 +59,8 @@ void EXTI9_5_IRQHandler(void)		//(PPS_Pin)
 
 	if(p_settings->device_number == (main_flags.time_slot + 1)) clear_fix_data(main_flags.time_slot + 1);	//before uart handling finished
 	if(p_settings->spreading_factor == 12 && p_settings->device_number == 2) clear_fix_data(2);	//for beacon №2 only to transmit
-	if(p_settings->spreading_factor != 12) led_blue_on();	//PPS received
+//	if(p_settings->spreading_factor != 12) led_blue_on();	//PPS received
+	led_blue_on();
 
 	led_w_off();								//avoid extra beeps
 //	main_flags.short_beeps = 0;
@@ -86,7 +87,3 @@ void EXTI9_5_IRQHandler(void)		//(PPS_Pin)
 	USART2->CR1 |= USART_CR1_RE | USART_CR1_RXNEIE_RXFNEIE;	//1: USART interrupt generated whenever ORE = 1 or RXFNE = 1 in the USART_ISR register
 
 }
-
-
-
-

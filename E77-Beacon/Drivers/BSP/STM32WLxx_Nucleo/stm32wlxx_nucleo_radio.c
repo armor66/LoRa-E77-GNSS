@@ -1,44 +1,7 @@
-/**
-  ******************************************************************************
-  * @file    stm32wlxx_nucleo_radio.c
-  * @author  MCD Application Team
-  * @brief   This file provides set of firmware functions to manage:
-  *          - RF circuitry available on STM32WLXX-Nucleo
-  *            Kit from STMicroelectronics
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2020-2021 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-
 /* Includes ------------------------------------------------------------------*/
 #include "stm32wlxx_nucleo_radio.h"
 #include "radio_driver.h"
-/** @addtogroup BSP
-  * @{
-  */
 
-/** @addtogroup STM32WLXX_NUCLEO
-  * @{
-  */
-
-/** @addtogroup STM32WLXX_NUCLEO_RADIO_LOW_LEVEL
-  * @brief This file provides set of firmware functions to Radio switch 
-  *        available on STM32WLXX-Nucleo Kit from STMicroelectronics.
-  * @{
-  */
-
-/** @addtogroup STM32WLXX_NUCLEO_RADIO_LOW_LEVEL_Exported_Functions
-  * @{
-  */
-  
 /**
   * @brief  Init Radio Switch 
   * @retval BSP status
@@ -72,7 +35,7 @@ int32_t BSP_RADIO_Init(void)
   HAL_GPIO_WritePin(RF_SW_CTRL2_GPIO_PORT, RF_SW_CTRL2_PIN, GPIO_PIN_RESET); 
   HAL_GPIO_WritePin(RF_SW_CTRL1_GPIO_PORT, RF_SW_CTRL1_PIN, GPIO_PIN_RESET); 
 
-  return BSP_ERROR_NONE;
+  return 0;
 }
 
 /**
@@ -90,7 +53,7 @@ int32_t BSP_RADIO_DeInit(void)
   HAL_GPIO_DeInit(RF_SW_CTRL1_GPIO_PORT, RF_SW_CTRL1_PIN);
   HAL_GPIO_DeInit(RF_SW_CTRL2_GPIO_PORT, RF_SW_CTRL2_PIN);
 
-  return BSP_ERROR_NONE;
+  return 0;
 }
 
 /**
@@ -139,7 +102,7 @@ int32_t BSP_RADIO_ConfigRFSwitch(BSP_RADIO_Switch_TypeDef Config)
       break;    
   }  
 
-  return BSP_ERROR_NONE;
+  return 0;
 }
 
 /**
@@ -199,18 +162,6 @@ int32_t BSP_RADIO_GetRFOMaxPowerConfig(BSP_RADIO_RFOMaxPowerConfig_TypeDef Confi
 
   return ret;
 }
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 /**
   * @}

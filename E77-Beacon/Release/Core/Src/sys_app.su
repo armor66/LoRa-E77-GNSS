@@ -1,6 +1,0 @@
-../Core/Src/sys_app.c:69:6:SystemApp_Init	8	static
-../Core/Src/sys_app.c:88:9:GetBatteryLevel	8	static
-../Core/Src/sys_app.c:123:10:GetTemperatureLevel	8	static
-../Core/Src/sys_app.c:145:19:HAL_InitTick	0	static
-../Core/Src/sys_app.c:164:10:HAL_GetTick	0	static
-../Core/Src/sys_app.c:196:6:HAL_Delay	8	static

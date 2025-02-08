@@ -94,13 +94,12 @@ void Error_Handler(void);
 #define BATT_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-#define NV3023
-//#define ST7735
+//#define NV3023
+#define ST7735
 //#define ST7735_IS_160X128_BLUE
 //#define ST7735_IS_160X128_RED
-
-#define BUFFER_AIR_SIZE                             13  /* Define the payload size here */
-#define BUFFER_RX                                 	15	//BUFFER_SIZE + 2 rssi and snr
+#define BUFFER_AIR_SIZE            	13  	/* Define the payload size here */
+#define BUFFER_RX                  	15		//BUFFER_SIZE + 2 rssi and snr
 #define PPS_SKIP	(2)		//how many first PPS pulses are skipped before switching to active mode
 
 void shortBeeps(int8_t beeps);

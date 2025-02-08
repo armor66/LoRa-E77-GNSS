@@ -39,6 +39,10 @@ extern "C" {
 void MX_GPIO_Init(void);
 
 /* USER CODE BEGIN Prototypes */
+void interrupt_init(void);
+void enable_buttons_interrupts(void);
+void disable_buttons_interrupts(void);
+
 void led_toggle(void);
 void led_red_on(void);
 void led_red_off(void);
@@ -46,10 +50,9 @@ void led_green_on(void);
 void led_green_off(void);
 void led_blue_on(void);
 void led_blue_off(void);
+
 void led_w_on(void);
 void led_w_off(void);
-void buzz_on(void);
-void buzz_off(void);
 
 void lcd_on(void);
 void lcd_off(void);
@@ -59,7 +62,7 @@ void gps_disable(void);
 
 void hold_power(void);
 void release_power(void);
-void shortBeepsBlocking(int8_t beeps);
+
 void longBeepsBlocking(int8_t beeps);
 /* USER CODE END Prototypes */
 

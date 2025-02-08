@@ -45,8 +45,8 @@
 /*#define HAL_I2S_MODULE_ENABLED   */
 /*#define HAL_IPCC_MODULE_ENABLED   */
 /*#define HAL_IRDA_MODULE_ENABLED   */
-#define HAL_IWDG_MODULE_ENABLED
-#define HAL_LPTIM_MODULE_ENABLED
+/*#define HAL_IWDG_MODULE_ENABLED   */
+/*#define HAL_LPTIM_MODULE_ENABLED   */
 /*#define HAL_PKA_MODULE_ENABLED   */
 /*#define HAL_RNG_MODULE_ENABLED   */
 #define HAL_RTC_MODULE_ENABLED
@@ -159,7 +159,7 @@
   * @brief This is the HAL system configuration section
   */
 #define  VDD_VALUE                          3300U                             /*!< Value of VDD in mv */
-#define  TICK_INT_PRIORITY                  ((1uL <<__NVIC_PRIO_BITS) - 1uL)  /*!< tick interrupt priority (lowest by default) */
+#define  TICK_INT_PRIORITY                  0U
 #define  USE_RTOS                           0U
 #define  PREFETCH_ENABLE                    0U
 #define  INSTRUCTION_CACHE_ENABLE           1U

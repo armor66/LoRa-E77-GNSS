@@ -1,18 +1,34 @@
-#include <ST7735.h>
-#include "stdint.h"
-#include "stdlib.h"
-#include <stdio.h>			//for 'sprintf'
+#include <stdlib.h>
+#include <math.h>
+#include "ST7735.h"
+
+#define _swap_int16_t(a, b)                                                    \
+  {                                                                            \
+    int16_t t = a;                                                             \
+    a = b;                                                                     \
+    b = t;                                                                     \
+  }
 
 int16_t _width;       ///< Display width as modified by current rotation
 int16_t _height;      ///< Display height as modified by current rotation
-int16_t cursor_x;     ///< x location to start print()ing text
-int16_t cursor_y;     ///< y location to start print()ing text
 uint8_t rotation;     ///< Display rotation (0 thru 3)
 uint8_t _colstart;   ///< Some displays need this changed to offset
 uint8_t _rowstart;       ///< Some displays need this changed to offset
 uint8_t _xstart;
 uint8_t _ystart;
 
+//__inline:
+static void sendCmd(uint8_t Cmd);
+static void sendData(uint8_t Data );
+static void sendDataMass(uint8_t* buff, size_t buff_size);
+static void setWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
+static void drawPixel(uint8_t x, uint8_t y, uint16_t color);
+static void drawVLine(uint8_t x, uint8_t y, uint8_t h, uint16_t color);
+static void drawHLine(uint8_t x, uint8_t y, uint8_t w, uint16_t color);
+static void fillCircleHelper(uint8_t x0, uint8_t y0, uint8_t r, uint8_t corners, uint8_t delta, uint16_t color);
+static void fillCircle(uint8_t x0, uint8_t y0, uint8_t r, uint16_t color);
+
+static void setRotation(uint8_t m);
 
   const uint8_t
   init_cmds1[] = {            // Init for 7735R, part 1 (red or green tab)
@@ -90,39 +106,29 @@ uint8_t _ystart;
     ST7735_DISPON ,    DELAY, //  4: Main screen turn on, no args w/delay
       100 };                  //     100 ms delay
 
-void ST7735_Select()
-{
-    HAL_GPIO_WritePin(CS_PORT, CS_PIN, GPIO_PIN_RESET);
-}
+//void ST7735_Reset()
+//{
+//    HAL_GPIO_WritePin(RST_PORT, RST_PIN, GPIO_PIN_RESET);
+//    HAL_Delay(5);
+//    HAL_GPIO_WritePin(RST_PORT, RST_PIN, GPIO_PIN_SET);
+//}
 
-void ST7735_Unselect()
-{
-    HAL_GPIO_WritePin(CS_PORT, CS_PIN, GPIO_PIN_SET);
-}
+// void ST7735_WriteCommand(uint8_t cmd)
+// {
+//    HAL_GPIO_WritePin(DC_PORT, DC_PIN, GPIO_PIN_RESET);
+//    HAL_SPI_Transmit(&ST7735_SPI_PORT, &cmd, sizeof(cmd), HAL_MAX_DELAY);
+//    //HAL_SPI_Transmit_DMA(&ST7735_SPI_PORT, &cmd, sizeof(cmd));
+// }
 
-void ST7735_Reset()
-{
-    HAL_GPIO_WritePin(RST_PORT, RST_PIN, GPIO_PIN_RESET);
-    HAL_Delay(5);
-    HAL_GPIO_WritePin(RST_PORT, RST_PIN, GPIO_PIN_SET);
-}
+//void ST7735_WriteData(uint8_t* buff, size_t buff_size)
+//{
+//    HAL_GPIO_WritePin(DC_PORT, DC_PIN, GPIO_PIN_SET);
+//    HAL_SPI_Transmit(&ST7735_SPI_PORT, buff, buff_size, HAL_MAX_DELAY);
+//    //HAL_SPI_Transmit_DMA(&ST7735_SPI_PORT, buff, buff_size);
+//    //while(hspi2.State == HAL_SPI_STATE_BUSY_TX);
+//}
 
- void ST7735_WriteCommand(uint8_t cmd)
- {
-    HAL_GPIO_WritePin(DC_PORT, DC_PIN, GPIO_PIN_RESET);
-    HAL_SPI_Transmit(&ST7735_SPI_PORT, &cmd, sizeof(cmd), HAL_MAX_DELAY);
-    //HAL_SPI_Transmit_DMA(&ST7735_SPI_PORT, &cmd, sizeof(cmd));
- }
-
-void ST7735_WriteData(uint8_t* buff, size_t buff_size)
-{
-    HAL_GPIO_WritePin(DC_PORT, DC_PIN, GPIO_PIN_SET);
-    HAL_SPI_Transmit(&ST7735_SPI_PORT, buff, buff_size, HAL_MAX_DELAY);
-    //HAL_SPI_Transmit_DMA(&ST7735_SPI_PORT, buff, buff_size);
-    //while(hspi2.State == HAL_SPI_STATE_BUSY_TX);
-}
-
-void DisplayInit(const uint8_t *addr)
+void displayInit(const uint8_t *addr)
 {
     uint8_t numCommands, numArgs;
     uint16_t ms;
@@ -130,14 +136,17 @@ void DisplayInit(const uint8_t *addr)
     numCommands = *addr++;
     while(numCommands--) {
         uint8_t cmd = *addr++;
-        ST7735_WriteCommand(cmd);
-
+        HAL_Delay(1);
+        DC_GPIO_Port->BSRR = (DC_Pin << 16);	// pin DC LOW
+        HAL_SPI_Transmit(&ST7735_SPI_PORT, &cmd, sizeof(cmd), HAL_MAX_DELAY);
+    	DC_GPIO_Port->BSRR = DC_Pin;			// pin DC HIGH
         numArgs = *addr++;
         // If high bit set, delay follows args
         ms = numArgs & DELAY;
         numArgs &= ~DELAY;
         if(numArgs) {
-            ST7735_WriteData((uint8_t*)addr, numArgs);
+
+        	sendDataMass((uint8_t*)addr, numArgs);
             addr += numArgs;
         }
 
@@ -149,39 +158,28 @@ void DisplayInit(const uint8_t *addr)
     }
 }
 
-void ST7735_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
+void st7735_init(uint8_t rotation)
 {
-    // column address set
-    ST7735_WriteCommand(ST7735_CASET);
-    uint8_t data[] = { 0x00, x0 + _xstart, 0x00, x1 + _xstart };
-    ST7735_WriteData(data, sizeof(data));
+	// Enable SPI
+//	if((st7735_SPI->CR1 & SPI_CR1_SPE) != SPI_CR1_SPE){
+//		SET_BIT(st7735_SPI->CR1, SPI_CR1_SPE);
+//	}
+	CS_GPIO_Port->BSRR = ( CS_Pin << 16 );
 
-    // row address set
-    ST7735_WriteCommand(ST7735_RASET);
-    data[1] = y0 + _ystart;
-    data[3] = y1 + _ystart;
-    ST7735_WriteData(data, sizeof(data));
+	RST_GPIO_Port->BSRR = (RST_Pin << 16);
+	HAL_Delay(20);
+	RST_GPIO_Port->BSRR = RST_Pin;
 
-    // write to RAM
-    ST7735_WriteCommand(ST7735_RAMWR);
-}
-
-void ST7735_Init(uint8_t rotation)
-{
-    ST7735_Select();
-    ST7735_Reset();
-    DisplayInit(init_cmds1);
-    DisplayInit(init_cmds2);
-    DisplayInit(init_cmds3);
+    displayInit(init_cmds1);
+    displayInit(init_cmds2);
+    displayInit(init_cmds3);
 #if ST7735_IS_160X80
     _colstart = 24;
     _rowstart = 0;
  /*****  IF Doesn't work, remove the code below (before #elif) *****/
     uint8_t data = 0xC0;
-    ST7735_Select();
     ST7735_WriteCommand(ST7735_MADCTL);
     ST7735_WriteData(&data,1);
-    ST7735_Unselect();
 
 #elif ST7735_IS_128X128
     _colstart = 2;
@@ -193,12 +191,10 @@ void ST7735_Init(uint8_t rotation)
     _colstart = 0;
     _rowstart = 0;
 #endif
-    ST7735_SetRotation (rotation);
-    ST7735_Unselect();
-
+   setRotation (rotation);
 }
 
-void ST7735_SetRotation(uint8_t m)
+static void setRotation(uint8_t m)
 {
 
   uint8_t madctl = 0;
@@ -252,138 +248,21 @@ void ST7735_SetRotation(uint8_t m)
 #endif
     break;
   }
-  ST7735_Select();
-  ST7735_WriteCommand(ST7735_MADCTL);
-  ST7735_WriteData(&madctl,1);
-  ST7735_Unselect();
+
+  sendCmd(ST7735_MADCTL);
+  sendData(madctl);
 }
 
-void ST7735_DrawPixel(uint16_t x, uint16_t y, uint16_t color) {
-    if((x >= _width) || (y >= _height))
-        return;
-
-    ST7735_Select();
-
-    ST7735_SetAddressWindow(x, y, x+1, y+1);
-    uint8_t data[] = { color >> 8, color & 0xFF };
-    ST7735_WriteData(data, sizeof(data));
-
-    ST7735_Unselect();
-}
-
-void ST7735_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor) {
-    uint32_t i, b, j;
-
-    ST7735_SetAddressWindow(x, y, x+font.width-1, y+font.height-1);
-
-    for(i = 0; i < font.height; i++) {
-        b = font.data[(ch - 32) * font.height + i];
-        for(j = 0; j < font.width; j++) {
-            if((b << j) & 0x8000)  {
-                uint8_t data[] = { color >> 8, color & 0xFF };
-                ST7735_WriteData(data, sizeof(data));
-            } else {
-                uint8_t data[] = { bgcolor >> 8, bgcolor & 0xFF };
-                ST7735_WriteData(data, sizeof(data));
-            }
-        }
-    }
-}
-
-void ST7735_WriteString(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor) {
-    ST7735_Select();
-
-    while(*str) {
-        if(x + font.width >= _width) {
-            x = 0;
-            y += font.height;
-            if(y + font.height >= _height) {
-                break;
-            }
-
-            if(*str == ' ') {
-                // skip spaces in the beginning of the new line
-                str++;
-                continue;
-            }
-        }
-
-        ST7735_WriteChar(x, y, *str, font, color, bgcolor);
-        x += font.width;
-        str++;
-    }
-
-    ST7735_Unselect();
-}
-
-void ST7735_FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
-{
-    if((x >= _width) || (y >= _height)) return;
-    if((x + w - 1) >= _width) w = _width - x;
-    if((y + h - 1) >= _height) h = _height - y;
-
-    ST7735_Select();
-    ST7735_SetAddressWindow(x, y, x+w-1, y+h-1);
-
-    uint8_t data[] = { color >> 8, color & 0xFF };
-    HAL_GPIO_WritePin(DC_PORT, DC_PIN, GPIO_PIN_SET);
-    for(y = h; y > 0; y--) {
-        for(x = w; x > 0; x--) {
-            HAL_SPI_Transmit(&ST7735_SPI_PORT, data, sizeof(data), HAL_MAX_DELAY);
-        }
-    }
-
-    ST7735_Unselect();
-}
-
-void ST7735_DrawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t* data) {
+void drawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t* data) {
     if((x >= _width) || (y >= _height)) return;
     if((x + w - 1) >= _width) return;
     if((y + h - 1) >= _height) return;
 
-    ST7735_Select();
-    ST7735_SetAddressWindow(x, y, x+w-1, y+h-1);
-    ST7735_WriteData((uint8_t*)data, sizeof(uint16_t)*w*h);
-    ST7735_Unselect();
+    setWindow(x, y, x+w-1, y+h-1);
+    sendDataMass((uint8_t*)data, sizeof(uint16_t)*w*h);
 }
 
-void ST7735_InvertColors(bool invert) {
-    ST7735_Select();
-    ST7735_WriteCommand(invert ? ST7735_INVON : ST7735_INVOFF);
-    ST7735_Unselect();
-}
-
-
-void drawPixel(int16_t x, int16_t y, uint16_t color)
-{
-	ST7735_DrawPixel(x, y, color);
-}
-
-void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
-{
-	ST7735_FillRectangle(x, y, w, h, color);
-}
-
-
-/***********************************************************************************************************/
-
-
-#define _swap_int16_t(a, b)                                                    \
-  {                                                                            \
-    int16_t t = a;                                                             \
-    a = b;                                                                     \
-    b = t;                                                                     \
-  }
-
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-
-
-void writePixel(int16_t x, int16_t y, uint16_t color)
-{
-    drawPixel(x, y, color);
-}
-
-void writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
+void drawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color)
 {
     int16_t steep = abs(y1 - y0) > abs(x1 - x0);
     if (steep) {
@@ -411,9 +290,9 @@ void writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
 
     for (; x0<=x1; x0++) {
         if (steep) {
-            writePixel(y0, x0, color);
+            drawPixel(y0, x0, color);
         } else {
-            writePixel(x0, y0, color);
+            drawPixel(x0, y0, color);
         }
         err -= dy;
         if (err < 0) {
@@ -423,32 +302,26 @@ void writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
     }
 }
 
-void  drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color)
-{
-	writeLine(x, y, x, y + h - 1, color);
-}
-void  drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color)
-{
-	writeLine(x, y, x + w - 1, y, color);
-}
-
-void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color)
+void draw_line(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color)
 {
     if(x0 == x1){
         if(y0 > y1) _swap_int16_t(y0, y1);
-        drawFastVLine(x0, y0, y1 - y0 + 1, color);
+        drawVLine(x0, y0, y1 - y0 + 1, color);
     } else if(y0 == y1){
         if(x0 > x1) _swap_int16_t(x0, x1);
-        drawFastHLine(x0, y0, x1 - x0 + 1, color);
+        drawHLine(x0, y0, x1 - x0 + 1, color);
     } else {
-        writeLine(x0, y0, x1, y1, color);
+        drawLine(x0, y0, x1, y1, color);
     }
 }
 
-#include <math.h>
-#include "lrns.h"
+void draw_course(uint8_t x0, uint8_t y0, double angle, uint16_t color)
+{
+//in void draw_beacons(void)
+//void drawPosition(63, 97, scaled_dist, azimuth_relative_rad, 7, current_device, RED)
+}
 
-void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, uint16_t color1, uint16_t color2)
+void draw_arrow(uint8_t x0, uint8_t y0, uint8_t r, double angle, uint8_t length, uint16_t color1, uint16_t color2)
 {
 	double xarrow, yarrow, xcentre, ycentre, x1, y1, x2, y2;
 	double arrow_angle = angle;		//stay with radian * deg_to_rad;
@@ -468,14 +341,14 @@ void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, 
 	y1 = yarrow - 9 * cos(arrow_tail+0.5);
 	x2 = xarrow + 9 * sin(arrow_tail-0.5);
 	y2 = yarrow - 9 * cos(arrow_tail-0.5);
-	drawLine(xarrow, yarrow, x1, y1, color1);
-	drawLine(xarrow, yarrow, x2, y2, color1);
+	draw_line(xarrow, yarrow, x1, y1, color1);
+	draw_line(xarrow, yarrow, x2, y2, color1);
 
 	x1 = x0 + (r-length) * arrow_sin;				//sin(arrow_angle);
 	y1 = y0 - (r-length) * arrow_cos;				//cos(arrow_angle);
 	x2 = x0 + (r) * arrow_sin;						//sin(arrow_angle);
 	y2 = y0 - (r) * arrow_cos;						//cos(arrow_angle);
-	drawLine(x1, y1, x2, y2, color1);
+	draw_line(x1, y1, x2, y2, color1);
 
 		xcentre = x0 + 1*arrow_cos;					//cos(arrow_angle);
 		ycentre = y0 + 1*arrow_sin;					//sin(arrow_angle);
@@ -483,7 +356,7 @@ void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, 
 		y1 = ycentre - (r-length) * arrow_cos;		//cos(arrow_angle);
 		x2 = xcentre + (r-2) * arrow_sin;			//sin(arrow_angle);
 		y2 = ycentre - (r-2) * arrow_cos;			//cos(arrow_angle);
-		drawLine(x1, y1, x2, y2, color1);
+		draw_line(x1, y1, x2, y2, color1);
 
 		xcentre = x0 - 1*arrow_cos;					//cos(arrow_angle);
 		ycentre = y0 - 1*arrow_sin;					//sin(arrow_angle);
@@ -491,7 +364,7 @@ void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, 
 		y1 = ycentre - (r-length) * arrow_cos;		//cos(arrow_angle);
 		x2 = xcentre + (r-2) * arrow_sin;			//sin(arrow_angle);
 		y2 = ycentre - (r-2) * arrow_cos;			//cos(arrow_angle);
-		drawLine(x1, y1, x2, y2, color1);
+		draw_line(x1, y1, x2, y2, color1);
 
 	xcentre = x0 + 2*arrow_cos;						//cos(arrow_angle);
 	ycentre = y0 + 2*arrow_sin;						//sin(arrow_angle);
@@ -499,7 +372,7 @@ void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, 
 	y1 = ycentre - (r-length) * arrow_cos;			//cos(arrow_angle);
 	x2 = xcentre + (r-4) * arrow_sin;				//sin(arrow_angle);
 	y2 = ycentre - (r-4) * arrow_cos;				//cos(arrow_angle);
-	drawLine(x1, y1, x2, y2, color1);
+	draw_line(x1, y1, x2, y2, color1);
 
 	xcentre = x0 - 2*arrow_cos;						//cos(arrow_angle);
 	ycentre = y0 - 2*arrow_sin;						//sin(arrow_angle);
@@ -507,7 +380,7 @@ void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, 
 	y1 = ycentre - (r-length) * arrow_cos;			//cos(arrow_angle);
 	x2 = xcentre + (r-4) * arrow_sin;				//sin(arrow_angle);
 	y2 = ycentre - (r-4) * arrow_cos;				//cos(arrow_angle);
-	drawLine(x1, y1, x2, y2, color1);
+	draw_line(x1, y1, x2, y2, color1);
 
 	xcentre = x0 + 1*arrow_tail_cos;					//cos(arrow_tail);
 	ycentre = y0 + 1*arrow_tail_sin;					//sin(arrow_tail);
@@ -515,7 +388,7 @@ void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, 
 	y1 = ycentre - (r-length+3) * arrow_tail_cos;		//cos(arrow_tail);
 	x2 = xcentre + r * arrow_tail_sin;					//sin(arrow_tail);
 	y2 = ycentre - r * arrow_tail_cos;					//cos(arrow_tail);
-	drawLine(x1, y1, x2, y2, color2);
+	draw_line(x1, y1, x2, y2, color2);
 
 		xcentre = x0;
 		ycentre = y0;
@@ -523,7 +396,7 @@ void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, 
 		y1 = ycentre - (r-length+3) * arrow_tail_cos;	//cos(arrow_tail);
 		x2 = xcentre + r * arrow_tail_sin;				//sin(arrow_tail);
 		y2 = ycentre - r * arrow_tail_cos;				//cos(arrow_tail);
-		drawLine(x1, y1, x2, y2, color2);
+		draw_line(x1, y1, x2, y2, color2);
 
 	xcentre = x0 - 1*arrow_tail_cos;					//cos(arrow_tail);
 	ycentre = y0 - 1*arrow_tail_sin;					//sin(arrow_tail);
@@ -531,54 +404,11 @@ void drawArrow(int16_t x0, int16_t y0, int16_t r, double angle, int16_t length, 
 	y1 = ycentre - (r-length+3) * arrow_tail_cos;		//cos(arrow_tail);
 	x2 = xcentre + r * arrow_tail_sin;					//sin(arrow_tail);
 	y2 = ycentre - r * arrow_tail_cos;					//cos(arrow_tail);
-	drawLine(x1, y1, x2, y2, color2);
+	draw_line(x1, y1, x2, y2, color2);
 
 }
 
-void drawPosition(int16_t x0, int16_t y0, int16_t r1, double angle, int16_t r2, int16_t tag, uint16_t color)
-{
-	int16_t xcentre, ycentre;
-//	double pos_angle = angle * deg_to_rad;
-	char Line[18][18];
-
-	xcentre = x0 + r1 * sin(angle);
-	ycentre = y0 - r1 * cos(angle);
-
-	sprintf(&Line[0][0], "%01d", tag);
-	ST7735_WriteString(xcentre-2, ycentre-3, &Line[0][0], Font_6x8, color,BLACK);
-
-	drawCircle(xcentre, ycentre, r2, color);
-}
-void drawTrace(int16_t x0, int16_t y0, int16_t r1, double angle, int16_t r2, uint16_t color)
-{
-	int16_t xcentre, ycentre;
-//	double pos_angle = angle * deg_to_rad;
-
-	xcentre = x0 + r1 * sin(angle);
-	ycentre = y0 - r1 * cos(angle);
-
-	drawCircle(xcentre, ycentre, r2, color);
-}
-void drawDirection(int16_t x0, int16_t y0, int16_t r, double angle, uint16_t color)
-{
-	int16_t x1, y1;
-	//	double pos_angle = angle * deg_to_rad;
-
-	x1 = x0 + r * sin(angle);
-	y1 = y0 - r * cos(angle);
-
-	writeLine(x0, y0, x1, y1, color);
-}
-void erasePosition(int16_t x0, int16_t y0, int16_t r1, double angle, int16_t r2)
-{
-	int16_t xcentre = x0 + r1 * sin(angle);
-	int16_t ycentre = y0 - r1 * cos(angle);
-
-    drawFastVLine(xcentre, ycentre-r2, 2*r2+1, BLACK);
-    fillCircleHelper(xcentre, ycentre, r2, 3, 0, BLACK);
-}
-
-void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
+void draw_circle(uint8_t x0, uint8_t y0, uint8_t r, uint16_t color)
 {
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
@@ -586,10 +416,10 @@ void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
     int16_t x = 0;
     int16_t y = r;
 
-    writePixel(x0  , y0+r, color);
-    writePixel(x0  , y0-r, color);
-    writePixel(x0+r, y0  , color);
-    writePixel(x0-r, y0  , color);
+    drawPixel(x0  , y0+r, color);
+    drawPixel(x0  , y0-r, color);
+    drawPixel(x0+r, y0  , color);
+    drawPixel(x0-r, y0  , color);
 
     while (x<y) {
         if (f >= 0) {
@@ -601,54 +431,238 @@ void drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
         ddF_x += 2;
         f += ddF_x;
 
-        writePixel(x0 + x, y0 + y, color);
-        writePixel(x0 - x, y0 + y, color);
-        writePixel(x0 + x, y0 - y, color);
-        writePixel(x0 - x, y0 - y, color);
-        writePixel(x0 + y, y0 + x, color);
-        writePixel(x0 - y, y0 + x, color);
-        writePixel(x0 + y, y0 - x, color);
-        writePixel(x0 - y, y0 - x, color);
+        drawPixel(x0 + x, y0 + y, color);
+        drawPixel(x0 - x, y0 + y, color);
+        drawPixel(x0 + x, y0 - y, color);
+        drawPixel(x0 - x, y0 - y, color);
+        drawPixel(x0 + y, y0 + x, color);
+        drawPixel(x0 - y, y0 + x, color);
+        drawPixel(x0 + y, y0 - x, color);
+        drawPixel(x0 - y, y0 - x, color);
     }
 }
 
-void drawCircleHelper( int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color)
+//==============================================================================
+/*new guess more fast functions*/
+//==============================================================================
+void draw_trace(uint8_t x0, uint8_t y0, uint8_t r1, double angle, uint8_t r2, uint16_t color)
 {
-    int16_t f     = 1 - r;
-    int16_t ddF_x = 1;
-    int16_t ddF_y = -2 * r;
-    int16_t x     = 0;
-    int16_t y     = r;
+	uint8_t xcentre, ycentre;
+//	double pos_angle = angle * deg_to_rad;
 
-    while (x<y) {
-        if (f >= 0) {
-            y--;
-            ddF_y += 2;
-            f     += ddF_y;
+	xcentre = x0 + r1 * sin(angle);
+	ycentre = y0 - r1 * cos(angle);
+
+	draw_circle(xcentre, ycentre, r2, color);
+	draw_circle(xcentre, ycentre, (r2 - 1), color);
+}
+
+void draw_direction(uint8_t x0, uint8_t y0, uint8_t r, double angle, uint16_t color)
+{
+	uint8_t x1, y1;
+	//	double pos_angle = angle * deg_to_rad;
+
+	x1 = x0 + r * sin(angle);
+	y1 = y0 - r * cos(angle);
+
+	draw_line(x0, y0, x1, y1, color);
+}
+
+void draw_position(uint8_t x0, uint8_t y0, uint8_t r1, double angle, uint8_t r2, uint8_t tag, uint16_t color)
+{
+	uint8_t xcentre, ycentre;
+//	double pos_angle = angle * deg_to_rad;
+	tag += 48;
+	uint8_t *p = &tag;
+
+	xcentre = x0 + r1 * sin(angle);
+	ycentre = y0 - r1 * cos(angle);
+
+	draw_char(xcentre-2, ycentre-3, *p, Font_6x8, color,BLACK);
+	draw_circle(xcentre, ycentre, r2, color);
+}
+
+void erase_position(uint8_t x0, uint8_t y0, uint8_t r1, double angle, uint8_t r2)
+{
+	uint8_t xcentre = x0 + r1 * sin(angle);
+	uint8_t ycentre = y0 - r1 * cos(angle);
+//fill circle:
+	fillCircle(xcentre, ycentre, r2, BLACK);
+//    drawVLine(xcentre, ycentre-r2, 2*r2+1, BLACK);
+//    fillCircleHelper(xcentre, ycentre, r2, 3, 0, BLACK);
+}
+
+void draw_str_by_rows(uint8_t x, uint8_t y, char* str, FontDef font, uint16_t color, uint16_t bg_color) {
+//	static uint16_t string_buff[ST7735_WIDTH * 18];
+	uint16_t string_buff[ST7735_WIDTH * font.height];
+	uint16_t pixel_index = 0;		//from 0 to BUF_LEN max
+    uint16_t row_in_char = 0;		//row in a particular character
+    uint8_t length = 0;
+
+    for(uint8_t i=0; str[i]!='\0'; i++)
+        {
+    		length++;
         }
-        x++;
-        ddF_x += 2;
-        f     += ddF_x;
-        if (cornername & 0x4) {
-            writePixel(x0 + x, y0 + y, color);
-            writePixel(x0 + y, y0 + x, color);
-        }
-        if (cornername & 0x2) {
-            writePixel(x0 + x, y0 - y, color);
-            writePixel(x0 + y, y0 - x, color);
-        }
-        if (cornername & 0x8) {
-            writePixel(x0 - y, y0 + x, color);
-            writePixel(x0 - x, y0 + y, color);
-        }
-        if (cornername & 0x1) {
-            writePixel(x0 - y, y0 - x, color);
-            writePixel(x0 - x, y0 - y, color);
+
+    for (uint8_t row_in_str = 0; row_in_str < font.height; row_in_str++)	//successive enumeration rows in string (0 to FONT_11x18_HEIGHT-1)
+    {
+        for(uint8_t char_ind=0; char_ind<length; char_ind++)					//successive enumeration characters in string (0 to length-1)
+        {
+        	row_in_char = font.data[((uint16_t)str[char_ind] - 32)*font.height + row_in_str];
+
+        	for (uint8_t j=0; j<font.width;j++)		//filling pixels in a particular row of each character
+        	{
+        		string_buff[pixel_index++]=(row_in_char & (uint16_t)0x8000)? color: bg_color;
+        		row_in_char = row_in_char<< 1;
+        	}
+		}
+	}
+
+    setWindow(x, y, (x + (font.width * length) - 1), (y + font.height - 1));
+
+    for (uint16_t i=0; i<(font.width * font.height * length); i++)
+    {
+        while (!(st7735_SPI->SR & SPI_SR_TXE));
+        *((__IO uint8_t *)&st7735_SPI->DR) = (string_buff[i] >> 8);
+        while (!(st7735_SPI->SR & SPI_SR_TXE));
+        *((__IO uint8_t *)&st7735_SPI->DR) = (string_buff[i] & 0xFF);
+    }
+    while (!(st7735_SPI->SR & SPI_SR_TXE) || (st7735_SPI->SR & SPI_SR_BSY));
+}
+
+void draw_char(uint8_t x, uint8_t y, char ch, FontDef font, uint16_t color, uint16_t bg_color)
+{
+    uint32_t i, b, j;
+
+    setWindow(x, y, (x + font.width - 1), (y + font.height - 1));
+
+    for(i = 0; i < font.height; i++) {
+        b = font.data[(ch - 32) * font.height + i];
+        for(j = 0; j < font.width; j++) {
+            if((b << j) & 0x8000)  {
+                uint8_t data[] = { color >> 8, color & 0xFF };
+                sendDataMass(data, sizeof(data));
+            } else {
+                uint8_t data[] = { bg_color >> 8, bg_color & 0xFF };
+                sendDataMass(data, sizeof(data));
+            }
         }
     }
 }
 
-void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t corners, int16_t delta, uint16_t color)
+void fill_screen(uint16_t color)
+{
+	fill_rectgl(0, 0,  _width, _height, color);
+}
+
+void fill_rectgl(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color)
+{
+	setWindow(x0, y0, x1-1, y1-1);
+
+   uint32_t len = (uint32_t)((x1-x0)*(y1-y0));
+
+   for (uint32_t i=0; i < len; i++)
+   {
+          while (!(st7735_SPI->SR & SPI_SR_TXE));
+          *((__IO uint8_t *)&st7735_SPI->DR) = (color >> 8);
+          while (!(st7735_SPI->SR & SPI_SR_TXE));
+          *((__IO uint8_t *)&st7735_SPI->DR) = (color & 0xFF);
+   }
+   while (!(st7735_SPI->SR & SPI_SR_TXE) || (st7735_SPI->SR & SPI_SR_BSY));
+}
+//==============================================================================
+/*static __inline functions*/
+//==============================================================================
+__inline static void sendCmd(uint8_t Cmd)
+{
+	DC_GPIO_Port->BSRR = ( DC_Pin << 16 );	// pin DC LOW
+	// TXE(Transmit buffer empty) – устанавливается когда буфер передачи(регистр SPI_DR) пуст, очищается при загрузке данных
+	while( (st7735_SPI->SR & SPI_SR_TXE) == RESET ){};
+	// заполняем буфер передатчика 1 байт информации--------------
+	*((__IO uint8_t *)&st7735_SPI->DR) = Cmd;
+	// TXE(Transmit buffer empty) – устанавливается когда буфер передачи(регистр SPI_DR) пуст, очищается при загрузке данных
+	while( (st7735_SPI->SR & (SPI_SR_TXE | SPI_SR_BSY)) != SPI_SR_TXE ){};
+	// pin DC HIGH
+	DC_GPIO_Port->BSRR = DC_Pin;			// pin DC HIGH
+}
+
+__inline static void sendData(uint8_t Data )
+{
+	// TXE(Transmit buffer empty) – устанавливается когда буфер передачи(регистр SPI_DR) пуст, очищается при загрузке данных
+	while( (st7735_SPI->SR & SPI_SR_TXE) == RESET ){};
+	// передаем 1 байт информации--------------
+	*((__IO uint8_t *)&st7735_SPI->DR) = Data;
+	// TXE(Transmit buffer empty) – устанавливается когда буфер передачи(регистр SPI_DR) пуст, очищается при загрузке данных
+	while( (st7735_SPI->SR & (SPI_SR_TXE | SPI_SR_BSY)) != SPI_SR_TXE ){};
+}
+
+__inline static void sendDataMass(uint8_t* buff, size_t buff_size)
+{
+	while( buff_size )
+	{
+		// TXE(Transmit buffer empty) – устанавливается когда буфер передачи(регистр SPI_DR) пуст, очищается при загрузке данных
+		while( (st7735_SPI->SR & SPI_SR_TXE) == RESET ){};
+		// передаем 1 байт информации--------------
+		*((__IO uint8_t *)&st7735_SPI->DR) = *buff++;
+		buff_size--;
+	}
+	// TXE(Transmit buffer empty) – устанавливается когда буфер передачи(регистр SPI_DR) пуст, очищается при загрузке данных
+	while( (st7735_SPI->SR & (SPI_SR_TXE | SPI_SR_BSY)) != SPI_SR_TXE ){};
+}
+
+__inline static void setWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
+{
+    // column address set
+    sendCmd(ST7735_CASET);
+    uint8_t data[] = { 0x00, x0 + _xstart, 0x00, x1 + _xstart };
+    sendDataMass(data, sizeof(data));
+    // row address set
+    sendCmd(ST7735_RASET);
+    data[1] = y0 + _ystart;
+    data[3] = y1 + _ystart;
+    sendDataMass(data, sizeof(data));
+    // write to RAM
+    sendCmd(ST7735_RAMWR);
+}
+
+__inline static void drawPixel(uint8_t x, uint8_t y, uint16_t color)
+{
+    if((x >= _width) || (y >= _height)) return;
+
+    setWindow(x, y, x, y);
+    uint8_t data[] = { color >> 8, color & 0xFF };
+    sendDataMass(data, sizeof(data));
+}
+
+__inline static void drawVLine(uint8_t x, uint8_t y, uint8_t h, uint16_t color)
+{
+	setWindow(x, y, x, y + h - 1);
+
+   for (uint8_t i=0; i < h; i++)
+   {
+          while (!(st7735_SPI->SR & SPI_SR_TXE));
+          *((__IO uint8_t *)&st7735_SPI->DR) = (color >> 8);
+          while (!(st7735_SPI->SR & SPI_SR_TXE));
+          *((__IO uint8_t *)&st7735_SPI->DR) = (color & 0xFF);
+   }
+   while (!(st7735_SPI->SR & SPI_SR_TXE) || (st7735_SPI->SR & SPI_SR_BSY));
+}
+
+__inline static void drawHLine(uint8_t x, uint8_t y, uint8_t w, uint16_t color)
+{
+	setWindow(x, y, x + w - 1, y);
+
+   for (uint8_t i=0; i < w; i++)
+   {
+          while (!(st7735_SPI->SR & SPI_SR_TXE));
+          *((__IO uint8_t *)&st7735_SPI->DR) = (color >> 8);
+          while (!(st7735_SPI->SR & SPI_SR_TXE));
+          *((__IO uint8_t *)&st7735_SPI->DR) = (color & 0xFF);
+   }
+   while (!(st7735_SPI->SR & SPI_SR_TXE) || (st7735_SPI->SR & SPI_SR_BSY));
+}
+
+__inline static void fillCircleHelper(uint8_t x0, uint8_t y0, uint8_t r, uint8_t corners, uint8_t delta, uint16_t color)
 {
 
     int16_t f     = 1 - r;
@@ -673,351 +687,21 @@ void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t corners, int16_
         // These checks avoid double-drawing certain lines, important
         // for the SSD1306 library which has an INVERT drawing mode.
         if(x < (y + 1)) {
-            if(corners & 1) drawFastVLine(x0+x, y0-y, 2*y+delta, color);
-            if(corners & 2) drawFastVLine(x0-x, y0-y, 2*y+delta, color);
+            if(corners & 1) drawVLine(x0+x, y0-y, 2*y+delta, color);
+            if(corners & 2) drawVLine(x0-x, y0-y, 2*y+delta, color);
         }
         if(y != py) {
-            if(corners & 1) drawFastVLine(x0+py, y0-px, 2*px+delta, color);
-            if(corners & 2) drawFastVLine(x0-py, y0-px, 2*px+delta, color);
+            if(corners & 1) drawVLine(x0+py, y0-px, 2*px+delta, color);
+            if(corners & 2) drawVLine(x0-py, y0-px, 2*px+delta, color);
             py = y;
         }
         px = x;
     }
 }
 
-void fillCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color)
+__inline static void fillCircle(uint8_t x0, uint8_t y0, uint8_t r, uint16_t color)
 {
-    drawFastVLine(x0, y0-r, 2*r+1, color);
+    drawVLine(x0, y0-r, 2*r+1, color);
     fillCircleHelper(x0, y0, r, 3, 0, color);
 }
 
-
-
-void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
-{
-    drawFastHLine(x, y, w, color);
-    drawFastHLine(x, y+h-1, w, color);
-    drawFastVLine(x, y, h, color);
-    drawFastVLine(x+w-1, y, h, color);
-}
-
-void drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color)
-{
-    int16_t max_radius = ((w < h) ? w : h) / 2; // 1/2 minor axis
-    if(r > max_radius) r = max_radius;
-    // smarter version
-    drawFastHLine(x+r  , y    , w-2*r, color); // Top
-    drawFastHLine(x+r  , y+h-1, w-2*r, color); // Bottom
-    drawFastVLine(x    , y+r  , h-2*r, color); // Left
-    drawFastVLine(x+w-1, y+r  , h-2*r, color); // Right
-    // draw four corners
-    drawCircleHelper(x+r    , y+r    , r, 1, color);
-    drawCircleHelper(x+w-r-1, y+r    , r, 2, color);
-    drawCircleHelper(x+w-r-1, y+h-r-1, r, 4, color);
-    drawCircleHelper(x+r    , y+h-r-1, r, 8, color);
-}
-
-
-void fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color)
-{
-    int16_t max_radius = ((w < h) ? w : h) / 2; // 1/2 minor axis
-    if(r > max_radius) r = max_radius;
-    // smarter version
-    fillRect(x+r, y, w-2*r, h, color);
-    // draw four corners
-    fillCircleHelper(x+w-r-1, y+r, r, 1, h-2*r-1, color);
-    fillCircleHelper(x+r    , y+r, r, 2, h-2*r-1, color);
-}
-
-
-void drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color)
-{
-    drawLine(x0, y0, x1, y1, color);
-    drawLine(x1, y1, x2, y2, color);
-    drawLine(x2, y2, x0, y0, color);
-}
-
-
-void fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color)
-{
-
-    int16_t a, b, y, last;
-
-    // Sort coordinates by Y order (y2 >= y1 >= y0)
-    if (y0 > y1) {
-        _swap_int16_t(y0, y1); _swap_int16_t(x0, x1);
-    }
-    if (y1 > y2) {
-        _swap_int16_t(y2, y1); _swap_int16_t(x2, x1);
-    }
-    if (y0 > y1) {
-        _swap_int16_t(y0, y1); _swap_int16_t(x0, x1);
-    }
-
-    if(y0 == y2) { // Handle awkward all-on-same-line case as its own thing
-        a = b = x0;
-        if(x1 < a)      a = x1;
-        else if(x1 > b) b = x1;
-        if(x2 < a)      a = x2;
-        else if(x2 > b) b = x2;
-        drawFastHLine(a, y0, b-a+1, color);
-        return;
-    }
-
-    int16_t
-    dx01 = x1 - x0,
-    dy01 = y1 - y0,
-    dx02 = x2 - x0,
-    dy02 = y2 - y0,
-    dx12 = x2 - x1,
-    dy12 = y2 - y1;
-    int32_t
-    sa   = 0,
-    sb   = 0;
-
-    // For upper part of triangle, find scanline crossings for segments
-    // 0-1 and 0-2.  If y1=y2 (flat-bottomed triangle), the scanline y1
-    // is included here (and second loop will be skipped, avoiding a /0
-    // error there), otherwise scanline y1 is skipped here and handled
-    // in the second loop...which also avoids a /0 error here if y0=y1
-    // (flat-topped triangle).
-    if(y1 == y2) last = y1;   // Include y1 scanline
-    else         last = y1-1; // Skip it
-
-    for(y=y0; y<=last; y++) {
-        a   = x0 + sa / dy01;
-        b   = x0 + sb / dy02;
-        sa += dx01;
-        sb += dx02;
-        /* longhand:
-        a = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
-        b = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-        */
-        if(a > b) _swap_int16_t(a,b);
-        drawFastHLine(a, y, b-a+1, color);
-    }
-
-    // For lower part of triangle, find scanline crossings for segments
-    // 0-2 and 1-2.  This loop is skipped if y1=y2.
-    sa = (int32_t)dx12 * (y - y1);
-    sb = (int32_t)dx02 * (y - y0);
-    for(; y<=y2; y++) {
-        a   = x1 + sa / dy12;
-        b   = x0 + sb / dy02;
-        sa += dx12;
-        sb += dx02;
-        /* longhand:
-        a = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
-        b = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-        */
-        if(a > b) _swap_int16_t(a,b);
-        drawFastHLine(a, y, b-a+1, color);
-    }
-}
-
-void fillScreen(uint16_t color) {
-    fillRect(0, 0, _width, _height, color);
-}
-
-void ST7735_FillScreen(uint16_t color) {
-    fillRect(0, 0, _width, _height, color);
-}
-
-void testLines(uint16_t color)
-{
-    int           x1, y1, x2, y2,
-                  w = _width,
-                  h = _height;
-
-    fillScreen(BLACK);
-
-    x1 = y1 = 0;
-    y2    = h - 1;
-    for (x2 = 0; x2 < w; x2 += 6) drawLine(x1, y1, x2, y2, color);
-    x2    = w - 1;
-    for (y2 = 0; y2 < h; y2 += 6) drawLine(x1, y1, x2, y2, color);
-
-    fillScreen(BLACK);
-
-    x1    = w - 1;
-    y1    = 0;
-    y2    = h - 1;
-    for (x2 = 0; x2 < w; x2 += 6) drawLine(x1, y1, x2, y2, color);
-    x2    = 0;
-    for (y2 = 0; y2 < h; y2 += 6) drawLine(x1, y1, x2, y2, color);
-
-    fillScreen(BLACK);
-
-    x1    = 0;
-    y1    = h - 1;
-    y2    = 0;
-    for (x2 = 0; x2 < w; x2 += 6) drawLine(x1, y1, x2, y2, color);
-    x2    = w - 1;
-    for (y2 = 0; y2 < h; y2 += 6) drawLine(x1, y1, x2, y2, color);
-
-    fillScreen(BLACK);
-
-    x1    = w - 1;
-    y1    = h - 1;
-    y2    = 0;
-    for (x2 = 0; x2 < w; x2 += 6) drawLine(x1, y1, x2, y2, color);
-    x2    = 0;
-    for (y2 = 0; y2 < h; y2 += 6) drawLine(x1, y1, x2, y2, color);
-
-}
-
-void testFastLines(uint16_t color1, uint16_t color2)
-{
-    int           x, y, w = _width, h = _height;
-
-    fillScreen(BLACK);
-    for (y = 0; y < h; y += 5) drawFastHLine(0, y, w, color1);
-    for (x = 0; x < w; x += 5) drawFastVLine(x, 0, h, color2);
-}
-
-void testRects(uint16_t color)
-{
-    int           n, i, i2,
-                  cx = _width  / 2,
-                  cy = _height / 2;
-
-    fillScreen(BLACK);
-    n     = min(_width, _height);
-    for (i = 2; i < n; i += 6) {
-        i2 = i / 2;
-        drawRect(cx - i2, cy - i2, i, i, color);
-    }
-
-}
-
-void testFilledRects(uint16_t color1, uint16_t color2)
-{
-    int           n, i, i2,
-                  cx = _width  / 2 - 1,
-                  cy = _height / 2 - 1;
-
-    fillScreen(BLACK);
-    n = min(_width, _height);
-    for (i = n; i > 0; i -= 6) {
-        i2    = i / 2;
-
-        fillRect(cx - i2, cy - i2, i, i, color1);
-
-        drawRect(cx - i2, cy - i2, i, i, color2);
-    }
-}
-
-void testFilledCircles(uint8_t radius, uint16_t color)
-{
-    int x, y, w = _width, h = _height, r2 = radius * 2;
-
-    fillScreen(BLACK);
-    for (x = radius; x < w; x += r2) {
-        for (y = radius; y < h; y += r2) {
-            fillCircle(x, y, radius, color);
-        }
-    }
-
-}
-
-void testCircles(uint8_t radius, uint16_t color)
-{
-    int           x, y, r2 = radius * 2,
-                        w = _width  + radius,
-                        h = _height + radius;
-
-    // Screen is not cleared for this one -- this is
-    // intentional and does not affect the reported time.
-    for (x = 0; x < w; x += r2) {
-        for (y = 0; y < h; y += r2) {
-            drawCircle(x, y, radius, color);
-        }
-    }
-
-}
-
-void testTriangles()
-{
-    int           n, i, cx = _width  / 2 - 1,
-                        cy = _height / 2 - 1;
-
-    fillScreen(BLACK);
-    n     = min(cx, cy);
-    for (i = 0; i < n; i += 5) {
-        drawTriangle(
-            cx    , cy - i, // peak
-            cx - i, cy + i, // bottom left
-            cx + i, cy + i, // bottom right
-            color565(0, 0, i));
-    }
-
-}
-
-void testFilledTriangles() {
-    int           i, cx = _width  / 2 - 1,
-                     cy = _height / 2 - 1;
-
-    fillScreen(BLACK);
-    for (i = min(cx, cy); i > 10; i -= 5) {
-    	fillTriangle(cx, cy - i, cx - i, cy + i, cx + i, cy + i,
-    	                         color565(0, i, i));
-    	drawTriangle(cx, cy - i, cx - i, cy + i, cx + i, cy + i,
-    	                         color565(i, i, 0));
-    }
-}
-
-void testRoundRects() {
-    int           w, i, i2, red, step,
-                  cx = _width  / 2 - 1,
-                  cy = _height / 2 - 1;
-
-    fillScreen(BLACK);
-    w     = min(_width, _height);
-    red = 0;
-    step = (256 * 6) / w;
-    for (i = 0; i < w; i += 6) {
-        i2 = i / 2;
-        red += step;
-        drawRoundRect(cx - i2, cy - i2, i, i, i / 8, color565(red, 0, 0));
-    }
-
-}
-
-void testFilledRoundRects() {
-    int           i, i2, green, step,
-                  cx = _width  / 2 - 1,
-                  cy = _height / 2 - 1;
-
-    fillScreen(BLACK);
-    green = 256;
-    step = (256 * 6) / min(_width, _height);
-    for (i = min(_width, _height); i > 20; i -= 6) {
-        i2 = i / 2;
-        green -= step;
-        fillRoundRect(cx - i2, cy - i2, i, i, i / 8, color565(0, green, 0));
-    }
-
-}
-void testFillScreen()
-{
-    fillScreen(BLACK);
-    fillScreen(RED);
-    fillScreen(GREEN);
-    fillScreen(BLUE);
-    fillScreen(BLACK);
-}
-
-void testAll (void)
-{
-	testFillScreen();
-	testLines(CYAN);
-	testFastLines(RED, BLUE);
-	testRects(GREEN);
-	testFilledRects(YELLOW, MAGENTA);
-	testFilledCircles(10, MAGENTA);
-	testCircles(10, WHITE);
-	testTriangles();
-	testFilledTriangles();
-	testRoundRects();
-	testFilledRoundRects();
-}

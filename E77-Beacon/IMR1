@@ -1,0 +1,154 @@
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:237:        temp = EXTI->RTSR1;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:243:        EXTI->RTSR1 = temp;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:245:        temp = EXTI->FTSR1;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:251:        EXTI->FTSR1 = temp;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:255:        temp = EXTI->C2IMR1;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:257:        temp = EXTI->IMR1;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:265:        EXTI->C2IMR1 = temp;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:267:        EXTI->IMR1 = temp;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:271:        temp = EXTI->C2EMR1;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:273:        temp = EXTI->EMR1;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:281:        EXTI->C2EMR1 = temp;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:283:        EXTI->EMR1 = temp;
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:326:        EXTI->C2IMR1 &= ~(iocurrent);
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:327:        EXTI->C2EMR1 &= ~(iocurrent);
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:329:        EXTI->IMR1 &= ~(iocurrent);
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:330:        EXTI->EMR1 &= ~(iocurrent);
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:334:        EXTI->RTSR1 &= ~(iocurrent);
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_gpio.c:335:        EXTI->FTSR1 &= ~(iocurrent);
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:175:    regaddr = (&EXTI->RTSR1 + (EXTI_CONFIG_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:192:    regaddr = (&EXTI->FTSR1 + (EXTI_CONFIG_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:223:  regaddr = (&EXTI->C2IMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:225:  regaddr = (&EXTI->IMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:244:  regaddr = (&EXTI->C2EMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:246:  regaddr = (&EXTI->EMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:302:  regaddr = (&EXTI->C2IMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:304:  regaddr = (&EXTI->IMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:320:  regaddr = (&EXTI->C2EMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:322:  regaddr = (&EXTI->EMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:339:    regaddr = (&EXTI->RTSR1 + (EXTI_CONFIG_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:349:    regaddr = (&EXTI->FTSR1 + (EXTI_CONFIG_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:399:  regaddr = (&EXTI->C2IMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:401:  regaddr = (&EXTI->IMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:408:  regaddr = (&EXTI->C2EMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:410:  regaddr = (&EXTI->EMR1 + (EXTI_MODE_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:418:    regaddr = (&EXTI->RTSR1 + (EXTI_CONFIG_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:422:    regaddr = (&EXTI->FTSR1 + (EXTI_CONFIG_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:526:  regaddr = (&EXTI->PR1 + (EXTI_CONFIG_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:571:  regaddr = (&EXTI->PR1 + (EXTI_CONFIG_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:604:  regaddr = (&EXTI->PR1 + (EXTI_CONFIG_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_exti.c:629:  regaddr = (&EXTI->SWIER1 + (EXTI_CONFIG_OFFSET * offset));
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:721:#define __HAL_RTC_ALARM_EXTI_ENABLE_IT()            (EXTI->C2IMR1 |= RTC_EXTI_LINE_ALARM_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:722:#define __HAL_RTC_ALARM_EXTI_DISABLE_IT()           (EXTI->C2IMR1 &= ~(RTC_EXTI_LINE_ALARM_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:723:#define __HAL_RTC_ALARM_EXTI_ENABLE_EVENT()         (EXTI->C2EMR1 |= RTC_EXTI_LINE_ALARM_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:724:#define __HAL_RTC_ALARM_EXTI_DISABLE_EVENT()        (EXTI->C2EMR1 &= ~(RTC_EXTI_LINE_ALARM_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:726:#define __HAL_RTC_ALARM_EXTI_ENABLE_IT()            (EXTI->IMR1 |= RTC_EXTI_LINE_ALARM_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:727:#define __HAL_RTC_ALARM_EXTI_DISABLE_IT()           (EXTI->IMR1 &= ~(RTC_EXTI_LINE_ALARM_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:728:#define __HAL_RTC_ALARM_EXTI_ENABLE_EVENT()         (EXTI->EMR1 |= RTC_EXTI_LINE_ALARM_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:729:#define __HAL_RTC_ALARM_EXTI_DISABLE_EVENT()        (EXTI->EMR1 &= ~(RTC_EXTI_LINE_ALARM_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:626:#define __HAL_RTC_WAKEUPTIMER_EXTI_ENABLE_IT()       (EXTI->C2IMR1 |= RTC_EXTI_LINE_WAKEUPTIMER_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:627:#define __HAL_RTC_WAKEUPTIMER_EXTI_DISABLE_IT()      (EXTI->C2IMR1 &= ~(RTC_EXTI_LINE_WAKEUPTIMER_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:628:#define __HAL_RTC_WAKEUPTIMER_EXTI_ENABLE_EVENT()    (EXTI->C2EMR1 |= RTC_EXTI_LINE_WAKEUPTIMER_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:629:#define __HAL_RTC_WAKEUPTIMER_EXTI_DISABLE_EVENT()   (EXTI->C2EMR1 &= ~(RTC_EXTI_LINE_WAKEUPTIMER_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:631:#define __HAL_RTC_WAKEUPTIMER_EXTI_ENABLE_IT()       (EXTI->IMR1 |= RTC_EXTI_LINE_WAKEUPTIMER_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:632:#define __HAL_RTC_WAKEUPTIMER_EXTI_DISABLE_IT()      (EXTI->IMR1 &= ~(RTC_EXTI_LINE_WAKEUPTIMER_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:633:#define __HAL_RTC_WAKEUPTIMER_EXTI_ENABLE_EVENT()    (EXTI->EMR1 |= RTC_EXTI_LINE_WAKEUPTIMER_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:634:#define __HAL_RTC_WAKEUPTIMER_EXTI_DISABLE_EVENT()   (EXTI->EMR1 &= ~(RTC_EXTI_LINE_WAKEUPTIMER_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:727:#define __HAL_RTC_TIMESTAMP_EXTI_ENABLE_IT()        (EXTI->C2IMR1 |= RTC_EXTI_LINE_TIMESTAMP_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:728:#define __HAL_RTC_TIMESTAMP_EXTI_DISABLE_IT()       (EXTI->C2IMR1 &= ~(RTC_EXTI_LINE_TIMESTAMP_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:729:#define __HAL_RTC_TIMESTAMP_EXTI_ENABLE_EVENT()     (EXTI->C2EMR1 |= RTC_EXTI_LINE_TIMESTAMP_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:730:#define __HAL_RTC_TIMESTAMP_EXTI_DISABLE_EVENT()    (EXTI->C2EMR1 &= ~(RTC_EXTI_LINE_TIMESTAMP_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:732:#define __HAL_RTC_TIMESTAMP_EXTI_ENABLE_IT()        (EXTI->IMR1 |= RTC_EXTI_LINE_TIMESTAMP_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:733:#define __HAL_RTC_TIMESTAMP_EXTI_DISABLE_IT()       (EXTI->IMR1 &= ~(RTC_EXTI_LINE_TIMESTAMP_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:734:#define __HAL_RTC_TIMESTAMP_EXTI_ENABLE_EVENT()     (EXTI->EMR1 |= RTC_EXTI_LINE_TIMESTAMP_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:735:#define __HAL_RTC_TIMESTAMP_EXTI_DISABLE_EVENT()    (EXTI->EMR1 &= ~(RTC_EXTI_LINE_TIMESTAMP_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1009:#define __HAL_RTC_TAMPER_EXTI_ENABLE_IT()        (EXTI->C2IMR1 |= RTC_EXTI_LINE_TAMPER_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1010:#define __HAL_RTC_TAMPER_EXTI_DISABLE_IT()       (EXTI->C2IMR1 &= ~(RTC_EXTI_LINE_TAMPER_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1011:#define __HAL_RTC_TAMPER_EXTI_ENABLE_EVENT()     (EXTI->C2EMR1 |= RTC_EXTI_LINE_TAMPER_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1012:#define __HAL_RTC_TAMPER_EXTI_DISABLE_EVENT()    (EXTI->C2EMR1 &= ~(RTC_EXTI_LINE_TAMPER_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1014:#define __HAL_RTC_TAMPER_EXTI_ENABLE_IT()        (EXTI->IMR1 |= RTC_EXTI_LINE_TAMPER_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1015:#define __HAL_RTC_TAMPER_EXTI_DISABLE_IT()       (EXTI->IMR1 &= ~(RTC_EXTI_LINE_TAMPER_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1016:#define __HAL_RTC_TAMPER_EXTI_ENABLE_EVENT()     (EXTI->EMR1 |= RTC_EXTI_LINE_TAMPER_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1017:#define __HAL_RTC_TAMPER_EXTI_DISABLE_EVENT()    (EXTI->EMR1 &= ~(RTC_EXTI_LINE_TAMPER_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1092:#define __HAL_RTC_SSRU_EXTI_ENABLE_IT()       (EXTI->C2IMR1 |= RTC_EXTI_LINE_SSRU_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1093:#define __HAL_RTC_SSRU_EXTI_DISABLE_IT()      (EXTI->C2IMR1 &= ~(RTC_EXTI_LINE_SSRU_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1094:#define __HAL_RTC_SSRU_EXTI_ENABLE_EVENT()    (EXTI->C2EMR1 |= RTC_EXTI_LINE_SSRU_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1095:#define __HAL_RTC_SSRU_EXTI_DISABLE_EVENT()   (EXTI->C2EMR1 &= ~(RTC_EXTI_LINE_SSRU_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1097:#define __HAL_RTC_SSRU_EXTI_ENABLE_IT()       (EXTI->IMR1 |= RTC_EXTI_LINE_SSRU_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1098:#define __HAL_RTC_SSRU_EXTI_DISABLE_IT()      (EXTI->IMR1 &= ~(RTC_EXTI_LINE_SSRU_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1099:#define __HAL_RTC_SSRU_EXTI_ENABLE_EVENT()    (EXTI->EMR1 |= RTC_EXTI_LINE_SSRU_EVENT)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:1100:#define __HAL_RTC_SSRU_EXTI_DISABLE_EVENT()   (EXTI->EMR1 &= ~(RTC_EXTI_LINE_SSRU_EVENT))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:170:#define __HAL_GPIO_EXTI_GET_FLAG(__EXTI_LINE__)       (EXTI->PR1 & (__EXTI_LINE__))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:178:#define __HAL_GPIO_EXTI_CLEAR_FLAG(__EXTI_LINE__)     (EXTI->PR1 = (__EXTI_LINE__))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:186:#define __HAL_GPIO_EXTI_GET_IT(__EXTI_LINE__)         (EXTI->PR1 & (__EXTI_LINE__))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:194:#define __HAL_GPIO_EXTI_CLEAR_IT(__EXTI_LINE__)       (EXTI->PR1 = (__EXTI_LINE__))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:202:#define __HAL_GPIO_EXTI_GENERATE_SWIT(__EXTI_LINE__)  (EXTI->SWIER1 |= (__EXTI_LINE__))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:199:#define LL_EXTI_WriteReg(__REG__, __VALUE__) WRITE_REG(EXTI->__REG__, (__VALUE__))
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:206:#define LL_EXTI_ReadReg(__REG__) READ_REG(EXTI->__REG__)
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:267:  SET_BIT(EXTI->IMR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:312:  SET_BIT(EXTI->C2IMR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:338:  SET_BIT(EXTI->IMR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:364:  SET_BIT(EXTI->C2IMR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:409:  CLEAR_BIT(EXTI->IMR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:454:  CLEAR_BIT(EXTI->C2IMR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:480:  CLEAR_BIT(EXTI->IMR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:506:  CLEAR_BIT(EXTI->C2IMR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:551:  return ((READ_BIT(EXTI->IMR1, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:596:  return ((READ_BIT(EXTI->C2IMR1, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:622:  return ((READ_BIT(EXTI->IMR2, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:648:  return ((READ_BIT(EXTI->C2IMR2, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:689:  SET_BIT(EXTI->EMR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:722:  SET_BIT(EXTI->C2EMR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:737:  SET_BIT(EXTI->EMR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:752:  SET_BIT(EXTI->C2EMR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:785:  CLEAR_BIT(EXTI->EMR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:818:  CLEAR_BIT(EXTI->C2EMR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:833:  CLEAR_BIT(EXTI->EMR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:848:  CLEAR_BIT(EXTI->C2EMR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:881:  return ((READ_BIT(EXTI->EMR1, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:914:  return ((READ_BIT(EXTI->C2EMR1, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:929:  return ((READ_BIT(EXTI->EMR2, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:944:  return ((READ_BIT(EXTI->C2EMR2, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:991:  SET_BIT(EXTI->RTSR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1013:  SET_BIT(EXTI->RTSR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1051:  CLEAR_BIT(EXTI->RTSR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1074:  CLEAR_BIT(EXTI->RTSR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1105:  return ((READ_BIT(EXTI->RTSR1, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1120:  return ((READ_BIT(EXTI->RTSR2, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1166:  SET_BIT(EXTI->FTSR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1188:  SET_BIT(EXTI->FTSR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1225:  CLEAR_BIT(EXTI->FTSR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1246:  CLEAR_BIT(EXTI->FTSR2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1277:  return ((READ_BIT(EXTI->FTSR1, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1292:  return ((READ_BIT(EXTI->FTSR2, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1336:  SET_BIT(EXTI->SWIER1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1356:  SET_BIT(EXTI->SWIER2, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1397:  return ((READ_BIT(EXTI->PR1, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1414:  return ((READ_BIT(EXTI->PR2, ExtiLine) == (ExtiLine)) ? 1UL : 0UL);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1448:  return (uint32_t)(READ_BIT(EXTI->PR1, ExtiLine));
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1465:  return (uint32_t)(READ_BIT(EXTI->PR2, ExtiLine));
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1498:  WRITE_REG(EXTI->PR1, ExtiLine);
+Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:1515:  WRITE_REG(EXTI->PR2, ExtiLine);
+Core/Src/gpio.c:128://    EXTI->RTSR |= EXTI_RTSR_TR2;				//interrupt 2 on rising edge
+Core/Src/gpio.c:129://    EXTI->IMR1 |= EXTI_IMR1_IM8;					//unmask interrupt 2
+Core/Src/gpio.c:134://    EXTI->FTSR |= EXTI_FTSR_TR3;				//interrupt 3 on falling edge
+Core/Src/gpio.c:139://    EXTI->FTSR |= EXTI_FTSR_TR4;				//interrupt 4 on falling edge
+Core/Src/gpio.c:144://    EXTI->FTSR |= EXTI_FTSR_TR5;                //interrupt 5 on falling edge
+Core/Src/gpio.c:147://    EXTI->PR1 = (uint32_t)0x0007FFFF;            //clear all pending interrupts
+Core/Src/gpio.c:153://	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 1;		//unmask interrupt
+Core/Src/gpio.c:154:	EXTI->IMR1 |= EXTI_IMR1_IM5;
+Core/Src/gpio.c:155://	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 1;		//unmask interrupt
+Core/Src/gpio.c:156:	EXTI->IMR1 |= EXTI_IMR1_IM1;
+Core/Src/gpio.c:157://	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 1;		//unmask interrupt
+Core/Src/gpio.c:158:	EXTI->IMR1 |= EXTI_IMR1_IM0;
+Core/Src/gpio.c:163:	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 0;		//mask interrupt
+Core/Src/gpio.c:164://	EXTI->IMR1 &= ~EXTI_IMR1_IM5;
+Core/Src/gpio.c:165:	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 0;		//mask interrupt
+Core/Src/gpio.c:166://	EXTI->IMR1 &= ~EXTI_IMR1_IM1;
+Core/Src/gpio.c:167:	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 0;		//mask interrupt
+Core/Src/gpio.c:168://	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
+Core/Src/exti_it.c:11:	EXTI->PR1 = EXTI_PR1_PIF5;		//clear interrupt
+Core/Src/exti_it.c:20:	EXTI->PR1 = EXTI_PR1_PIF1;		//clear interrupt
+Core/Src/exti_it.c:28:	EXTI->PR1 = EXTI_PR1_PIF0;		//clear interrupt
+Core/Src/exti_it.c:36:	EXTI->PR1 = EXTI_PR1_PIF4;		//clear interrupt
+Core/Src/main.c:116://  EXTI->IMR1 &= ~EXTI_IMR1_IM8;			//interrupt disabled on PPS front

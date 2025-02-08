@@ -50,7 +50,12 @@ void MX_TIM16_Init(void);
 void MX_TIM17_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+void timer1_start(void);
+void timer1_stop(void);
+void timer2_start(void);
+void timer2_stop(void);
+void timer17_start(void);
+void timer17_stop(void);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

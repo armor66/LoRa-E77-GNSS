@@ -187,7 +187,9 @@ void rx_to_devices(uint8_t device_number)
 			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
 		}
 	}
+
 }
+
 void check_traced(uint8_t device_number)
 {
 	if(--devices[device_number].beacon_traced <= 0)	//may be decremented below 0
@@ -196,6 +198,7 @@ void check_traced(uint8_t device_number)
 		devices[device_number].beacon_lost = 1;
 	}
 }
+
 void clear_fix_data(uint8_t device_number)
 {
 	devices[device_number].fix_type_opt = 0;			//only 2 bits used to transmit

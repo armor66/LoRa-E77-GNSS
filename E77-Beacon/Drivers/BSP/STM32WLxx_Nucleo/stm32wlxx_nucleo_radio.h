@@ -1,21 +1,3 @@
-/**
-  ******************************************************************************
-  * @file    stm32wlxx_nucleo_radio.h
-  * @author  MCD Application Team
-  * @brief   Header for stm32wlxx_nucleo_radio.c
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2020-2021 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef STM32WLXX_NUCLEO_RADIO_H
 #define STM32WLXX_NUCLEO_RADIO_H
@@ -25,28 +7,7 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32wlxx_nucleo_errno.h"
-#include "stm32wlxx_nucleo_conf.h"
-
-/*
- * Modifications by Dana Myers for the Seeed LoRa-E5
- */
-   
-/** @addtogroup BSP
-  * @{
-  */
-
-/** @addtogroup STM32WLXX_NUCLEO STM32WLXX-NUCLEO
-  * @{
-  */
-
-/** @defgroup STM32WLXX_NUCLEO_RADIO_LOW_LEVEL RADIO LOW LEVEL
-  * @{
-  */
-
-/** @defgroup STM32WLXX_NUCLEO_RADIO_LOW_LEVEL_Exported_Types RADIO LOW LEVEL Exported Types
-  * @{
-  */
+#include "stm32wlxx_hal.h"
 
 typedef enum 
 {
@@ -62,17 +23,6 @@ typedef enum
   RADIO_RFO_HP_MAXPOWER,
 } BSP_RADIO_RFOMaxPowerConfig_TypeDef;
 
-/**
-  * @}
-  */
-
-/** @defgroup STM32WLXX_NUCLEO_RADIO_LOW_LEVEL_Exported_Constants RADIO LOW LEVEL Exported Constants
-  * @{
-  */
-
-/** @defgroup STM32WLXX_NUCLEO_RADIO_LOW_LEVEL_RADIOCONFIG RADIO LOW LEVEL RADIO CONFIG Constants
-  * @{
-  */
 #define RADIO_CONF_RFO_LP_HP                     0U
 #define RADIO_CONF_RFO_LP                        1U
 #define RADIO_CONF_RFO_HP                        2U
@@ -91,13 +41,6 @@ typedef enum
 #define RADIO_CONF_RFO_LP_MAX_14_dBm  ((int32_t) 14)
 #define RADIO_CONF_RFO_LP_MAX_10_dBm  ((int32_t) 10)
 
-/**
-  * @}
-  */
-
-/** @defgroup STM32WLXX_NUCLEO_RADIO_LOW_LEVEL_RFSWITCH RADIO LOW LEVEL RF SWITCH Constants
-  * @{
-  */
 //PA7 = RF_RXEN
 #define RF_SW_CTRL1_PIN                          GPIO_PIN_7
 #define RF_SW_CTRL1_GPIO_PORT                    GPIOA
@@ -113,13 +56,6 @@ typedef enum
 #define RF_TCXO_VCC_GPIO_PORT                    GPIOB
 #define RF_TCXO_VCC_CLK_ENABLE()                 __HAL_RCC_GPIOB_CLK_ENABLE()
 #define RF_TCXO_VCC_CLK_DISABLE()                __HAL_RCC_GPIOB_CLK_DISABLE()
-/**
- * @}
- */
-
-/**
-  * @}
-  */
 
 /** @defgroup STM32WLXX_NUCLEO_RADIO_LOW_LEVEL_Exported_Functions RADIO LOW LEVEL Exported Functions
   * @{
@@ -131,22 +67,6 @@ int32_t BSP_RADIO_GetTxConfig(void);
 int32_t BSP_RADIO_IsTCXO(void);
 int32_t BSP_RADIO_IsDCDC(void);
 int32_t BSP_RADIO_GetRFOMaxPowerConfig(BSP_RADIO_RFOMaxPowerConfig_TypeDef Config);
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 #ifdef __cplusplus
 }

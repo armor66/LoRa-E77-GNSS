@@ -6,13 +6,16 @@
 #include "bit_band.h"
 #include "menu.h"
 #include "settings.h"
-#include "compass.h"
 #include "lrns.h"
 #include "e77radio.h"
 #include "radio.h"
+#include "gnss.h"		//for trek points
+#include "compass.h"
 
 int8_t pattern_index = 0;
 int8_t long_beep_ones = 0;
+
+uint8_t *p_tx_power_values_tim;
 
 struct settings_struct *p_settings_tim;
 struct devices_struct **pp_devices_tim;
@@ -30,6 +33,7 @@ void timer_it_init(void)
 	TIM2->CR1 |= TIM_CR1_URS;
 	TIM17->CR1 |= TIM_CR1_URS;
 
+	p_tx_power_values_tim = get_tx_power_values();
 	p_settings_tim = get_settings();
 	pp_devices_tim = get_devices();
 }
@@ -48,26 +52,6 @@ const uint8_t timeslot_pattern[2][103] =
 //	0 50 100mS	                             1000		 1300mS						  2000				    	  	2750	   3000
    {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,3,4,5,4,7,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,1 }};
 
-//int8_t if_update_screen(void)
-//{
-//	if(main_flags.update_screen)
-//	{
-//		main_flags.update_screen = 0;
-//		return 1;
-//	}
-//	else return 0;
-//}
-//int8_t if_change_menu(void)
-//{
-//	if((main_flags.buttons_scanned) && (main_flags.permit_actions))
-//	{
-//		main_flags.buttons_scanned = 0;
-//		main_flags.update_screen = 1;
-//		change_menu(main_flags.button_code);
-//		return 1;
-//	}
-//	else return 0;
-//}
 static void restartPattern(void)
 {
 	getADC_sensors();
@@ -87,30 +71,36 @@ void TIM1_UP_IRQHandler(void)
 	if(!main_flags.scanRadioFlag)
     {
 		main_flags.time_slot_timer_ovf++;
-//		(p_settings_tim->spreading_factor == 12)? (pattern_index = 1): (pattern_index = 0);
+		(p_settings_tim->spreading_factor == 12)? (pattern_index = 1): (pattern_index = 0);
 		switch (timeslot_pattern[pattern_index][main_flags.time_slot_timer_ovf])
 		{
 		case 0:			//do nothing
 			break;
 
 		case 1:			//50mS
+			if(p_settings_tim->spreading_factor == 12) main_flags.time_slot++;
 			if(p_settings_tim->devices_on_air == main_flags.time_slot)	//if PPS did not come, but cycle completed + 50mS
 			{
 				restartPattern();
 				break;
 			}
-			main_flags.time_slot++;
+			if(p_settings_tim->spreading_factor != 12) main_flags.time_slot++;
 //clear what should be received or not in this slot after draw menu has finished
 			if(p_settings_tim->device_number != main_flags.time_slot) clear_fix_data(main_flags.time_slot);
-//set receive LORA_IQ_NORMAL in other time slot ones if transmitting with LORA_IQ_INVERTED has occurred (for [p_settings_tim->device_number == 3] only)
-			if(main_flags.transmit_iq_inverted_flag)	//(p_settings_tim->spreading_factor == 12) && (pp_devices_tim[3]->beeper_flag != time_slot)
+
+//set receive LORA_IQ_NORMAL in other time slot whilst transmitting with LORA_IQ_INVERTED has occurred
+//(for [p_settings_tim->device_number == 3] only)
+//only if (p_settings_tim->spreading_factor == 12) && (pp_devices_tim[3]->beeper_flag != time_slot)
+			if(main_flags.transmit_iq_inverted_flag)
 			{
 				main_flags.transmit_iq_inverted_flag = 0;
 
-//				Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_tim->spreading_factor,
-//				p_settings_tim->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH, LORA_SYMBOL_TIMEOUT,
-//				LORA_FIX_LENGTH_PAYLOAD_ON,	BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, true);
+				Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_tim->spreading_factor,
+				p_settings_tim->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH, LORA_SYMBOL_TIMEOUT,
+				LORA_FIX_LENGTH_PAYLOAD_ON,	BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, true);
 			}
+
+
 			if(main_flags.pps_synced) led_green_on();	//to shorten it, instead of PPS start
 			led_blue_off();								//led_blue_on on case 6 or PPS IRQ
 			led_red_off();								//after new pattern started
@@ -129,8 +119,8 @@ void TIM1_UP_IRQHandler(void)
 						timer17_stop();
 					}
 					main_flags.permit_actions = 0;
-					led_red_on();			//start transmitting, end by OnTxDone
-					set_transmit_data();		//State = TX_START;
+					led_red_on();					//start transmitting, end by OnTxDone
+					set_transmit_data();			//State = TX_START;
 				}else main_flags.fix_valid = 0;		//just to avoid negative values
 			}
 			else//if(time_slot != p_settings_tim->device_number)	other devices:
@@ -138,13 +128,12 @@ void TIM1_UP_IRQHandler(void)
 				if((p_settings_tim->spreading_factor == 12) && (pp_devices_tim[3]->beeper_flag == main_flags.time_slot))	//for [p_settings_tim->device_number == 3] only
 				{	//beeper_flags inverted to transmit in the slot, beacon can get: slot1 for beacon2, slot2 for beacon1
 						main_flags.permit_actions = 0;
-						main_flags.transmit_iq_inverted_flag = 1;
-						//set transmit LORA_IQ_INVERTED
-//						Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_tim[p_settings_tim->tx_power_opt], 0,
-//							LORA_BANDWIDTH,	p_settings_tim->spreading_factor, p_settings_tim->coding_rate_opt,
-//							LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_INVERTED, TX_TIMEOUT_VALUE);
-//						led_red_on();
-//						transmit_data();		//State = TX_START;
+						main_flags.transmit_iq_inverted_flag = 1;	//set transmit LORA_IQ_INVERTED
+						Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_tim[p_settings_tim->tx_power_opt], 0,
+					LORA_BANDWIDTH,	p_settings_tim->spreading_factor, p_settings_tim->coding_rate_opt,
+					LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_INVERTED, TX_TIMEOUT_VALUE);
+						led_red_on();
+						set_transmit_data();	//transmit flags and time only with buffer_to_transmit = 3
 				}
 				else//(p_settings_tim->spreading_factor != 12) or !(pp_devices_tim[3]->beeper_flag == time_slot)
 				{	//manage (pp_devices_tim[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
@@ -159,7 +148,7 @@ void TIM1_UP_IRQHandler(void)
 			}
 			break;
 
-		case 3:	//check if remote devices on the air, draw menu items
+		case 3:				//check if remote devices on the air, draw menu items
 			led_red_off();	//650ms after OnRxDone
 			if(main_flags.time_slot != p_settings_tim->device_number)	//for receiver slot only
 			{
@@ -180,12 +169,12 @@ void TIM1_UP_IRQHandler(void)
 					}
 				}
 			}
-//			if(find_nearest_trekpoint_flag)
-//			{
-//				__disable_irq();
-//				find_nearest_trekpoint();
-//			}
-//			while(find_nearest_trekpoint_flag);		//__enable_irq(); after that
+			if(main_flags.find_nearest_trekpoint_flag)
+			{
+				__disable_irq();
+				find_nearest_trekpoint();
+			}
+			while(main_flags.find_nearest_trekpoint_flag);		//wait and __enable_irq(); after that
 			read_north();
 
 			if(long_beep_ones)
@@ -219,18 +208,6 @@ void TIM1_UP_IRQHandler(void)
 				led_w_on();
 			}
 			break;
-
-//		case 6:					//if PPS did not come, but cycle completed + 50mS
-//			getADC_sensors();
-//			clear_fix_data(p_settings_tim->device_number);
-//			timer1_stop();
-//			timer1_start();
-//			main_flags.time_slot = 0;			// from TIM1_IRQ case: 2
-//			main_flags.time_slot_timer_ovf = 0;
-//			main_flags.pps_synced = 0;
-//			led_blue_on();			//led_blue_off on case 1 (50ms)
-//			led_red_on();			//as pattern_started on PPS
-//			break;
 
 		default:
 			break;

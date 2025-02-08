@@ -903,3 +903,4 @@ void lost_device_save(uint8_t device)	// executed when "case 3" TIM1-IRQ occurs
    	    flash_lock();
    	}
 }
+

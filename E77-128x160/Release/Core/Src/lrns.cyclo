@@ -1,0 +1,14 @@
+lrns.c:29:25:get_devices	1
+lrns.c:41:30:get_point_groups	1
+lrns.c:60:6:init_lrns	2
+lrns.c:80:6:ublox_to_this_device	2
+lrns.c:102:6:rx_to_devices	9
+lrns.c:193:6:check_traced	2
+lrns.c:202:6:clear_fix_data	1
+lrns.c:209:6:calc_point_position	3
+lrns.c:237:6:calc_relative_position	3
+lrns.c:267:6:calc_fence	4
+lrns.c:288:9:check_any_alarm_fence_timeout	1
+lrns.c:307:8:getADC_calibration	4
+lrns.c:345:6:getADC_sensors	1
+lrns.c:375:6:DMA1_Channel1_IRQHandler	5

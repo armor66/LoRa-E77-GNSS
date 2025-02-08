@@ -19,19 +19,13 @@ MAP_FILES :=
 S_DEPS := 
 S_UPPER_DEPS := 
 C_DEPS := 
+OBJCOPY_BIN := 
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 Core/Src \
 Core/Startup \
 Drivers/BSP/STM32WLxx_Nucleo \
+Drivers/Radio \
 Drivers/STM32WLxx_HAL_Driver/Src \
-Middlewares/Third_Party/SubGHz_Phy/stm32_radio_driver \
-SubGHz_Phy/App \
-SubGHz_Phy/Target \
-Utilities/lpm/tiny_lpm \
-Utilities/misc \
-Utilities/sequencer \
-Utilities/timer \
-Utilities/trace/adv_trace \
 

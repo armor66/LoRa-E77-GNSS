@@ -22,14 +22,15 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "bit_band.h"
+//#include "stm32wle5xx.h"
 /* USER CODE END 0 */
 
 /*----------------------------------------------------------------------------*/
 /* Configure GPIO                                                             */
 /*----------------------------------------------------------------------------*/
 /* USER CODE BEGIN 1 */
-//#ifndef BEACON
+
 /* USER CODE END 1 */
 
 /** Configure pins as
@@ -50,53 +51,37 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED_W_Pin|BUZZ_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LED_R_Pin|LED_B_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, LED_R_Pin|LED_B_Pin|LED_W_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPS_EN_GPIO_Port, GPS_EN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, RF_CTRL2_Pin|RF_CTRL1_Pin|CS_Pin|DC_Pin
+  HAL_GPIO_WritePin(GPIOA, RF_CTRL1_Pin|RF_CTRL2_Pin|CS_Pin|DC_Pin
                           |RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(HOLD_GPIO_Port, HOLD_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PBPin PBPin */
-  GPIO_InitStruct.Pin = LED_W_Pin|BUZZ_Pin;
+  /*Configure GPIO pins : PBPin PBPin PBPin */
+  GPIO_InitStruct.Pin = LED_R_Pin|LED_B_Pin|GPS_EN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = LED_W_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(LED_W_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PBPin PBPin */
-  GPIO_InitStruct.Pin = LED_R_Pin|LED_B_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PBPin PBPin */
-  GPIO_InitStruct.Pin = BTN_1_Pin|BUZZ_IN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PAPin PAPin */
-  GPIO_InitStruct.Pin = BTN_2_Pin|BTN_3_Pin;
+  /*Configure GPIO pins : PAPin PAPin PAPin */
+  GPIO_InitStruct.Pin = BTN_1_Pin|BTN_2_Pin|BTN_3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = GPS_EN_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPS_EN_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = PPS_Pin;
@@ -105,10 +90,10 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(PPS_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PAPin PAPin */
-  GPIO_InitStruct.Pin = RF_CTRL2_Pin|RF_CTRL1_Pin;
+  GPIO_InitStruct.Pin = RF_CTRL1_Pin|RF_CTRL2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PAPin PAPin PAPin */
@@ -125,80 +110,112 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(HOLD_GPIO_Port, &GPIO_InitStruct);
 
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
-
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-
 }
 
 /* USER CODE BEGIN 2 */
-void led_toggle(void){
-//GPIOB->ODR ^= GPIO_ODR_OD4;
-GPIOB->ODR ^= GPIO_ODR_OD5;
-}
-void led_red_on(void){
-	GPIOB->BSRR = GPIO_BSRR_BR5;	//gnd for custom pcb
-}
-void led_red_off(void){
-	GPIOB->BSRR = GPIO_BSRR_BS5;
-}
-void led_green_on(void){
-//	GPIOB->BSRR = GPIO_BSRR_BR2;	//gnd for custom pcb
-}
-void led_green_off(void){
-//	GPIOB->BSRR = GPIO_BSRR_BS2;
-}
-void led_blue_on(void){
-//	GPIOB->BSRR = GPIO_BSRR_BR12;	//gnd for custom pcb
-}
-void led_blue_off(void){
-//	GPIOB->BSRR = GPIO_BSRR_BS12;
+void interrupt_init(void)
+{
+	TIM1->SR &= ~TIM_SR_UIF;                //clear update interrupt
+	TIM1->DIER |= TIM_DIER_UIE;             //update interrupt enable
+    NVIC_EnableIRQ(TIM1_UP_IRQn);
+
+    TIM2->SR &= ~TIM_SR_UIF;                //clear update interrupt
+    TIM2->DIER |= TIM_DIER_UIE;         //update interrupt enable
+   	NVIC_EnableIRQ(TIM2_IRQn);
+
+//    //PB2 - GPS PPS interrupt on rising edge
+//    AFIO->EXTICR[0] |= AFIO_EXTICR1_EXTI2_PB;	//exti 2 source is port B
+//    EXTI->RTSR |= EXTI_RTSR_TR2;				//interrupt 2 on rising edge
+//    EXTI->IMR1 |= EXTI_IMR1_IM8;					//unmask interrupt 2
+    NVIC_EnableIRQ(EXTI9_5_IRQn);             	//enable interrupt
+//
+//    //PB3 - DOWN/ESC button
+//    AFIO->EXTICR[0] |= AFIO_EXTICR1_EXTI3_PB;	//exti 3 source is port B
+//    EXTI->FTSR |= EXTI_FTSR_TR3;				//interrupt 3 on falling edge
+    NVIC_EnableIRQ(EXTI0_IRQn);             	//enable interrupt
+//
+//    //PB4 - UP/OK button
+//    AFIO->EXTICR[1] |= AFIO_EXTICR2_EXTI4_PB;	//exti 4 source is port B
+//    EXTI->FTSR |= EXTI_FTSR_TR4;				//interrupt 4 on falling edge
+    NVIC_EnableIRQ(EXTI1_IRQn);             	//enable interrupt
+//
+//    //PB5 - PWR button
+//    AFIO->EXTICR[1] |= AFIO_EXTICR2_EXTI5_PB;   //exti 5 source is port B
+//    EXTI->FTSR |= EXTI_FTSR_TR5;                //interrupt 5 on falling edge
+    NVIC_EnableIRQ(EXTI4_IRQn);               //enable interrupt
+//
+//    EXTI->PR1 = (uint32_t)0x0007FFFF;            //clear all pending interrupts
+//    NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
-void hold_power(void) {
-    GPIOC->BSRR = GPIO_BSRR_BS13;	//+
+void enable_buttons_interrupts(void)
+{
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 1;		//unmask interrupt
+	EXTI->IMR1 |= EXTI_IMR1_IM5;
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 1;		//unmask interrupt
+	EXTI->IMR1 |= EXTI_IMR1_IM1;
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 1;		//unmask interrupt
+	EXTI->IMR1 |= EXTI_IMR1_IM0;
 }
-void release_power(void) {
-    GPIOC->BSRR = GPIO_BSRR_BR13;	//gnd
+
+void disable_buttons_interrupts(void)
+{
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 0;		//mask interrupt
+	EXTI->IMR1 &= ~EXTI_IMR1_IM5;
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 0;		//mask interrupt
+	EXTI->IMR1 &= ~EXTI_IMR1_IM1;
+//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 0;		//mask interrupt
+	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
+}
+
+void led_toggle(void){
+	GPIOB->ODR ^= GPIO_ODR_OD4;
+}
+void led_red_on(void){
+	GPIOB->BSRR = GPIO_BSRR_BR4;
+}
+void led_red_off(void){
+	GPIOB->BSRR = GPIO_BSRR_BS4;
+}
+void led_green_on(void){
+//	GPIOB->BSRR = GPIO_BSRR_BR4;
+}
+void led_green_off(void){
+//	GPIOB->BSRR = GPIO_BSRR_BS4;
+}
+void led_blue_on(void){
+	GPIOB->BSRR = GPIO_BSRR_BR3;
+}
+void led_blue_off(void){
+	GPIOB->BSRR = GPIO_BSRR_BS3;
+}
+
+void led_w_on(void){
+	GPIOB->BSRR = GPIO_BSRR_BS5;
+}
+void led_w_off(void){
+	GPIOB->BSRR = GPIO_BSRR_BR5;
+}
+
+void lcd_on(void){
+	CS_GPIO_Port->BSRR = (CS_Pin << 16);
+}
+void lcd_off(void){
+	CS_GPIO_Port->BSRR = CS_Pin;
 }
 
 void gps_enable(void){
-	GPIOA->BSRR = GPIO_BSRR_BS1;	//+
+	GPIOB->BSRR = GPIO_BSRR_BS8;
 }
 void gps_disable(void){
-	GPIOA->BSRR = GPIO_BSRR_BR1;	//gnd
-}
-void buzz_on(void){
-	GPIOB->BSRR = GPIO_BSRR_BS4;	//+
-}
-void buzz_off(void){
-	GPIOB->BSRR = GPIO_BSRR_BR4;
-}
-void led_w_on(void){
-	GPIOB->BSRR = GPIO_BSRR_BS3;	//+
-}
-void led_w_off(void){
-	GPIOB->BSRR = GPIO_BSRR_BR3;
+	GPIOB->BSRR = GPIO_BSRR_BR8;
 }
 
-void shortBeepsBlocking(int8_t beeps)
-{
-	for(int8_t i = 0; i < beeps; i++)
-	{
-		HAL_Delay(100);
-		led_w_on();
-		HAL_Delay(10);
-		led_w_off();
-	}
+void hold_power(void) {
+    GPIOC->BSRR = GPIO_BSRR_BS13;
+}
+void release_power(void) {
+    GPIOC->BSRR = GPIO_BSRR_BR13;
 }
 void longBeepsBlocking(int8_t beeps)
 {
@@ -206,10 +223,8 @@ void longBeepsBlocking(int8_t beeps)
 	{
 		HAL_Delay(100);
 		led_w_on();
-		buzz_on();
 		HAL_Delay(500);
 		led_w_off();
-		buzz_off();
 	}
 }
 /* USER CODE END 2 */

@@ -1,30 +1,17 @@
 
 #include <stdio.h>			//for 'sprintf'#include "radio.h"
+
 #include "e77radio.h"
+#include "radio.h"
 #include "main.h"
 #include "settings.h"
 #include "lrns.h"
 #include "gpio.h"
-//#include "nv3023.h"
 #include "spi.h"
 #include "tim.h"
 #include "lptim.h"
-#include "radio.h"
 
 #include "lcd_display.h"
-
-//#define LORA_SPREADING_FACTOR    	11         /* [SF7..SF12] */
-//#define LORA_CODINGRATE          	2         /* [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8] */
-#define LORA_BANDWIDTH             	0         /* [0: 125 kHz, 1: 250 kHz, 2: 500 kHz, 3: Reserved] */
-#define LORA_PREAMBLE_LENGTH       	8         /* Same for Tx and Rx */
-#define LORA_SYMBOL_TIMEOUT       	5         /* Symbols */
-#define LORA_FIX_LENGTH_PAYLOAD_ON	true
-#define LORA_IQ_NORMAL				0
-#define LORA_IQ_INVERTED			1
-#define TX_TIMEOUT_VALUE            0		//3000
-//#define TCXO_WORKAROUND_TIME_MARGIN	50
-#define BUFFER_AIR_SIZE            	13  	/* Define the payload size here */
-#define BUFFER_RX                  	15		//BUFFER_SIZE + 2 rssi and snr
 
 static RadioEvents_t RadioEvents;
 static States_t State = RX_START;
@@ -44,7 +31,6 @@ static void OnRxTimeout(void);
 
 struct settings_struct *p_settings_rf;
 struct devices_struct **pp_devices_rf;
-
 
 void radio_init(void)
 {
@@ -122,8 +108,8 @@ void set_transmit_data(void)
 
 	if(p_settings_rf->spreading_factor == 12)
 	{
-		device_number = pp_devices_rf[3]->beeper_flag;
-		buffer_to_transmit = 3;	//transmit flags and time todo: change time to gnss fix data
+		device_number = pp_devices_rf[3]->beeper_flag;	//beacon slot to beep
+		buffer_to_transmit = 3;							//transmit flags and gnss fix data
 	}
 	else
 	{

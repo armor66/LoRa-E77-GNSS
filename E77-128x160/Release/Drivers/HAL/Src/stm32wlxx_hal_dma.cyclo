@@ -1,0 +1,13 @@
+stm32wlxx_hal_dma.c:1258:13:DMA_CalcDMAMUXChannelBaseAndMask	2
+stm32wlxx_hal_dma.c:152:19:HAL_DMA_Init	5
+stm32wlxx_hal_dma.c:255:19:HAL_DMA_DeInit	4
+stm32wlxx_hal_dma.c:370:19:HAL_DMA_Start	3
+stm32wlxx_hal_dma.c:421:19:HAL_DMA_Start_IT	3
+stm32wlxx_hal_dma.c:497:19:HAL_DMA_Abort	4
+stm32wlxx_hal_dma.c:558:19:HAL_DMA_Abort_IT	4
+stm32wlxx_hal_dma.c:619:19:HAL_DMA_PollForTransfer	13
+stm32wlxx_hal_dma.c:747:6:HAL_DMA_IRQHandler	13
+stm32wlxx_hal_dma.c:841:19:HAL_DMA_RegisterCallback	7
+stm32wlxx_hal_dma.c:892:19:HAL_DMA_UnRegisterCallback	8
+stm32wlxx_hal_dma.c:970:22:HAL_DMA_GetState	1
+stm32wlxx_hal_dma.c:982:10:HAL_DMA_GetError	1

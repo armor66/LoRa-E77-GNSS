@@ -110,7 +110,6 @@ void draw_confirm_settings(void);
 void confirm_settings_reboot(void);
 void donot_save_settings(void);
 void confirm_settings_restore(void);
-
 //ACTIONS MENU
 void draw_actions(void);
 void power_long(void);
@@ -135,7 +134,6 @@ enum    //menu number starts from 1, because 0 is used as "end marker" in menu s
 	M_POINTS,
 	M_POINTS_SUBMENU,
 	M_CONFIRM_CLEARGROUP,
-//	M_POINTS_SUBMENU_DEVICES,
 
 	M_SETTINGS,
 	M_CONFIRM_SETTINGS,
@@ -597,11 +595,11 @@ void change_menu(uint8_t button_code)
 			case BTN_PWR_LONG:
 				lptim1_start(16, main_flags.brightness);
 				main_flags.display_status = 1;
-//				if(current_menu == M_NAVIGATION && pp_devices_menu[this_device]->valid_fix_flag && pp_devices_menu[this_device]->flwtrek_flag)
-//				{
-//					find_nearest_trekpoint_flag = 1;		//find_nearest_trekpoint();
-//					fillScreen(BLACK);
-//				}
+				if(current_menu == M_NAVIGATION && pp_devices_menu[this_device]->valid_fix_flag && pp_devices_menu[this_device]->flwtrek_flag)
+				{
+					main_flags.find_nearest_trekpoint_flag = 1;		//find_nearest_trekpoint();
+					fill_screen(BLACK);
+				}
 				break;
 
 			case BTN_UP:				//if short pressed
@@ -943,6 +941,7 @@ void draw_main(void)
 //	draw_char(3, 10+row*19, *">", &Font_11x18, YELLOW,BLACK);	//">"
 	int8_t slot = main_flags.time_slot + 1;
 	if(main_flags.time_slot == p_settings_menu->devices_on_air) slot = 1;
+	if((p_settings_menu->spreading_factor == 12) && (main_flags.time_slot == 2)) slot = 1;
 	sprintf(&string_buffer[row][0], "%d",slot);
 	draw_str_by_rows(3, 10+row*19,  &string_buffer[row][0], &Font_11x18, YELLOW,BLACK);
 }

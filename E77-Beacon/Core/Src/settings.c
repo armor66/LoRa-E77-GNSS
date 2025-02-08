@@ -1,23 +1,9 @@
-#include "config.h"
+#include <string.h>
+//#include "config.h"
 #include "settings.h"
+#include "eeprom.h"
 #include "lrns.h"
-#include "flash_if.h"
-
-#define FREQ_REGION_RU_VALUE		(64)
-#define FREQ_REGION_IN_VALUE		(65)
-#define FREQ_REGION_EU_VALUE		(68)
-#define FREQ_REGION_US_VALUE		(115)
-#define FREQ_REGION_KR_VALUE		(120)
-#define FREQ_REGION_AS_VALUE		(123)
-
-char *region[] = {"RU", "EU", "US"};
-
-#define FREQ_REGION_VALUES_ARRAY 	{ 	FREQ_REGION_RU_VALUE, \
-										FREQ_REGION_IN_VALUE, \
-										FREQ_REGION_EU_VALUE,	\
-										FREQ_REGION_US_VALUE, \
-										FREQ_REGION_KR_VALUE, \
-										FREQ_REGION_AS_VALUE}
+//#include "flash_if.h"
 /* [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8] */
 #define CODING_RATE_1_VALUE   	(5)
 #define CODING_RATE_2_VALUE   	(6)
@@ -49,7 +35,6 @@ char *region[] = {"RU", "EU", "US"};
 #define SETTINGS_DEVICE_NUMBER_POS      	(1)
 #define SETTINGS_DEVICES_ON_AIR_POS			(2)
 #define SETTINGS_SPREADING_FACTOR_POS      	(3)
-//#define SETTINGS_FREQ_REGION_POS	        (4)
 #define SETTINGS_CODING_RATE_POS     	  	(4)
 #define SETTINGS_FREQ_CHANNEL_POS       	(5)
 #define SETTINGS_TX_POWER_POS           	(6)
@@ -70,27 +55,17 @@ char *region[] = {"RU", "EU", "US"};
 #define SETTINGS_GYR_OFFSET_Z_POS			(26)
 
 #define SETTINGS_ACC_RADIUS_POS				(28)
-
 #define SETTINGS_MAG_RADIUS_POS				(30)
-
-/***********#define SETTINGS_POS			(32)***************/
-//#define SETTINGS_ACCELEROMETER_POS			(10)	//TIME_ZONE_MINUTE
-//#define SETTINGS_MAGN_OFFSET_X_POS			(12)
-//#define SETTINGS_MAGN_OFFSET_Y_POS			(14)
-//#define SETTINGS_MAGN_SCALE_X_POS			(16)
-//#define SETTINGS_MAGN_SCALE_Y_POS			(20)
-//#define SETTINGS_POS			(24)
 
 //default values:
 #define SETTINGS_INIT_FLAG_DEFAULT      	(0xAA)
-#define SETTINGS_DEVICE_NUMBER_DEFAULT  	(1)
+#define SETTINGS_DEVICE_NUMBER_DEFAULT  	(3)
 #define SETTINGS_DEVICES_ON_AIR_DEFAULT		(3)		//DEVICE_NUMBER_LAST)
 #define SETTINGS_SPREADING_FACTOR_DEFAULT	(11)
-//#define SETTINGS_FREQ_REGION_DEFAULT		(FREQ_REGION_FIRST_OPTION)
 #define SETTINGS_CODING_RATE_DEFAULT		(CODING_RATE_2_SETTING)		// 2
 #define SETTINGS_FREQ_CHANNEL_DEFAULT   	(FREQ_CHANNEL_FIRST)        //base freq is 433.050 and freq step is 25kHz, so CH0 - 433.050 (not valid, not used); CH1 - 433.075 (first LPD channel)
 #define SETTINGS_TX_POWER_DEFAULT       	(TX_POWER_10MILLIW_SETTING)	// 2
-#define SETTINGS_TIMEOUT_THRESHOLD_DEFAULT  (60)
+#define SETTINGS_TIMEOUT_THRESHOLD_DEFAULT  (0)
 #define SETTINGS_FENCE_THRESHOLD_DEFAULT  	(100)
 #define SETTINGS_TIME_ZONE_HOUR_DEFAULT		(5)		//#define SETTINGS_TIME_ZONE_DIR_DEFAULT
 
@@ -121,25 +96,45 @@ char *region[] = {"RU", "EU", "US"};
 #define SETTINGS_MAG_RADIUS_LSB_DEFAULT			(0x00)
 #define SETTINGS_MAG_RADIUS_MSB_DEFAULT			(0x00)
 
-//#define SETTINGS_ACCELEROMETER_DEFAULT		(0x03)		//707(0x0303)//TIME_ZONE_MINUTE
-//#define SETTINGS_MAGN_OFFSET_X_DEFAULT		(0)
-//#define SETTINGS_MAGN_OFFSET_Y_DEFAULT		(0)
-//#define SETTINGS_MAGN_SCALE_XM0_DEFAULT		(0x3f)	//float 1.0 0x3f80
-//#define SETTINGS_MAGN_SCALE_XM1_DEFAULT		(0x80)
-//#define SETTINGS_MAGN_SCALE_XL0_DEFAULT		(0x00)
-//#define SETTINGS_MAGN_SCALE_XL1_DEFAULT		(0x00)
-//#define SETTINGS_MAGN_SCALE_YM0_DEFAULT		(0x3f)	//float 1.0 0x3f80
-//#define SETTINGS_MAGN_SCALE_YM1_DEFAULT		(0x80)
-//#define SETTINGS_MAGN_SCALE_YL0_DEFAULT		(0x00)
-//#define SETTINGS_MAGN_SCALE_YL1_DEFAULT		(0x00)
 //settings size
-#define SETTINGS_SIZE						(32) //half-words (% sizeof(uint64_t)) == 0)
+#define SETTINGS_SIZE			(0x20) //(32)half-words (% sizeof(uint64_t)) == 0)
+#define SETTINGS_PAGE			127
+#define SETTINGS_PAGE_ADDR		0x0803F800UL		//page 127
 
-#define SETTINGS_PAGE		0x0803D800		//0x3D800 / 0x800 = page 123 (0x0801F000)	//page 62
+//------------------------lost device defines----------------------------------
+#define LOST_DEVICE_PAGE			126
+#define LOST_DEVICE_PAGE_ADDR		0x0803F000UL	//page 126
+#define LOST_DEVICE_POINTS			7
+#define LOST_DEVICE_SIZE			0x40	//64				//divisible by 8(64bit) = (device flag) + 7*(1exist, 4lat, 4lon)
+
+#define LOST_DEVICE_FLAG_POS		(0)
+
+#define LOST_DEVPOINT_EXIST_POS		(0)
+#define LOST_DEVPOINT_EXIST_FLAG	(0x56)
+#define LOST_DEVPOINT_LAT_POS		(1)
+#define LOST_DEVPOINT_LON_POS		(5)
+#define LOST_DEVICE_POINT_SIZE		(9)
+
+//------------------------saved groups defines----------------------------------
+#define SAVED_GROUPS_PAGE			125
+#define SAVED_GROUPS_PAGE_ADDR		0x0803E800UL	//page 125
+#define GROUPS_TO_SAVE				7				//0 is emergency & 5 groups 6 is beacon manually saved
+#define POINTS_IN_GROUP				7
+#define SAVED_GROUP_SIZE			64				//divisible by 8(64bit) = (group flag) + 7*(1exist, 4lat, 4lon)
+
+#define SAVED_GROUP_FLAG_POS		(0)
+
+#define SAVED_POINT_EXIST_POS		(0)
+#define SAVED_POINT_EXIST_FLAG		(0x56)
+#define SAVED_POINT_LAT_POS			(1)
+#define SAVED_POINT_LON_POS			(5)
+#define SAVED_POINT_SIZE			(9)
+
 //------------------------memory points defines----------------------------------
-#define FLASH_POINTS_PAGE	0x0803E800		//0x3E800 / 0x800 = page 125 (0x08020000)//page 64 start (0x0801F800)
+#define POINTS_PAGE				124
+#define POINTS_PAGE_ADDR		0x0803E000UL		//page 124
 
-#define MEMORY_POINT_SIZE	(12)	//9 bytes include: 1 flag, 4 lat; 4 lon.
+#define MEMORY_POINT_SIZE	(16)	//divisible by 8 (64bit) 1 flag, 4 lat; 4 lon.
 
 #define MEMORY_POINT_FLAG		(0xAA)	//if a mem point exists then it's flag variable is 0xAA
 #define MEMORY_POINT_FLAG_POS	(0)
@@ -195,16 +190,8 @@ uint8_t settings_array[SETTINGS_SIZE];
 
 struct settings_struct settings;
 
-uint8_t freq_region_values[] = FREQ_REGION_VALUES_ARRAY;
 uint8_t coding_rate_values[] = CODING_RATE_VALUES_ARRAY;
 uint8_t tx_power_values[] = TX_POWER_VALUES_ARRAY;
-
-void read_flash_page(uint32_t start_address, uint8_t data_array[], uint8_t amount);
-
-uint8_t *get_freq_region_values(void)
-{
-	return &freq_region_values[0];
-}
 
 uint8_t *get_coding_rate_values(void)
 {
@@ -220,30 +207,63 @@ struct settings_struct *get_settings(void)
 {
 	return &settings;
 }
-//struct points_struct **pp_points;
+
+static uint8_t find_settins(void)
+{
+//    uint32_t start_addr = SETTINGS_PAGE_ADDR;	// + PAGE_DATA_OFFSET;
+//    uint32_t end_addr = SETTINGS_PAGE_ADDR + FLASH_PAGE_SIZE - SETTINGS_SIZE;
+    uint8_t init_flag_valid = 0;
+    uint8_t end_index = (FLASH_PAGE_SIZE / SETTINGS_SIZE);
+
+	main_flags.settings_address = SETTINGS_PAGE_ADDR + FLASH_PAGE_SIZE ;	//- SETTINGS_SIZE;
+
+//from 64 to 1 (64 iterations)
+    for(main_flags.settings_index = end_index; main_flags.settings_index > 0; main_flags.settings_index--)
+    {
+    	main_flags.settings_address -= SETTINGS_SIZE;						//start from (top of the page - SETTINGS_SIZE)
+
+    	read_page(main_flags.settings_address, &settings_array[SETTINGS_INIT_FLAG_POS], 1);
+
+        if (settings_array[SETTINGS_INIT_FLAG_POS] == SETTINGS_INIT_FLAG_DEFAULT)
+        {
+        	init_flag_valid = 1;
+            break;
+        }
+//        else main_flags.settings_address -= SETTINGS_SIZE;
+    }
+    main_flags.settings_index--;
+    return init_flag_valid;
+}
+
 void settings_load(void)
 {
-	read_flash_page(SETTINGS_PAGE, &settings_array[0], 1);	//0x0803F000
-
-    if (settings_array[SETTINGS_INIT_FLAG_POS] != SETTINGS_INIT_FLAG_DEFAULT)     //if first power-up or FLASH had been erased
+    if(!find_settins())		// (settings_array[SETTINGS_INIT_FLAG_POS] != SETTINGS_INIT_FLAG_DEFAULT)     //if first power-up or FLASH had been erased
     {
-        settings_save_default();		//todo: add default load by OK & ESC button hold
+    	struct settings_struct *p_settings;
+    	p_settings = get_settings();
+        settings_save_default(p_settings);		//todo: add default load by OK & ESC button hold
     }
         //read from flash
-    read_flash_page(SETTINGS_PAGE, &settings_array[0], SETTINGS_SIZE);	//0x0803F800
+    read_page(main_flags.settings_address, &settings_array[0], SETTINGS_SIZE);
     
     //load settings to struct
+    settings.settings_init_flag = 				settings_array[SETTINGS_INIT_FLAG_POS];
     settings.device_number = 					settings_array[SETTINGS_DEVICE_NUMBER_POS];
     settings.devices_on_air = 					settings_array[SETTINGS_DEVICES_ON_AIR_POS];
     settings.spreading_factor = 				settings_array[SETTINGS_SPREADING_FACTOR_POS];
-//    settings.freq_region_opt = 					settings_array[SETTINGS_FREQ_REGION_POS];
     settings.coding_rate_opt = 					settings_array[SETTINGS_CODING_RATE_POS];
     settings.freq_channel = 					settings_array[SETTINGS_FREQ_CHANNEL_POS];
     settings.tx_power_opt = 					settings_array[SETTINGS_TX_POWER_POS];
     settings.timeout_threshold = 				settings_array[SETTINGS_TIMEOUT_THRESHOLD_POS];
     settings.fence_threshold = 					settings_array[SETTINGS_FENCE_THRESHOLD_POS];
-//    settings.time_zone_dir = 					settings_array[SETTINGS_TIME_ZONE_DIR_POS];
     settings.time_zone_hour = 					settings_array[SETTINGS_TIME_ZONE_HOUR_POS];
+
+    settings.gyro_offset_x.as_array[0] =		settings_array[SETTINGS_GYR_OFFSET_X_POS];
+    settings.gyro_offset_x.as_array[1] =		settings_array[SETTINGS_GYR_OFFSET_X_POS + 1];
+    settings.gyro_offset_y.as_array[0] =		settings_array[SETTINGS_GYR_OFFSET_Y_POS];
+    settings.gyro_offset_y.as_array[1] =		settings_array[SETTINGS_GYR_OFFSET_Y_POS + 1];
+    settings.gyro_offset_z.as_array[0] =		settings_array[SETTINGS_GYR_OFFSET_Z_POS];
+    settings.gyro_offset_z.as_array[1] =		settings_array[SETTINGS_GYR_OFFSET_Z_POS + 1];
 
     settings.accel_offset_x.as_array[0] =		settings_array[SETTINGS_ACC_OFFSET_X_POS];
     settings.accel_offset_x.as_array[1] =		settings_array[SETTINGS_ACC_OFFSET_X_POS + 1];
@@ -259,13 +279,6 @@ void settings_load(void)
     settings.magn_offset_z.as_array[0] =		settings_array[SETTINGS_MAG_OFFSET_Z_POS];
     settings.magn_offset_z.as_array[1] =		settings_array[SETTINGS_MAG_OFFSET_Z_POS + 1];
 
-    settings.gyro_offset_x.as_array[0] =		settings_array[SETTINGS_MAG_OFFSET_X_POS];
-    settings.gyro_offset_x.as_array[1] =		settings_array[SETTINGS_MAG_OFFSET_X_POS + 1];
-    settings.gyro_offset_y.as_array[0] =		settings_array[SETTINGS_MAG_OFFSET_Y_POS];
-    settings.gyro_offset_y.as_array[1] =		settings_array[SETTINGS_MAG_OFFSET_Y_POS + 1];
-    settings.gyro_offset_z.as_array[0] =		settings_array[SETTINGS_MAG_OFFSET_Z_POS];
-    settings.gyro_offset_z.as_array[1] =		settings_array[SETTINGS_MAG_OFFSET_Z_POS + 1];
-
     settings.accel_radius.as_array[0] = 		settings_array[SETTINGS_ACC_RADIUS_POS];
     settings.accel_radius.as_array[1] = 		settings_array[SETTINGS_ACC_RADIUS_POS + 1];
     settings.magn_radius.as_array[0] = 			settings_array[SETTINGS_MAG_RADIUS_POS];
@@ -273,33 +286,33 @@ void settings_load(void)
 
     if(settings.spreading_factor == 12)
     {
-//    	settings.device_number = 3;	//RX only (slot1 and slot2), Radio.SetRxConfig IQ inverted, TX on demand
+//    	settings.device_number = 3;	//device number should be beacon1 or beacon2
     	settings.devices_on_air = 3;
     	settings.coding_rate_opt = 3;
     }
     else if(settings.spreading_factor == 11) settings.coding_rate_opt = 2;
 }
 
-void settings_save_default(void)		//page 63 == 1F800
+void settings_save_default(struct settings_struct *p_settings)		//page 63 == 1F800
 {
-	__disable_irq();
-	HAL_FLASH_Unlock();
-	FLASH_IF_EraseByPages(123, 1, 0);		//erase_flash_page(SETTINGS_PAGE);0x0803F000
-
     //assign default values
     settings_array[SETTINGS_INIT_FLAG_POS] = 			SETTINGS_INIT_FLAG_DEFAULT;
     settings_array[SETTINGS_DEVICE_NUMBER_POS] = 		SETTINGS_DEVICE_NUMBER_DEFAULT;
     settings_array[SETTINGS_DEVICES_ON_AIR_POS] = 		SETTINGS_DEVICES_ON_AIR_DEFAULT;
     settings_array[SETTINGS_SPREADING_FACTOR_POS] = 	SETTINGS_SPREADING_FACTOR_DEFAULT;
-//    settings_array[SETTINGS_FREQ_REGION_POS] = 			SETTINGS_FREQ_REGION_DEFAULT;
     settings_array[SETTINGS_CODING_RATE_POS] = 			SETTINGS_CODING_RATE_DEFAULT;
     settings_array[SETTINGS_FREQ_CHANNEL_POS] = 		SETTINGS_FREQ_CHANNEL_DEFAULT;
     settings_array[SETTINGS_TX_POWER_POS] = 			SETTINGS_TX_POWER_DEFAULT;
     settings_array[SETTINGS_TIMEOUT_THRESHOLD_POS] = 	SETTINGS_TIMEOUT_THRESHOLD_DEFAULT;
     settings_array[SETTINGS_FENCE_THRESHOLD_POS] = 		SETTINGS_FENCE_THRESHOLD_DEFAULT;
-//    settings_array[SETTINGS_TIME_ZONE_DIR_POS] = 		SETTINGS_TIME_ZONE_DIR_DEFAULT;
     settings_array[SETTINGS_TIME_ZONE_HOUR_POS] = 		SETTINGS_TIME_ZONE_HOUR_DEFAULT;
 
+    settings_array[SETTINGS_GYR_OFFSET_X_POS] = 		SETTINGS_GYR_OFFSET_X_LSB_DEFAULT;
+    settings_array[SETTINGS_GYR_OFFSET_X_POS + 1] =		SETTINGS_GYR_OFFSET_X_MSB_DEFAULT;
+    settings_array[SETTINGS_GYR_OFFSET_Y_POS] = 		SETTINGS_GYR_OFFSET_Y_LSB_DEFAULT;
+    settings_array[SETTINGS_GYR_OFFSET_Y_POS + 1] =		SETTINGS_GYR_OFFSET_Y_MSB_DEFAULT;
+    settings_array[SETTINGS_GYR_OFFSET_Z_POS] = 		SETTINGS_GYR_OFFSET_Z_LSB_DEFAULT;
+    settings_array[SETTINGS_GYR_OFFSET_Z_POS + 1] =		SETTINGS_GYR_OFFSET_Z_MSB_DEFAULT;
 
     settings_array[SETTINGS_ACC_OFFSET_X_POS] = 		SETTINGS_ACC_OFFSET_X_LSB_DEFAULT;
     settings_array[SETTINGS_ACC_OFFSET_X_POS + 1] =		SETTINGS_ACC_OFFSET_X_MSB_DEFAULT;
@@ -315,84 +328,101 @@ void settings_save_default(void)		//page 63 == 1F800
     settings_array[SETTINGS_MAG_OFFSET_Z_POS] = 		SETTINGS_MAG_OFFSET_Z_LSB_DEFAULT;
     settings_array[SETTINGS_MAG_OFFSET_Z_POS + 1] =		SETTINGS_MAG_OFFSET_Z_MSB_DEFAULT;
 
-    settings_array[SETTINGS_GYR_OFFSET_X_POS] = 		SETTINGS_GYR_OFFSET_X_LSB_DEFAULT;
-    settings_array[SETTINGS_GYR_OFFSET_X_POS + 1] =		SETTINGS_GYR_OFFSET_X_MSB_DEFAULT;
-    settings_array[SETTINGS_GYR_OFFSET_Y_POS] = 		SETTINGS_GYR_OFFSET_Y_LSB_DEFAULT;
-    settings_array[SETTINGS_GYR_OFFSET_Y_POS + 1] =		SETTINGS_GYR_OFFSET_Y_MSB_DEFAULT;
-    settings_array[SETTINGS_GYR_OFFSET_Z_POS] = 		SETTINGS_GYR_OFFSET_Z_LSB_DEFAULT;
-    settings_array[SETTINGS_GYR_OFFSET_Z_POS + 1] =		SETTINGS_GYR_OFFSET_Z_MSB_DEFAULT;
-
+    settings_array[SETTINGS_ACC_RADIUS_POS] = 			0;
+    settings_array[SETTINGS_ACC_RADIUS_POS + 1] = 		0;
+    settings_array[SETTINGS_MAG_RADIUS_POS] = 			0;
+    settings_array[SETTINGS_MAG_RADIUS_POS + 1] =		0;
+    //to retain calibration data if settings restored to defaults
+//	settings_array[SETTINGS_GYR_OFFSET_X_POS] = 		p_settings->gyro_offset_x.as_array[0];
+//	settings_array[SETTINGS_GYR_OFFSET_X_POS + 1] = 	p_settings->gyro_offset_x.as_array[1];
+//	settings_array[SETTINGS_GYR_OFFSET_Y_POS] = 		p_settings->gyro_offset_y.as_array[0];
+//	settings_array[SETTINGS_GYR_OFFSET_Y_POS + 1] = 	p_settings->gyro_offset_y.as_array[1];
+//	settings_array[SETTINGS_GYR_OFFSET_Z_POS] = 		p_settings->gyro_offset_z.as_array[0];
+//	settings_array[SETTINGS_GYR_OFFSET_Z_POS + 1] = 	p_settings->gyro_offset_z.as_array[1];
+//
+//	settings_array[SETTINGS_ACC_OFFSET_X_POS] = 		p_settings->accel_offset_x.as_array[0];
+//	settings_array[SETTINGS_ACC_OFFSET_X_POS + 1] = 	p_settings->accel_offset_x.as_array[1];
+//	settings_array[SETTINGS_ACC_OFFSET_Y_POS] = 		p_settings->accel_offset_y.as_array[0];
+//	settings_array[SETTINGS_ACC_OFFSET_Y_POS + 1] = 	p_settings->accel_offset_y.as_array[1];
+//	settings_array[SETTINGS_ACC_OFFSET_Z_POS] = 		p_settings->accel_offset_z.as_array[0];
+//	settings_array[SETTINGS_ACC_OFFSET_Z_POS + 1] = 	p_settings->accel_offset_z.as_array[1];
+//
+//	settings_array[SETTINGS_MAG_OFFSET_X_POS] = 		p_settings->magn_offset_x.as_array[0];
+//	settings_array[SETTINGS_MAG_OFFSET_X_POS + 1] = 	p_settings->magn_offset_x.as_array[1];
+//	settings_array[SETTINGS_MAG_OFFSET_Y_POS] = 		p_settings->magn_offset_y.as_array[0];
+//	settings_array[SETTINGS_MAG_OFFSET_Y_POS + 1] = 	p_settings->magn_offset_y.as_array[1];
+//	settings_array[SETTINGS_MAG_OFFSET_Z_POS] = 		p_settings->magn_offset_z.as_array[0];
+//	settings_array[SETTINGS_MAG_OFFSET_Z_POS + 1] = 	p_settings->magn_offset_z.as_array[1];
+//
+//	settings_array[SETTINGS_ACC_RADIUS_POS] = 			p_settings->accel_radius.as_array[0];
+//	settings_array[SETTINGS_ACC_RADIUS_POS + 1] = 		p_settings->accel_radius.as_array[1];
+//	settings_array[SETTINGS_MAG_RADIUS_POS] = 			p_settings->magn_radius.as_array[0];
+//	settings_array[SETTINGS_MAG_RADIUS_POS + 1] = 		p_settings->magn_radius.as_array[1];
     //write to flash
-    FLASH_IF_Write(SETTINGS_PAGE, &settings_array[0], SETTINGS_SIZE, NULL);		//write_flash_page(FLASH_SETTINGS_PAGE, &settings_array[0], SETTINGS_SIZE);
-    HAL_FLASH_Lock();
-    __enable_irq();
+	if(flash_unlock())
+	{
+		flash_erase_page(SETTINGS_PAGE);										//FLASH_IF_EraseByPages(SETTINGS_PAGE, 1, 0);
+		flash_write_array(SETTINGS_PAGE_ADDR, settings_array, SETTINGS_SIZE);	//FLASH_IF_Write_Buffer(SETTINGS_PAGE_ADDR, settings_array, SETTINGS_SIZE);
+	    flash_lock();
+	}
 }
 
 void settings_save(struct settings_struct *p_settings)
 {
-	__disable_irq();
-	HAL_FLASH_Unlock();
-	FLASH_IF_EraseByPages(123, 1, 0);		//erase_flash_page(FLASH_SETTINGS_PAGE);0x0803F000
-
     //assign values
     settings_array[SETTINGS_INIT_FLAG_POS] = 			SETTINGS_INIT_FLAG_DEFAULT;
     settings_array[SETTINGS_DEVICE_NUMBER_POS] = 		p_settings->device_number;
     settings_array[SETTINGS_DEVICES_ON_AIR_POS] =		p_settings->devices_on_air;
     settings_array[SETTINGS_SPREADING_FACTOR_POS] = 	p_settings->spreading_factor;
-//    settings_array[SETTINGS_FREQ_REGION_POS] = 			p_settings->freq_region_opt;
     settings_array[SETTINGS_CODING_RATE_POS] = 			p_settings->coding_rate_opt;
     settings_array[SETTINGS_FREQ_CHANNEL_POS] = 		p_settings->freq_channel;
     settings_array[SETTINGS_TX_POWER_POS] = 			p_settings->tx_power_opt;
     settings_array[SETTINGS_TIMEOUT_THRESHOLD_POS] = 	p_settings->timeout_threshold;
     settings_array[SETTINGS_FENCE_THRESHOLD_POS] = 		p_settings->fence_threshold;
-//    settings_array[SETTINGS_TIME_ZONE_DIR_POS] = 		p_settings->time_zone_dir;
     settings_array[SETTINGS_TIME_ZONE_HOUR_POS] = 		p_settings->time_zone_hour;
 
-		settings_array[SETTINGS_ACC_OFFSET_X_POS] = 		p_settings->accel_offset_x.as_array[0];
-		settings_array[SETTINGS_ACC_OFFSET_X_POS + 1] = 	p_settings->accel_offset_x.as_array[1];
-		settings_array[SETTINGS_ACC_OFFSET_Y_POS] = 		p_settings->accel_offset_y.as_array[0];
-		settings_array[SETTINGS_ACC_OFFSET_Y_POS + 1] = 	p_settings->accel_offset_y.as_array[1];
- 		settings_array[SETTINGS_ACC_OFFSET_Z_POS] = 		p_settings->accel_offset_z.as_array[0];
-		settings_array[SETTINGS_ACC_OFFSET_Z_POS + 1] = 	p_settings->accel_offset_z.as_array[1];
+	settings_array[SETTINGS_GYR_OFFSET_X_POS] = 		p_settings->gyro_offset_x.as_array[0];
+	settings_array[SETTINGS_GYR_OFFSET_X_POS + 1] = 	p_settings->gyro_offset_x.as_array[1];
+	settings_array[SETTINGS_GYR_OFFSET_Y_POS] = 		p_settings->gyro_offset_y.as_array[0];
+	settings_array[SETTINGS_GYR_OFFSET_Y_POS + 1] = 	p_settings->gyro_offset_y.as_array[1];
+	settings_array[SETTINGS_GYR_OFFSET_Z_POS] = 		p_settings->gyro_offset_z.as_array[0];
+	settings_array[SETTINGS_GYR_OFFSET_Z_POS + 1] = 	p_settings->gyro_offset_z.as_array[1];
 
-		settings_array[SETTINGS_MAG_OFFSET_X_POS] = 		p_settings->magn_offset_x.as_array[0];
-		settings_array[SETTINGS_MAG_OFFSET_X_POS + 1] = 	p_settings->magn_offset_x.as_array[1];
-		settings_array[SETTINGS_MAG_OFFSET_Y_POS] = 		p_settings->magn_offset_y.as_array[0];
-		settings_array[SETTINGS_MAG_OFFSET_Y_POS + 1] = 	p_settings->magn_offset_y.as_array[1];
-		settings_array[SETTINGS_MAG_OFFSET_Z_POS] = 		p_settings->magn_offset_z.as_array[0];
-		settings_array[SETTINGS_MAG_OFFSET_Z_POS + 1] = 	p_settings->magn_offset_z.as_array[1];
+	settings_array[SETTINGS_ACC_OFFSET_X_POS] = 		p_settings->accel_offset_x.as_array[0];
+	settings_array[SETTINGS_ACC_OFFSET_X_POS + 1] = 	p_settings->accel_offset_x.as_array[1];
+	settings_array[SETTINGS_ACC_OFFSET_Y_POS] = 		p_settings->accel_offset_y.as_array[0];
+	settings_array[SETTINGS_ACC_OFFSET_Y_POS + 1] = 	p_settings->accel_offset_y.as_array[1];
+	settings_array[SETTINGS_ACC_OFFSET_Z_POS] = 		p_settings->accel_offset_z.as_array[0];
+	settings_array[SETTINGS_ACC_OFFSET_Z_POS + 1] = 	p_settings->accel_offset_z.as_array[1];
 
-		settings_array[SETTINGS_MAG_OFFSET_X_POS] = 		p_settings->gyro_offset_x.as_array[0];
-		settings_array[SETTINGS_MAG_OFFSET_X_POS + 1] = 	p_settings->gyro_offset_x.as_array[1];
-		settings_array[SETTINGS_MAG_OFFSET_Y_POS] = 		p_settings->gyro_offset_y.as_array[0];
-		settings_array[SETTINGS_MAG_OFFSET_Y_POS + 1] = 	p_settings->gyro_offset_y.as_array[1];
-		settings_array[SETTINGS_MAG_OFFSET_Z_POS] = 		p_settings->gyro_offset_z.as_array[0];
-		settings_array[SETTINGS_MAG_OFFSET_Z_POS + 1] = 	p_settings->gyro_offset_z.as_array[1];
+	settings_array[SETTINGS_MAG_OFFSET_X_POS] = 		p_settings->magn_offset_x.as_array[0];
+	settings_array[SETTINGS_MAG_OFFSET_X_POS + 1] = 	p_settings->magn_offset_x.as_array[1];
+	settings_array[SETTINGS_MAG_OFFSET_Y_POS] = 		p_settings->magn_offset_y.as_array[0];
+	settings_array[SETTINGS_MAG_OFFSET_Y_POS + 1] = 	p_settings->magn_offset_y.as_array[1];
+	settings_array[SETTINGS_MAG_OFFSET_Z_POS] = 		p_settings->magn_offset_z.as_array[0];
+	settings_array[SETTINGS_MAG_OFFSET_Z_POS + 1] = 	p_settings->magn_offset_z.as_array[1];
 
- 		settings_array[SETTINGS_ACC_RADIUS_POS] = 			p_settings->accel_radius.as_array[0];
-		settings_array[SETTINGS_ACC_RADIUS_POS + 1] = 		p_settings->accel_radius.as_array[1];
- 		settings_array[SETTINGS_MAG_RADIUS_POS] = 			p_settings->magn_radius.as_array[0];
- 		settings_array[SETTINGS_MAG_RADIUS_POS + 1] = 		p_settings->magn_radius.as_array[1];
+	settings_array[SETTINGS_ACC_RADIUS_POS] = 			p_settings->accel_radius.as_array[0];
+	settings_array[SETTINGS_ACC_RADIUS_POS + 1] = 		p_settings->accel_radius.as_array[1];
+	settings_array[SETTINGS_MAG_RADIUS_POS] = 			p_settings->magn_radius.as_array[0];
+	settings_array[SETTINGS_MAG_RADIUS_POS + 1] = 		p_settings->magn_radius.as_array[1];
     
     //write to flash
-    FLASH_IF_Write(SETTINGS_PAGE, &settings_array[0], SETTINGS_SIZE, NULL);		//write_flash_page(FLASH_SETTINGS_PAGE, &settings_array[0], SETTINGS_SIZE);
-    HAL_Delay(100);
-    HAL_FLASH_Lock();
-    __enable_irq();
-
-//    memory_points_save();
-}
-
-void read_flash_page(uint32_t start_address, uint8_t data_array[], uint8_t amount)
-{
-	for (uint8_t i = 0; i < amount; i++)
+	if(flash_unlock())
 	{
-		data_array[i] = ((__IO uint8_t *)start_address)[i];
+		main_flags.settings_address += SETTINGS_SIZE;	//write to next free area or erase entire page
+		if(main_flags.settings_address ==  SETTINGS_PAGE_ADDR + FLASH_PAGE_SIZE)
+		{
+			flash_erase_page(SETTINGS_PAGE);	//FLASH_IF_EraseByPages(SETTINGS_PAGE, 1, 0);
+			main_flags.settings_address = SETTINGS_PAGE_ADDR;
+		}
+		flash_write_array((main_flags.settings_address), settings_array, SETTINGS_SIZE);	//FLASH_IF_Write_Buffer(SETTINGS_PAGE_ADDR, settings_array, SETTINGS_SIZE);
+	    flash_lock();
 	}
 }
-
+#ifndef BEACON
 //------------------------memory points----------------------------
-uint8_t points_array[1152];	//1024(MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE) (size % sizeof(uint64_t)) != 0)
+//uint8_t points_array[MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE];	//1024(MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE) (size % sizeof(uint64_t)) != 0)
 
 struct points_struct points[MEMORY_POINTS_TOTAL];        //structures array for devices from 1 to DEVICES_IN_GROUP. Index 0 is invalid and always empty.
 struct points_struct *p_points[MEMORY_POINTS_TOTAL];		//structure pointers array
@@ -414,19 +444,18 @@ struct points_struct **pp_points;
 char points_group_name_values[MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS][MEM_POINT_NAME_LEN + 1] = MEM_POINTS_GROUPS_ARRAY;
 char points_group_name_short[MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS][MEM_POINT_NAME_LEN_SHORT + 1] = MEM_POINTS_GROUPS_ARRAY_SHORT;
 
-void read_points_page(uint32_t start_address, uint8_t data_array[], uint16_t amount);
+//void read_points_page(uint32_t start_address, uint8_t data_array[], uint16_t amount);
+//void init_memory_points(void)
+//{
+//	pp_points = get_points();
+//	memory_points_load();
+//}
 
-void init_memory_points(void)
+/*void memory_points_load(void)	// FLASH -> buffer array -> devices struct
 {
 	pp_points = get_points();
-	memory_points_load();
-}
 
-void memory_points_load(void)	// FLASH -> buffer array -> devices struct
-{
-	pp_points = get_points();
-
-	read_points_page(FLASH_POINTS_PAGE, &points_array[0], 1024);	//(MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE)
+	read_page(POINTS_PAGE_ADDR, &points_array[0], 1024);	//(MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE)
 
 	for (uint8_t point_group = 0; point_group < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); point_group++)		//MEMORY_POINT_GROUPS
 	{
@@ -453,58 +482,42 @@ void memory_points_load(void)	// FLASH -> buffer array -> devices struct
 			else points[point_number].exist_flag = 0;		//pp_points[point_number]->exist_flag = 0;
 		}
 	}
-}
+}*/
 //uint8_t dataTempPage[1024];
 void memory_points_save(void)	//struct points_struct **pp_points devices struct -> buffer array -> FLASH (pre-erased)
 {
-	pp_points = get_points();
-	__disable_irq();
-	HAL_FLASH_Unlock();
-	HAL_Delay(20);
-	FLASH_IF_EraseByPages(125, 1, 0);		//erase_flash_page(FLASH_POINTS_PAGE);
-	FLASH_IF_EraseByPages(125, 1, 0);
-	HAL_Delay(20);
-
-	for (uint8_t point_group = 0; point_group < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); point_group++)		//MEMORY_POINT_GROUPS
-	{
-		uint8_t point_group_ind = point_group * MEMORY_SUBPOINTS;
-
-		for (uint8_t point = point_group_ind; point < (point_group_ind + 10); point++)
-		{
-			uint16_t point_start_index = point * MEMORY_POINT_SIZE;			//0, 16, 32, 48, ..., 144
-			uint8_t point_number = point;	// + MEMORY_POINT_FIRST;		//0,  1,  2,  3, ...,  9
-			if (pp_points[point_number]->exist_flag == 1)
-			{
-				points_array[point_start_index + MEMORY_POINT_FLAG_POS] = MEMORY_POINT_FLAG;
-
-				for (uint8_t b = 0; b < 4; b++)	//copy lat and lon coordinates
-				{
-					points_array[point_start_index + MEMORY_POINT_LAT_POS + b] = pp_points[point_number]->latitude.as_array[b];
-					points_array[point_start_index + MEMORY_POINT_LON_POS + b] = pp_points[point_number]->longitude.as_array[b];
-					//todo: add date/time save
-				}
-			}
-			else points_array[point_start_index + MEMORY_POINT_FLAG_POS] = 0;
-		}
-	}
-//	__disable_irq();
-//	HAL_FLASH_Unlock();
-//	HAL_Delay(10);
-	FLASH_IF_Write(FLASH_POINTS_PAGE, &points_array[0], 1152, NULL);	//(MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE)write_flash_page(FLASH_POINTS_PAGE, &raw_points_array[0], MEMORY_POINTS_SIZE);
-	HAL_Delay(40);
-	HAL_FLASH_Lock();
-	HAL_Delay(20);
-	__enable_irq();
+//	pp_points = get_points();
+//	flash_erase_page(POINTS_PAGE);
+//
+//	for (uint8_t point_group = 0; point_group < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); point_group++)		//MEMORY_POINT_GROUPS
+//	{
+//		uint8_t point_group_ind = point_group * MEMORY_SUBPOINTS;
+//
+//		for (uint8_t point = point_group_ind; point < (point_group_ind + 10); point++)
+//		{
+//			uint16_t point_start_index = point * MEMORY_POINT_SIZE;			//0, 16, 32, 48, ..., 144
+//			uint8_t point_number = point;	// + MEMORY_POINT_FIRST;		//0,  1,  2,  3, ...,  9
+//			if (pp_points[point_number]->exist_flag == 1)
+//			{
+//				points_array[point_start_index + MEMORY_POINT_FLAG_POS] = MEMORY_POINT_FLAG;
+//
+//				for (uint8_t b = 0; b < 4; b++)	//copy lat and lon coordinates
+//				{
+//					points_array[point_start_index + MEMORY_POINT_LAT_POS + b] = pp_points[point_number]->latitude.as_array[b];
+//					points_array[point_start_index + MEMORY_POINT_LON_POS + b] = pp_points[point_number]->longitude.as_array[b];
+//					//todo: add date/time save
+//				}
+//			}
+//			else points_array[point_start_index + MEMORY_POINT_FLAG_POS] = 0;
+//		}
+//	}
+//	flash_write_array(POINTS_PAGE_ADDR, &points_array[0], 1152);
 }
 
-void memory_points_erase(void)
+/*void memory_points_erase(void)
 {
-	__disable_irq();
-	HAL_FLASH_Unlock();
-	HAL_Delay(20);
-	FLASH_IF_EraseByPages(125, 1, 0);
-	FLASH_IF_EraseByPages(125, 1, 0);
-	HAL_Delay(20);
+	flash_erase_page(POINTS_PAGE);
+
 	for (uint8_t point_group = 0; point_group < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); point_group++)		//MEMORY_POINT_GROUPS
 		{
 			uint8_t point_group_ind = point_group * MEMORY_SUBPOINTS;
@@ -515,12 +528,8 @@ void memory_points_erase(void)
 				points_array[point_start_index + MEMORY_POINT_FLAG_POS] = 0;
 			}
 		}
-	FLASH_IF_Write(FLASH_POINTS_PAGE, &points_array[0], 1152, NULL);	//(MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE)write_flash_page(FLASH_POINTS_PAGE, &raw_points_array[0], MEMORY_POINTS_SIZE);
-	HAL_Delay(40);
-	HAL_FLASH_Lock();
-	HAL_Delay(20);
-	__enable_irq();
-}
+	flash_write_array(POINTS_PAGE_ADDR, &points_array[0], 1152);
+}*/
 
 void save_one_point(int8_t point_absolute_index)
 {
@@ -532,16 +541,7 @@ void save_one_point(int8_t point_absolute_index)
 	points[point_absolute_index].exist_flag = 1;
 	points[point_absolute_index].latitude.as_integer = pp_devices[p_settings->device_number]->latitude.as_integer;
 	points[point_absolute_index].longitude.as_integer = pp_devices[p_settings->device_number]->longitude.as_integer;
-	memory_points_save();		//save to flash
-}
-
-void clear_points_group(int8_t current_point_group)
-{
-	for(int8_t i = 0; i < MEMORY_SUBPOINTS; i++) {
-//		point_absolute_index = current_point_group * MEMORY_SUBPOINTS + i;
-		points[current_point_group * MEMORY_SUBPOINTS + i].exist_flag = 0;
-	}
-	memory_points_save();		//save to flash
+//	memory_points_save();		//save to flash
 }
 
 char *get_points_group_name(uint8_t group_number)		//point_number from MEMORY_POINT_FIRST to MEMORY_POINT_LAST
@@ -553,12 +553,354 @@ char *get_points_group_short(uint8_t group_number)		//point_number from MEMORY_P
 {
 	return &points_group_name_short[group_number][0];		// - MEMORY_POINT_FIRST][0];
 }
-
-void read_points_page(uint32_t start_address, uint8_t data_array[], uint16_t amount)
+void erase_point_groups(void)
 {
-	for (uint16_t i = 0; i < amount; i++)
+	if(flash_unlock())
 	{
-		data_array[i] = ((__IO uint8_t *)start_address)[i];
+		flash_erase_page(SAVED_GROUPS_PAGE);
+	    flash_lock();
 	}
 }
-//-------------------------memory points end----------------------------
+void erase_saved_devices(void)
+{
+	if(flash_unlock())
+	{
+		flash_erase_page(LOST_DEVICE_PAGE);
+    	flash_lock();
+	}
+}
+//-------------------------memory points end-----------------------------
+//-------------------------points_groups start----------------------------
+const uint8_t saved_group_flag[] = {0xCC, 0xA5, 0xB5, 0xC5, 0xD5, 0xE5, 0xCA};	//emergency & 5 point groups
+uint8_t saved_group_array[SAVED_GROUP_SIZE];				//saved_point_group_flag[device] + 63 are 7 points of 9 bytes each
+uint8_t saved_group_index;								//FLASH_PAGE_SIZE / SAVED_GROUP_SIZE (from 1 to 32)
+uint32_t saved_group_address[GROUPS_TO_SAVE];				//page start address + SAVED_GROUP_SIZE incremented
+
+static uint8_t find_saved_group(uint8_t group)
+{
+	struct point_groups_struct **pp_point_groups;
+	pp_point_groups = get_point_groups();
+
+	uint8_t group_found = 0;
+	uint8_t end_index = (FLASH_PAGE_SIZE / SAVED_GROUP_SIZE);
+//search from top of the page
+	saved_group_address[group] = SAVED_GROUPS_PAGE_ADDR + FLASH_PAGE_SIZE;	// - SAVED_GROUP_SIZE;	//max available
+
+//from 32 to 1 (32 iterations)
+    for(saved_group_index = end_index; saved_group_index > 0; saved_group_index--)
+    {
+    	saved_group_address[group] -= SAVED_GROUP_SIZE;		//start from (top of the page - SAVED_GROUP_SIZE)
+
+    	read_page(saved_group_address[group], &saved_group_array[SAVED_GROUP_FLAG_POS], 1);
+
+    	if (saved_group_array[SAVED_GROUP_FLAG_POS] == saved_group_flag[group])
+        {
+    		group_found = 1;
+            break;
+        }
+//        else saved_group_address[group] -= SAVED_GROUP_SIZE;
+    }
+    pp_point_groups[group]->index_in_flash = saved_group_index - 1;
+    return group_found;
+}
+
+void saved_group_load(uint8_t group)
+{
+//	struct point_groups_struct **pp_point_groups;
+//	pp_point_groups = get_point_groups();
+	pp_points = get_points();
+    if(find_saved_group(group))
+    {
+//read from flash, fill lost_device_array with 64 bytes. saved_group_flag[group] + 63 are 7 points of 9 bytes each
+    	read_page(saved_group_address[group], &saved_group_array[0], SAVED_GROUP_SIZE);
+
+    	for(uint8_t point = 0; point < POINTS_IN_GROUP; point++)		//read lost_device_array[64]
+    	{	//exist flag index
+    	   	uint8_t read_from_flash_point_index = point*SAVED_POINT_SIZE + 1; 	//1, 10, 19, 28, 37, 46, 55
+    	   	uint8_t global_point_index = group * MEMORY_SUBPOINTS + point + 1;
+/*group*****global_point_zero index*****global_point_index*****point*****read_from_flash_point_index*/
+//	0	(0)					0				 1-7				1-7			1, 10, 19, 28, 37, 46, 55
+//	1	(1)				 	8				 9-15				1-7			1, 10, 19, 28, 37, 46, 55
+//	2 	(2)					16				17-23				1-7			1, 10, 19, 28, 37, 46, 55
+//	3 	(3)					24				25-31				1-7			1, 10, 19, 28, 37, 46, 55
+//	4 	(4)					32				33-39				1-7			1, 10, 19, 28, 37, 46, 55
+//	5 	(5)					40				41-47				1-7			1, 10, 19, 28, 37, 46, 55
+//bcnman(6)					48				49-55
+    		if (saved_group_array[read_from_flash_point_index] == SAVED_POINT_EXIST_FLAG)
+    		{
+    			points[global_point_index].exist_flag = 1;
+
+    			for (uint8_t b = 0; b < 4; b++)	//copy lat and lon coordinates
+    			{
+					points[global_point_index].latitude.as_array[b] = saved_group_array[read_from_flash_point_index + LOST_DEVPOINT_LAT_POS + b];
+					points[global_point_index].longitude.as_array[b] = saved_group_array[read_from_flash_point_index + LOST_DEVPOINT_LON_POS + b];
+    			}
+    		}else points[global_point_index].exist_flag = 0;	//pp_lost_device[device][point].exist_flag = 0;
+    	}
+    }else
+    {
+//    	pp_point_groups[group]->index_in_flash = -1;
+    	return;
+    }
+}
+
+void points_group_save(uint8_t group)
+{
+	struct point_groups_struct **pp_point_groups;
+	pp_point_groups = get_point_groups();
+
+	pp_points = get_points();
+	uint8_t saved_group_found = 0;
+	uint8_t max_index = 0;
+	uint32_t max_address = 0;
+
+	memset(saved_group_array, 0, SAVED_GROUP_SIZE);
+
+//find max index/address to save new group_array in next free LOST_DEVICE_SIZE area
+    for (uint8_t grp = 0; grp < GROUPS_TO_SAVE; grp++)
+    {
+    	if(find_saved_group(grp))
+    	{
+    		saved_group_found +=1;
+        	if(saved_group_index > max_index)
+        	{
+        		max_index = saved_group_index;
+        		max_address = saved_group_address[grp];
+        	}
+    	}else pp_point_groups[grp]->index_in_flash = -1;
+    }
+
+	//fill group_array[64]
+   	saved_group_array[SAVED_GROUP_FLAG_POS] = saved_group_flag[group];	    //fill this after find procedure
+
+	for(uint8_t point = 0; point < POINTS_IN_GROUP; point++)
+	{
+	   	uint8_t write_to_flash_point_index = point*SAVED_POINT_SIZE + 1; 	//1, 10, 19, 28, 36, 46, 55
+	   	uint8_t global_point_index = group * MEMORY_SUBPOINTS + point + 1;
+/*group*****global_point_zero index*****global_point_index*****point*****write_to_flash_point_index*/
+//	0	(0)					0				 1-7				1-7			1, 10, 19, 28, 37, 46, 55
+//	1	(1)				 	8				 9-15				1-7			1, 10, 19, 28, 37, 46, 55
+//	2 	(2)					16				17-23				1-7			1, 10, 19, 28, 37, 46, 55
+//	3 	(3)					24				25-31				1-7			1, 10, 19, 28, 37, 46, 55
+//	4 	(4)					32				33-39				1-7			1, 10, 19, 28, 37, 46, 55
+//	5 	(5)					40				41-47				1-7			1, 10, 19, 28, 37, 46, 55
+//bcnman(6)					48				49-55				1-7			1, 10, 19, 28, 37, 46, 55
+		if(pp_points[global_point_index]->exist_flag == 1)
+		{
+			saved_group_array[write_to_flash_point_index] = SAVED_POINT_EXIST_FLAG;
+
+			for (uint8_t b = 0; b < 4; b++)	//copy lat and lon coordinates
+   			{
+				saved_group_array[write_to_flash_point_index + LOST_DEVPOINT_LAT_POS + b] = pp_points[global_point_index]->latitude.as_array[b];
+				saved_group_array[write_to_flash_point_index + LOST_DEVPOINT_LON_POS + b] = pp_points[global_point_index]->longitude.as_array[b];
+   			}
+		}
+	}
+
+   	if(flash_unlock())	//write to next free area or erase entire page
+   	{
+   		if((max_index > (FLASH_PAGE_SIZE / SAVED_GROUP_SIZE) - 1) || !saved_group_found)	//the page is full if last area occupied (index = 32)
+   		{
+   			flash_erase_page(SAVED_GROUPS_PAGE);
+//todo: save and flash all saved groups from the beginning of SAVED_GROUPS_PAGE_ADDR
+   			saved_group_address[group] = SAVED_GROUPS_PAGE_ADDR;			//start from first page address
+   		}
+   		else saved_group_address[group] = max_address + SAVED_GROUP_SIZE;	//flash to next free area
+
+   	    pp_point_groups[group]->index_in_flash = max_index;
+
+   		flash_write_array(saved_group_address[group], saved_group_array, SAVED_GROUP_SIZE);	//FLASH_IF_Write_Buffer(SETTINGS_PAGE_ADDR, settings_array, SETTINGS_SIZE);
+   	    flash_lock();
+   	}
+}
+
+void clear_points_group(int8_t group)
+{
+	pp_points = get_points();
+	uint8_t saved_group_found = 0;
+	uint8_t max_index = 0;
+	uint32_t max_address = 0;
+
+	//find max index/address to save new group_array in next free LOST_DEVICE_SIZE area
+    for (uint8_t grp = 0; grp < GROUPS_TO_SAVE; grp++)
+    {
+    	if(find_saved_group(grp))
+    	{
+    		if(group == grp) saved_group_found = 1;
+        	if(saved_group_index > max_index)
+        	{
+        		max_index = saved_group_index;
+        		max_address = saved_group_address[grp];
+        	}
+    	}//else pp_devices[dev]->index_in_flash = -1;
+    }
+/*if saved group has found we should create new 64 bytes area with it "saved_group_flag[group]"
+* valid at "0" position and fill all point indexes (1, 10, 19, 28, 37, 46, 55) with "0"*/
+    if(saved_group_found)	//if chosen group not found, do nothing
+    {
+    	//fill group_array[64]
+    	for(uint8_t point = 0; point < POINTS_IN_GROUP; point++)
+    	{
+    	   	uint8_t write_to_flash_point_index = point*SAVED_POINT_SIZE + 1;	//0 to 63 array
+    		saved_group_array[write_to_flash_point_index] = 0;				//1, 10, 19, 28, 37, 46, 55
+    	}
+//    	memset(saved_group_array, 0, SAVED_GROUP_SIZE);
+
+    	//fill this after find procedure
+    	saved_group_array[SAVED_GROUP_FLAG_POS] = saved_group_flag[group];
+    	if(flash_unlock())	//write to next free area or erase entire page
+    	{
+       		if(max_index > (FLASH_PAGE_SIZE / SAVED_GROUP_SIZE) - 1)	//the page is full if last area occupied (index = 32)
+       		{
+       			flash_erase_page(SAVED_GROUPS_PAGE);
+//todo: save and flash all saved groups from the beginning of SAVED_GROUPS_PAGE_ADDR
+       		}
+       		else
+       		{	//write to the next free area point exist indexes with zeroes
+       			saved_group_address[group] = max_address + SAVED_GROUP_SIZE;
+       	   		flash_write_array(saved_group_address[group], saved_group_array, SAVED_GROUP_SIZE);
+       		}
+       	    flash_lock();
+    	}
+    }
+}
+//------------------------lost_devices start----------------------------
+const uint8_t lost_device_flag[] = {0x00, 0xA5, 0xB5, 0xC5, 0xD5, 0xE5};		//5 devices max
+uint8_t lost_device_array[LOST_DEVICE_SIZE];				//lost_device_flag[device] + 63 are 7 points of 9 bytes each
+uint8_t lost_device_index;										//FLASH_PAGE_SIZE / LOST_DEVICE_SIZE (from 1 to 32)
+uint32_t lost_device_address[DEVICES_ON_AIR_MAX + 1];			//page start address + LOST_DEVICE_SIZE incremented
+
+static uint8_t find_lost_device(uint8_t device)
+{
+	struct devices_struct **pp_devices;
+	pp_devices = get_devices();
+	uint8_t device_found = 0;
+	uint8_t end_index = (FLASH_PAGE_SIZE / LOST_DEVICE_SIZE);
+
+	lost_device_address[device] = LOST_DEVICE_PAGE_ADDR + FLASH_PAGE_SIZE;	// - LOST_DEVICE_SIZE;	//top of the page
+
+//from 32 to 1 (32 iterations)
+    for(lost_device_index = end_index; lost_device_index > 0; lost_device_index--)
+    {
+    	lost_device_address[device] -= LOST_DEVICE_SIZE;	//start from (top of the page - LOST_DEVICE_SIZE)
+
+    	read_page(lost_device_address[device], &lost_device_array[LOST_DEVICE_FLAG_POS], 1);
+
+    	if(lost_device_array[LOST_DEVICE_FLAG_POS] == lost_device_flag[device])	//for device specific flag
+        {
+    		device_found = 1;
+//    	    pp_devices[device]->index_in_flash = lost_device_index - 1;
+            break;
+        }
+//      else lost_device_address[device] -= LOST_DEVICE_SIZE;
+    }
+    pp_devices[device]->index_in_flash = lost_device_index - 1;
+    return device_found;
+}
+
+void lost_device_load(uint8_t device)
+{
+//	struct devices_struct **pp_devices;
+//	pp_devices = get_devices();
+	pp_points = get_points();
+    if(find_lost_device(device))
+    {
+//read from flash, fill lost_device_array with 64 bytes. lost_device_flag[device] + 63 are 7 points of 9 bytes each
+    	read_page(lost_device_address[device], &lost_device_array[0], LOST_DEVICE_SIZE);
+
+    	for(uint8_t point = 0; point < LOST_DEVICE_POINTS; point++)		//read lost_device_array[64]
+    	{	//exist flag index
+    	   	uint8_t read_from_flash_point_index = point*LOST_DEVICE_POINT_SIZE + 1; 	//1, 10, 19, 28, 37, 46, 55
+    	   	uint8_t global_point_index = (GROUPS_TO_SAVE + device - 1) * MEMORY_SUBPOINTS + point + 1;
+/*device*****global_point_zero index*****global_point_index*****point*****read_from_flash_point_index*/
+//	1	(7)				 	56				57-63				1-7			1, 10, 19, 28, 37, 46, 55
+//	2 	(8)					64				65-71				1-7			1, 10, 19, 28, 37, 46, 55
+//	3 	(9)					72				73-79				1-7			1, 10, 19, 28, 37, 46, 55
+//	4  (10)					80				81-87				1-7			1, 10, 19, 28, 37, 46, 55
+//	5  (11)					88				89-95				1-7			1, 10, 19, 28, 37, 46, 55
+    		if (lost_device_array[read_from_flash_point_index] == LOST_DEVPOINT_EXIST_FLAG)
+    		{
+    			points[global_point_index].exist_flag = 1;
+
+    			for (uint8_t b = 0; b < 4; b++)	//copy lat and lon coordinates
+    			{
+					points[global_point_index].latitude.as_array[b] = lost_device_array[read_from_flash_point_index + LOST_DEVPOINT_LAT_POS + b];
+					points[global_point_index].longitude.as_array[b] = lost_device_array[read_from_flash_point_index + LOST_DEVPOINT_LON_POS + b];
+    			}
+    		}else points[global_point_index].exist_flag = 0;	//pp_lost_device[device][point].exist_flag = 0;
+    	}
+    }else
+    {
+//    	pp_devices[device]->index_in_flash = -1;
+    	return;
+    }
+}
+
+void lost_device_save(uint8_t device)	// executed when "case 3" TIM1-IRQ occurs
+{
+	struct devices_struct **pp_devices;
+	pp_devices = get_devices();
+	pp_points = get_points();
+	uint8_t lost_device_found = 0;
+	uint8_t max_index = 0;
+	uint32_t max_address = 0;
+
+	memset(lost_device_array, 0, LOST_DEVICE_SIZE);
+
+	//find max index/address to save new lost_device_array in next free LOST_DEVICE_SIZE area
+    for (uint8_t dev = 1; dev <= DEVICES_ON_AIR_MAX; dev++)
+    {
+    	if(find_lost_device(dev))
+    	{
+    		lost_device_found +=1;
+        	if(lost_device_index > max_index)
+        	{
+        		max_index = lost_device_index;
+        		max_address = lost_device_address[dev];
+        	}
+    	}else pp_devices[dev]->index_in_flash = -1;
+    }
+
+    //fill lost_device_array[64]
+	lost_device_array[LOST_DEVICE_FLAG_POS] = lost_device_flag[device];		//fill this after find procedure
+
+	for(uint8_t point = 0; point < LOST_DEVICE_POINTS; point++)
+	{
+	   	uint8_t write_to_flash_point_index = point*LOST_DEVICE_POINT_SIZE + 1; 	//1, 10, 19, 28, 37, 46, 55
+	   	uint8_t global_point_index = (GROUPS_TO_SAVE + device - 1) * MEMORY_SUBPOINTS + point + 1;
+/*device*****global_point_zero index*****global_point_index*****point*****write_to_flash_point_index*/
+//	1	(7)				 	56				57-63				1-7			1, 10, 19, 28, 37, 46, 55
+//	2 	(8)					64				65-71				1-7			1, 10, 19, 28, 37, 46, 55
+//	3 	(9)					72				73-79				1-7			1, 10, 19, 28, 37, 46, 55
+//	4  (10)					80				81-87				1-7			1, 10, 19, 28, 37, 46, 55
+//	5  (11)					88				89-95				1-7			1, 10, 19, 28, 37, 46, 55
+		if(pp_points[global_point_index]->exist_flag == 1)
+		{
+			lost_device_array[write_to_flash_point_index] = LOST_DEVPOINT_EXIST_FLAG;
+
+			for (uint8_t b = 0; b < 4; b++)	//copy lat and lon coordinates
+   			{
+				lost_device_array[write_to_flash_point_index + LOST_DEVPOINT_LAT_POS + b] = pp_points[global_point_index]->latitude.as_array[b];
+				lost_device_array[write_to_flash_point_index + LOST_DEVPOINT_LON_POS + b] = pp_points[global_point_index]->longitude.as_array[b];
+   			}
+		}
+	}
+
+   	if(flash_unlock())	//write to next free area or erase entire page
+   	{
+   		if((max_index > (FLASH_PAGE_SIZE / LOST_DEVICE_SIZE) - 1) || !lost_device_found)	//the page is full if last area occupied (index = 32)
+   		{
+   			flash_erase_page(LOST_DEVICE_PAGE);
+//todo: save and flash all existed lost devices from the beginning of LOST_DEVICE_PAGE_ADDR
+   			lost_device_address[device] = LOST_DEVICE_PAGE_ADDR;
+//   			max_index = 99;
+   		}
+   		else lost_device_address[device] = max_address + LOST_DEVICE_SIZE;
+
+   		pp_devices[device]->index_in_flash = max_index;
+
+   		flash_write_array(lost_device_address[device], lost_device_array, LOST_DEVICE_SIZE);	//FLASH_IF_Write_Buffer(SETTINGS_PAGE_ADDR, settings_array, SETTINGS_SIZE);
+   	    flash_lock();
+   	}
+}
+#endif
