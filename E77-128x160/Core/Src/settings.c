@@ -288,7 +288,7 @@ void settings_load(void)
     {
     	settings.device_number = 3;	//RX only (slot1 and slot2), Radio.SetRxConfig IQ inverted, TX on demand
     	settings.devices_on_air = 3;
-    	settings.coding_rate_opt = 3;
+    	settings.coding_rate_opt = 2;
     }
     else if(settings.spreading_factor == 11) settings.coding_rate_opt = 2;
 }

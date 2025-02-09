@@ -5,6 +5,7 @@
 //#include "radio.h"
 #include "menu.h"
 #include "gpio.h"
+//#include "gnss.h"
 
 const double rad_to_deg = 57.29577951308232;        //rad to deg multiplyer
 const double deg_to_rad = 0.0174532925199433;       //deg to rad multiplyer
@@ -97,7 +98,21 @@ void ublox_to_this_device(uint8_t device_number)
 		devices[device_number].gps_heading = ((PVTbuffer[67+6]<<24)+(PVTbuffer[66+6]<<16)+(PVTbuffer[65+6]<<8)+PVTbuffer[64+6])/100000 & 0x1FF;	// 0 - 511 degrees
 		devices[device_number].p_dop = (PVTbuffer[77+6]<<8)+PVTbuffer[76+6];
 
-		if(devices[device_number].valid_fix_flag) main_flags.fix_valid = p_settings_lrns->devices_on_air;	//3, 4 or 5
+		if(main_flags.fix_valid >= p_settings_lrns->devices_on_air)		//at least 3 fix valid occurred
+		{
+			main_flags.fix_valid = p_settings_lrns->devices_on_air;
+			if(!main_flags.first_time_locked)	//if not locked yet
+			{
+				//set CFG-TP-PERIOD_LOCK_TP1=3.000.000 to manage ADC and UART only ones on period
+//				if(p_settings_lrns->spreading_factor == 12)
+//				{
+//					USART2->CR1 |= USART_CR1_TE | USART_CR1_UE;
+//					serialPrint(set_three_seconds, sizeof(set_three_seconds));
+//				}
+				main_flags.first_time_locked = 1;
+				main_flags.short_beeps = 3;		//glad tidings
+			}
+		}else  if(devices[device_number].valid_fix_flag) main_flags.fix_valid++;
 }
 void rx_to_devices(uint8_t device_number)
 {

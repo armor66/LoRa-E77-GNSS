@@ -46,14 +46,13 @@ const uint8_t timeslot_pattern[2][103] =
 //	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
 //	2000 2100mS								 3000 3100mS							  4000 4100mS							   5000mS
 	4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1 },
-//	SF = 12, CR1(4/5), Packet duration in air = 1155.1
-//  | PVT|Slot1 		OnRxDone time		<1200mS		  |draw menu| |Slot2 			OnRxDone time		<1200mS	   |draw menu|
-//	|----|-----------------------------------|------------|---------|-----------------|------------------------------|---------|
-//	0 50 100mS	                             1000		 1300mS						  2000				    	  	2750	   3000
-   {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,0, 0,0,0,0,3,4,5,4,7,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,6,0,0,0,0,0,0,0,0,0,3,4,5,4,7,1 }};
-//	|----|---------------------------|--------------------|-----------|----------------------------|-------------------|-------|
-//	0 50 100mS	                    +700     			+1200mS	     1600				  	      +700				 +1200	   3000
-//case 6: end of received packet from device №3, IQ inverted
+//	SF = 12, CR3(4/7), Packet duration in air = 1122.3
+// PPS	 |Slot1 		AIR time 1122mS		PPS 		| draw menu|  |Slot2 		 PPS   		AIR time 1122mS      | draw menu|
+//	|----|-----------------------------------|----|-----|-------------|---------------|----|-------------------------|---------|
+//	0 50 100mS	                             1000		1250mS						  2000				    	  	2750	   3000
+   {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,0, 0,0,0,3,4,5,4,7,4,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,6,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1 }};
+//	|----|---------------------------|------------------|-------------|----------------------------|-----------------|---------|
+//	0 50 100mS	                    +700     		   +1150mS	     1600				  	      +700				+1150	   3000
 
 static void restartPattern(void)
 {
@@ -137,17 +136,21 @@ void TIM1_UP_IRQHandler(void)
 
 
 
-//manage (pp_devices_phy[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
-				if(p_settings_tim->spreading_factor != 12)
-				{
-					if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
-					{
-						led_w_on();
-						pp_devices_tim[main_flags.time_slot]->beeper_flag = 0;
-						long_beep_ones = 1;	//set here to finish on case 3 after starts here only
-					}
-				}
+
+
+
+
+
+
 				Radio.Rx(0);			//start to receive SF=12 or not
+
+//manage (pp_devices_phy[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
+				if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
+				{
+					led_w_on();
+					pp_devices_tim[main_flags.time_slot]->beeper_flag = 0;
+					long_beep_ones = 1;	//set here to finish on case 3 after starts here only
+				}
 			}
 			break;
 
@@ -184,7 +187,7 @@ void TIM1_UP_IRQHandler(void)
 			}
 			break;
 
-		case 6:	//on the alien slot only (device 3 choose in witch slot to transmit)
+		case 6:	//for SF=12 on the alien slot only (device 3 choose in witch slot to transmit)
 			if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
 			{
 				led_w_on();		//500mS to case 3

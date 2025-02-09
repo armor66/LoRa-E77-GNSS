@@ -882,7 +882,7 @@ void draw_main(void)
 	row+=1;	//2
 	if(main_flags.nav_pvt_ram_flag)
 	{
-		sprintf(&string_buffer[row][0], " %5s pDop:%2d.%02d ", fixType[pp_devices_menu[this_device]->fix_type_opt],
+		sprintf(&string_buffer[row][0], "%d %5s pDop:%2d.%02d", main_flags.fix_valid, fixType[pp_devices_menu[this_device]->fix_type_opt],
 						pp_devices_menu[this_device]->p_dop/100, pp_devices_menu[this_device]->p_dop%100);
 		(pp_devices_menu[this_device]->valid_fix_flag)?
 				draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, WHITE,BLACK):

@@ -46,11 +46,13 @@ const uint8_t timeslot_pattern[2][103] =
 //	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
 //	2000 2100mS								 3000 3100mS							  4000 4100mS							   5000mS
 	4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1 },
-//	SF = 12, CR1(4/5), Packet duration in air = 1155.1
-//  | PVT|Slot1 		OnRxDone time		<1200mS		  |draw menu| |Slot2 			OnRxDone time		<1200mS	   |draw menu|
-//	|----|-----------------------------------|------------|---------|-----------------|------------------------------|---------|
-//	0 50 100mS	                             1000		 1300mS						  2000				    	  	2750	   3000
-   {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,3,4,5,4,7,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,1 }};
+//	SF = 12, CR3(4/7), Packet duration in air = 1122.3
+// PPS	 |Slot1 		AIR time 1122mS		PPS 		| draw menu|  |Slot2 		 PPS   		AIR time 1122mS      | draw menu|
+//	|----|-----------------------------------|----|-----|-------------|---------------|----|-------------------------|---------|
+//	0 50 100mS	                             1000		1250mS						  2000				    	  	2750	   3000
+   {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,3,4,5,4,7,4,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1 }};
+//	|----|---------------------------|------------------|-------------|----------------------------|-----------------|---------|
+//	0 50 100mS	                    +700     		   +1150mS	     1600				  	      +700				+1150	   3000
 
 static void restartPattern(void)
 {
@@ -110,7 +112,7 @@ void TIM1_UP_IRQHandler(void)
 			led_green_off();
 			if(main_flags.time_slot == p_settings_tim->device_number)	//this device:
 			{	//if this device doesn't get gnss fix via uart 100mS after PPS, delay for full pattern time
-				if(!pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag)	main_flags.fix_valid--;
+				if(!pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag) main_flags.fix_valid--;
 				if(main_flags.fix_valid > 0)	//do not transmit if no GNSS FIX
 				{
 					if(main_flags.display_status)
@@ -124,26 +126,30 @@ void TIM1_UP_IRQHandler(void)
 				}else main_flags.fix_valid = 0;		//just to avoid negative values
 			}
 			else//if(time_slot != p_settings_tim->device_number)	other devices:
-			{	//transmit on demand if beeper_flag has set(choose witch beacon to send) with LORA_IQ_INVERTED
-				if((p_settings_tim->spreading_factor == 12) && (pp_devices_tim[3]->beeper_flag == main_flags.time_slot))	//for [p_settings_tim->device_number == 3] only
-				{	//beeper_flags inverted to transmit in the slot, beacon can get: slot1 for beacon2, slot2 for beacon1
-						main_flags.permit_actions = 0;
-						main_flags.transmit_iq_inverted_flag = 1;	//set transmit LORA_IQ_INVERTED
-						Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_tim[p_settings_tim->tx_power_opt], 0,
-					LORA_BANDWIDTH,	p_settings_tim->spreading_factor, p_settings_tim->coding_rate_opt,
-					LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_INVERTED, TX_TIMEOUT_VALUE);
-						led_red_on();
-						set_transmit_data();	//transmit flags and time only with buffer_to_transmit = 3
+			{
+				if(p_settings_tim->spreading_factor == 12)	//for device3 only
+				{
+					(main_flags.fix_valid > 0)? (main_flags.fix_valid--): (main_flags.fix_valid = 0);
+					//transmit on demand if beeper_flag has set(choose witch beacon to send) with LORA_IQ_INVERTED
+					if(pp_devices_tim[3]->beeper_flag == main_flags.time_slot)	//1 for beacon2 or 2 for beacon1
+					{	//beeper_flags inverted to transmit in the slot, beacon can get: slot1 for beacon2, slot2 for beacon1
+							main_flags.permit_actions = 0;
+							main_flags.transmit_iq_inverted_flag = 1;	//set transmit LORA_IQ_INVERTED
+							Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_tim[p_settings_tim->tx_power_opt], 0,
+						LORA_BANDWIDTH,	p_settings_tim->spreading_factor, p_settings_tim->coding_rate_opt,
+						LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_INVERTED, TX_TIMEOUT_VALUE);
+							led_red_on();
+							set_transmit_data();	//transmit flags and time only with buffer_to_transmit = 3
+					}else Radio.Rx(0);		//start to receive on slot 1 or 2
 				}
-				else//(p_settings_tim->spreading_factor != 12) or !(pp_devices_tim[3]->beeper_flag == time_slot)
-				{	//manage (pp_devices_tim[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
-					if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
-					{
-						led_w_on();
-						pp_devices_tim[main_flags.time_slot]->beeper_flag = 0;
-						long_beep_ones = 1;	//set here to finish on case 3 after starts here only
-					}
-					Radio.Rx(0);			//start to receive if SF != 12 or no beeper_flag has set on SF ==12
+				else Radio.Rx(0);			//start to receive if SF != 12
+
+//manage (pp_devices_tim[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
+				if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
+				{
+					led_w_on();
+					pp_devices_tim[main_flags.time_slot]->beeper_flag = 0;
+					long_beep_ones = 1;	//set here to finish on case 3 after starts here only
 				}
 			}
 			break;
@@ -226,12 +232,6 @@ void TIM2_IRQHandler(void)					//Scan buttons interval	void TIM3_IRQHandler(void
 		if (main_flags.button_code)	//perhaps get rid off the buttons_scanned and clear button_code in main.c/while (1)
 		{
 			main_flags.buttons_scanned = 1;
-//			if(main_flags.button_code == BTN_PWR) led_red_off();
-//			if(main_flags.button_code == BTN_PWR_LONG) led_red_on();
-//			if(main_flags.button_code == BTN_UP)	led_green_off();
-//			if(main_flags.button_code == BTN_OK)	led_green_on();
-//			if(main_flags.button_code == BTN_DOWN)	led_blue_off();
-//			if(main_flags.button_code == BTN_ESC)	set_brightness();
 		}
 	}
 }
