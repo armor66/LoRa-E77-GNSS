@@ -703,7 +703,10 @@ void draw_main(void)
 		if(hour > 23) hour = hour - 24;
 	}else day = month = year = hour = 0;
 
-	if(pp_devices_menu[this_device]->batt_voltage < 50)		// U < 3.2volt (!pp_devices_menu[this_device]->batt_voltage)
+	if((p_settings_menu->spreading_factor == 12) && (this_device > 2))
+	{
+		sprintf(&Line[row][0], "!set device 1 or 2");
+	}else if(pp_devices_menu[this_device]->batt_voltage < 50)		// U < 3.2volt (!pp_devices_menu[this_device]->batt_voltage)
 	{
 		sprintf(&Line[row][0], "DevID:%02d  ADC %3d", this_device, main_flags.adc_calibration_factor);
 //		sprintf(&Line[row][0], "DevID:%02d Batt low!", this_device);
@@ -727,11 +730,8 @@ void draw_main(void)
 						draw_str_by_rows(0, 1+row*11, &Line[row][0], Font_7x10, ORANGE,BLACK):
 						draw_str_by_rows(0, 1+row*11, &Line[row][0], Font_7x10, CYAN,BLACK));
 	}
-	else
-	{
-		shortBeeps(2);			//1 beep actually every PPS
-		draw_str_by_rows(0, 1+row*11, "GPS not configured", Font_7x10, ORANGE,BLACK);
-	}
+	else draw_str_by_rows(0, 1+row*11, "GPS not configured", Font_7x10, ORANGE,BLACK);
+
 	row+=1;	//3
 	int8_t dev;
 	for(dev = 1; dev < 1 + p_settings_menu->devices_on_air; dev++)
@@ -758,7 +758,7 @@ void draw_main(void)
 	{
 		int8_t nods_on_the_air = (pp_devices_menu[1]->valid_fix_flag) + (pp_devices_menu[2]->valid_fix_flag) + (pp_devices_menu[3]->valid_fix_flag) +
 																		(pp_devices_menu[4]->valid_fix_flag) + (pp_devices_menu[5]->valid_fix_flag);
-		sprintf(&Line[row][0], "OnTheAir: %d/%d Nods", nods_on_the_air, p_settings_menu->devices_on_air);
+		sprintf(&Line[row][0], "OnTheAir: %d/%d Devs", nods_on_the_air, p_settings_menu->devices_on_air);
 		draw_str_by_rows(0, 1+row*11, &Line[row][0], Font_7x10, WHITE,BLACK);
 	}
 
@@ -774,7 +774,6 @@ void draw_main(void)
 		if(k == row) draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, YELLOW,BLACK);
 		else draw_str_by_rows(3, 10+k*19, &Line[k][0], Font_11x18, GREEN,BLACK);
 	}
-
 //	draw_char(3, 10+row*19, *">", Font_11x18, YELLOW,BLACK);	//">"
 	int8_t slot = main_flags.time_slot + 1;
 	if(main_flags.time_slot == p_settings_menu->devices_on_air) slot = 1;

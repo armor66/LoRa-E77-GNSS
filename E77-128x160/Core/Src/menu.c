@@ -891,11 +891,8 @@ void draw_main(void)
 						draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, ORANGE,BLACK):
 						draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, CYAN,BLACK));
 	}
-	else
-	{
-		shortBeeps(2);			//1 beep actually every PPS
-		draw_str_by_rows(0, 1+row*11, "GPS not configured", &Font_7x9, ORANGE,BLACK);
-	}
+	else draw_str_by_rows(0, 1+row*11, "GPS not configured", &Font_7x9, ORANGE,BLACK);
+
 	row+=1;	//3
 	int8_t dev;
 	for(dev = 1; dev < 1 + p_settings_menu->devices_on_air; dev++)

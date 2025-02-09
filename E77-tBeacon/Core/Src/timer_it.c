@@ -65,6 +65,10 @@ static void restartPattern(void)
 	main_flags.pps_synced = 0;
 	led_blue_on();			//led_blue_off on case 1 (50ms)
 	led_red_on();			//as pattern_started on PPS
+	if(((p_settings_tim->spreading_factor == 12) && (p_settings_tim->device_number > 2)) || !main_flags.nav_pvt_ram_flag)
+	{
+		shortBeeps(2);
+	}
 }
 
 void TIM1_UP_IRQHandler(void)

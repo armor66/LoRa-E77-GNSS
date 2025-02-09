@@ -285,11 +285,8 @@ void settings_load(void)
     settings.magn_radius.as_array[1] = 			settings_array[SETTINGS_MAG_RADIUS_POS + 1];
 
     if(settings.spreading_factor == 12)
-    {	//device number should be beacon1 or beacon2
-    	if(settings.device_number > 3)
-    	{
-        	(settings.device_number == 5)? (settings.device_number = 2): (settings.device_number = 1);
-    	}
+    {
+    	//device number should be beacon1 or beacon2
     	settings.devices_on_air = 3;
     	settings.coding_rate_opt = 2;
     }

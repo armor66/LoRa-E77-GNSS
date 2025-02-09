@@ -1,4 +1,4 @@
 ../Core/Src/timer_it.c:23:6:timer_it_init	8	static
-../Core/Src/timer_it.c:70:6:TIM1_UP_IRQHandler	64	static,ignoring_inline_asm
-../Core/Src/timer_it.c:225:6:TIM2_IRQHandler	8	static
-../Core/Src/timer_it.c:239:6:TIM17_IRQHandler	8	static
+../Core/Src/timer_it.c:74:6:TIM1_UP_IRQHandler	64	static,ignoring_inline_asm
+../Core/Src/timer_it.c:229:6:TIM2_IRQHandler	8	static
+../Core/Src/timer_it.c:243:6:TIM17_IRQHandler	8	static
