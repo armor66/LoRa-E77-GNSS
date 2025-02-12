@@ -109,12 +109,14 @@ void set_fence_esc(void);
 void draw_confirm_settings(void);
 void confirm_settings_reboot(void);
 void donot_save_settings(void);
+void confirm_erase_points(void);
 void confirm_settings_restore(void);
 //ACTIONS MENU
 void draw_actions(void);
 void power_long(void);
 void actions_ok(void);
 void actions_esc(void);
+void draw_erase_points(void);
 void draw_restore_defaults(void);
 void set_brightness(void);
 
@@ -148,6 +150,7 @@ enum    //menu number starts from 1, because 0 is used as "end marker" in menu s
 	M_SET_FENCE,
 
 	M_ACTIONS,
+	M_ERASE_POINTS,
 	M_CONFIRM_RESTORING
 };
 
@@ -312,6 +315,7 @@ const struct
 	{M_ACTIONS,					BTN_OK,					actions_ok},
 	{M_ACTIONS,					BTN_ESC,				actions_esc},
 //
+	{M_ERASE_POINTS,			BTN_OK,					confirm_erase_points},
 	{M_CONFIRM_RESTORING,		BTN_OK,					confirm_settings_restore},
     {0, 0, 0}   //end marker
 };
@@ -397,6 +401,7 @@ const struct
 	{M_SET_TIMEOUT,				M_SETTINGS},
 	{M_SET_FENCE,				M_SETTINGS},
 
+	{M_ERASE_POINTS,			M_ACTIONS},
 	{M_CONFIRM_RESTORING,		M_ACTIONS},
     {0, 0}      //end marker
 };
@@ -454,6 +459,7 @@ const struct
 	{M_CONFIRM_SETTINGS,		draw_confirm_settings},
 
 	{M_ACTIONS,					draw_actions},
+	{M_ERASE_POINTS,			draw_erase_points},
 	{M_CONFIRM_RESTORING,		draw_restore_defaults},
     {0, 0}      //end mark
 };
@@ -2112,22 +2118,23 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 //					(pp_devices_menu[current_device]->gather_flag = 0);
 			break;
 		case M_ACTIONS_I_ERASE_POINTS:
-			erase_point_groups();
-			erase_saved_devices();
-
-	    	for(uint8_t i = 0; i < 96; i++)	//<56 for groups only, +40 for devices
-	    	{
-	    	   	pp_points_menu[i]->exist_flag = 0;
-	    	}
-//			memset(pp_points_menu, 0, 184);
-//			for(uint8_t i = 0; i < MEMORY_POINT_GROUPS; i++)
-//			{
-//		    	saved_group_load(i);
-//			}
-//			for(uint8_t i = 1; i < (DEVICES_ON_AIR_MAX+1); i++)
-//			{
-//				lost_device_load(i);
-//			}
+			current_menu = M_ERASE_POINTS;
+//			erase_point_groups();
+//			erase_saved_devices();
+//
+//	    	for(uint8_t i = 0; i < 96; i++)	//<56 for groups only, +40 for devices
+//	    	{
+//	    	   	pp_points_menu[i]->exist_flag = 0;
+//	    	}
+////			memset(pp_points_menu, 0, 184);
+////			for(uint8_t i = 0; i < MEMORY_POINT_GROUPS; i++)
+////			{
+////		    	saved_group_load(i);
+////			}
+////			for(uint8_t i = 1; i < (DEVICES_ON_AIR_MAX+1); i++)
+////			{
+////				lost_device_load(i);
+////			}
 			break;
 		case M_ACTIONS_I_SET_DEFAULTS:
 			current_menu = M_CONFIRM_RESTORING;
@@ -2163,6 +2170,37 @@ void actions_esc(void)
 	current_menu = return_from_power_menu;
 }
 
+void draw_erase_points(void)
+{
+	sprintf(&string_buffer[1][0], "   ARE YOU SURE  ");
+	sprintf(&string_buffer[2][0], "   TO ERASE ALL  ");
+	sprintf(&string_buffer[3][0], "   SAVED POINTS  ");
+	sprintf(&string_buffer[4][0], "    AND SAVED    ");
+	sprintf(&string_buffer[5][0], "  DEVICE POINTS? ");
+	for (uint8_t k = 1; k < 6; k++) {
+		draw_str_by_rows(0, k*11, &string_buffer[k][0], &Font_7x9, CYAN,BLACK);
+	}
+
+	draw_str_by_rows(0, 7*11, "  YES (OK) ", &Font_11x18, YELLOW,BLACK);
+	draw_str_by_rows(0, 10*11, "  NO (ESC) ", &Font_11x18, GREEN,BLACK);
+}
+void confirm_erase_points(void)
+{
+	erase_point_groups();
+	erase_saved_devices();
+
+	for(uint8_t i = 0; i < 96; i++)	//<56 for groups only, +40 for devices
+	{
+	   	pp_points_menu[i]->exist_flag = 0;
+	}
+	fill_screen(BLACK);
+
+	row = 4;
+	draw_str_by_rows(0, row*17-1, " Erasing...", &Font_11x18, YELLOW,BLACK);
+    HAL_Delay(300);
+	current_menu = M_ACTIONS;
+}
+
 void draw_restore_defaults(void)
 {
 	sprintf(&string_buffer[1][0], "   TO RESTORE    ");
@@ -2180,7 +2218,6 @@ void draw_restore_defaults(void)
 	draw_str_by_rows(0, 10*11, " Press ESC ", &Font_11x18, YELLOW,BLACK);
 	draw_str_by_rows(0, 12*11, "CALL MENU ACTIONS ", &Font_7x9, GREEN,BLACK);
 }
-
 void confirm_settings_restore(void)
 {
 	fill_screen(BLACK);
