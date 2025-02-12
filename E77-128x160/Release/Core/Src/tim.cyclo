@@ -9,5 +9,7 @@ tim.c:270:6:timer1_start	1
 tim.c:275:6:timer1_stop	1
 tim.c:285:6:timer2_start	1
 tim.c:293:6:timer2_stop	1
-tim.c:303:6:timer17_start	1
-tim.c:308:6:timer17_stop	1
+tim.c:303:6:timer16_start	1
+tim.c:309:6:timer16_stop	1
+tim.c:314:6:timer17_start	1
+tim.c:319:6:timer17_stop	1

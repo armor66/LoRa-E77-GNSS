@@ -45,6 +45,7 @@ Core/Src/e77radio.o: ../Core/Src/e77radio.c ../Core/Inc/e77radio.h \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
+ ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h \
  ../Core/Inc/settings.h ../Core/Inc/main.h ../Core/Inc/lrns.h \
  ../Core/Inc/gpio.h ../Core/Inc/spi.h ../Core/Inc/tim.h \
  ../Core/Inc/ST7735.h ../Core/Inc/fonts.h
@@ -95,6 +96,7 @@ Core/Src/e77radio.o: ../Core/Src/e77radio.c ../Core/Inc/e77radio.h \
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h:
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h:
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
+../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
 ../Core/Inc/settings.h:
 ../Core/Inc/main.h:
 ../Core/Inc/lrns.h:

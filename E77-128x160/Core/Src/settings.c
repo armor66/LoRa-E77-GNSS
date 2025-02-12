@@ -422,7 +422,6 @@ void settings_save(struct settings_struct *p_settings)
 }
 
 //------------------------memory points----------------------------
-//uint8_t points_array[MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE];	//1024(MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE) (size % sizeof(uint64_t)) != 0)
 
 struct points_struct points[MEMORY_POINTS_TOTAL];        //structures array for devices from 1 to DEVICES_IN_GROUP. Index 0 is invalid and always empty.
 struct points_struct *p_points[MEMORY_POINTS_TOTAL];		//structure pointers array
@@ -439,97 +438,8 @@ struct points_struct **get_points(void)
 
 struct points_struct **pp_points;
 
-//uint8_t points_array[MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE] = {0}; //uint16 is used because the FLASH organization; actually it is used to carry uint8 data
-
 char points_group_name_values[MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS][MEM_POINT_NAME_LEN + 1] = MEM_POINTS_GROUPS_ARRAY;
 char points_group_name_short[MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS][MEM_POINT_NAME_LEN_SHORT + 1] = MEM_POINTS_GROUPS_ARRAY_SHORT;
-
-//void read_points_page(uint32_t start_address, uint8_t data_array[], uint16_t amount);
-//void init_memory_points(void)
-//{
-//	pp_points = get_points();
-//	memory_points_load();
-//}
-
-/*void memory_points_load(void)	// FLASH -> buffer array -> devices struct
-{
-	pp_points = get_points();
-
-	read_page(POINTS_PAGE_ADDR, &points_array[0], 1024);	//(MEMORY_POINTS_TOTAL * MEMORY_POINT_SIZE)
-
-	for (uint8_t point_group = 0; point_group < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); point_group++)		//MEMORY_POINT_GROUPS
-	{
-		uint8_t point_group_ind = point_group * MEMORY_SUBPOINTS;
-
-		for (uint8_t point = point_group_ind; point < (point_group_ind + 10); point++)
-		{
-			uint16_t point_start_index = point * MEMORY_POINT_SIZE;				//0, 16, 32, 48,...
-			uint8_t point_number = point;	// + MEMORY_POINT_FIRST;			//0,  1,  2,  3, ...,  9
-
-			if (points_array[point_start_index + MEMORY_POINT_FLAG_POS] == MEMORY_POINT_FLAG)
-			{
-//				pp_points[point_number]->exist_flag = 1;
-				points[point_number].exist_flag = 1;
-
-				for (uint8_t b = 0; b < 4; b++)	//copy lat and lon coordinates
-				{
-//					pp_points[point_number]->latitude.as_array[b] = points_array[point_start_index + MEMORY_POINT_LAT_POS + b];
-//					pp_points[point_number]->longitude.as_array[b] = points_array[point_start_index + MEMORY_POINT_LON_POS + b];
-					points[point_number].latitude.as_array[b] = points_array[point_start_index + MEMORY_POINT_LAT_POS + b];
-					points[point_number].longitude.as_array[b] = points_array[point_start_index + MEMORY_POINT_LON_POS + b];
-				}
-			}
-			else points[point_number].exist_flag = 0;		//pp_points[point_number]->exist_flag = 0;
-		}
-	}
-}*/
-//uint8_t dataTempPage[1024];
-void memory_points_save(void)	//struct points_struct **pp_points devices struct -> buffer array -> FLASH (pre-erased)
-{
-//	pp_points = get_points();
-//	flash_erase_page(POINTS_PAGE);
-//
-//	for (uint8_t point_group = 0; point_group < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); point_group++)		//MEMORY_POINT_GROUPS
-//	{
-//		uint8_t point_group_ind = point_group * MEMORY_SUBPOINTS;
-//
-//		for (uint8_t point = point_group_ind; point < (point_group_ind + 10); point++)
-//		{
-//			uint16_t point_start_index = point * MEMORY_POINT_SIZE;			//0, 16, 32, 48, ..., 144
-//			uint8_t point_number = point;	// + MEMORY_POINT_FIRST;		//0,  1,  2,  3, ...,  9
-//			if (pp_points[point_number]->exist_flag == 1)
-//			{
-//				points_array[point_start_index + MEMORY_POINT_FLAG_POS] = MEMORY_POINT_FLAG;
-//
-//				for (uint8_t b = 0; b < 4; b++)	//copy lat and lon coordinates
-//				{
-//					points_array[point_start_index + MEMORY_POINT_LAT_POS + b] = pp_points[point_number]->latitude.as_array[b];
-//					points_array[point_start_index + MEMORY_POINT_LON_POS + b] = pp_points[point_number]->longitude.as_array[b];
-//					//todo: add date/time save
-//				}
-//			}
-//			else points_array[point_start_index + MEMORY_POINT_FLAG_POS] = 0;
-//		}
-//	}
-//	flash_write_array(POINTS_PAGE_ADDR, &points_array[0], 1152);
-}
-
-/*void memory_points_erase(void)
-{
-	flash_erase_page(POINTS_PAGE);
-
-	for (uint8_t point_group = 0; point_group < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); point_group++)		//MEMORY_POINT_GROUPS
-		{
-			uint8_t point_group_ind = point_group * MEMORY_SUBPOINTS;
-
-			for (uint8_t point = point_group_ind; point < (point_group_ind + 10); point++)
-			{
-				uint16_t point_start_index = point * MEMORY_POINT_SIZE;			//0, 16, 32, 48, ..., 144
-				points_array[point_start_index + MEMORY_POINT_FLAG_POS] = 0;
-			}
-		}
-	flash_write_array(POINTS_PAGE_ADDR, &points_array[0], 1152);
-}*/
 
 void save_one_point(int8_t point_absolute_index)
 {
@@ -606,8 +516,6 @@ static uint8_t find_saved_group(uint8_t group)
 
 void saved_group_load(uint8_t group)
 {
-//	struct point_groups_struct **pp_point_groups;
-//	pp_point_groups = get_point_groups();
 	pp_points = get_points();
     if(find_saved_group(group))
     {
@@ -637,11 +545,7 @@ void saved_group_load(uint8_t group)
     			}
     		}else points[global_point_index].exist_flag = 0;	//pp_lost_device[device][point].exist_flag = 0;
     	}
-    }else
-    {
-//    	pp_point_groups[group]->index_in_flash = -1;
-    	return;
-    }
+    }else return;
 }
 
 void points_group_save(uint8_t group)

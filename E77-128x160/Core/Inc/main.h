@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stm32wle5xx.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -117,7 +117,12 @@ struct main_flags_struct
     int8_t time_slot;
     int8_t time_slot_timer_ovf;
 
+    int8_t long_beeps;
+    int8_t long_beeps_flag;
     int8_t short_beeps;
+    int8_t short_beeps_flag;
+    int8_t opt_short_beeps;
+    int8_t opt_long_beeps;
     int8_t brightness;
     uint16_t endRX_2_TX;
 
@@ -146,12 +151,14 @@ struct main_flags_struct
     int8_t adc_calibration_factor;
     uint8_t uartIdx;
     uint8_t settings_index;
+
     uint32_t settings_address;
 };
 //struct main_flags_struct *get_main_flags(void);
 extern struct main_flags_struct main_flags;
 
 void shortBeeps(int8_t beeps);
+void longBeeps(int8_t beeps);
 
 extern uint8_t PVTbuffer[];
 extern uint8_t bufferRx[];

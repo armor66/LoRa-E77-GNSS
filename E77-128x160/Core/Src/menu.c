@@ -4,7 +4,7 @@
 #include "gpio.h"
 #include "menu.h"
 #include "buttons.h"
-//#include "tim.h"
+#include "tim.h"
 #include "lptim.h"
 #include "settings.h"
 #include "compass.h"
@@ -463,7 +463,7 @@ const struct
 char string_buffer[20][27];		//15raws,22(~240:11)items
 char *fixType[] = {"NoFix", "DReck", "2DFix", "3DFix", "DReck", "Time"}; 	//only 2 bits used to transmit (first 4 items)
 
-int8_t current_point_group = 0;		//Current number of memory point to save
+//int8_t main_flags.current_point_group = 0;		//Current number of memory point to save
 uint8_t current_mem_subpoint = 0;
 uint8_t points_group_ind = 0;
 uint8_t memory_subpoint = 0;
@@ -545,7 +545,7 @@ void set_brightness(void)
 //Check for buttons and change menu if needed
 void change_menu(uint8_t button_code)
 {
-//	int8_t point_absolute_index = 0;
+	int8_t point_absolute_index = 0;
 	if(main_flags.display_status)	//if lcd is on
 	{	//search for exclusive operation(function) for this case
 		for (uint8_t i = 0; menu_exclusive_table[i].current_menu; i++)     //until end marker
@@ -582,7 +582,7 @@ void change_menu(uint8_t button_code)
 			case BTN_PWR:
 				lptim1_stop();					//lcd off
 				main_flags.display_status = 0;
-				current_point_group = 0;		//to start save points from group 1
+				main_flags.current_point_group = 0;		//to start save points from group 1
 				break;
 
 			default:
@@ -603,109 +603,104 @@ void change_menu(uint8_t button_code)
 				break;
 
 			case BTN_UP:				//if short pressed
-//				HAL_TIM_Base_Stop(&htim17);					//if not stopped on State = TX_START
-//				__HAL_TIM_SET_COUNTER(&htim17, 0);
-//				__HAL_TIM_SET_AUTORELOAD(&htim17, 1499);		//hold for 1 second
-//				__HAL_TIM_CLEAR_FLAG(&htim17, TIM_SR_UIF);	//clear flag
-//				HAL_TIM_Base_Start_IT(&htim17);				//start with IRQ interrupt to set (current_point_group = 0) by IRQ
-//				if(current_point_group < 5) {
-//					current_point_group++;
-//					memory_subpoint_ind[current_point_group] = 0;		//to start from point 1
-////					led_blue_on();		//current_point_group has set
-//				}else {
-//					shortBeepsBlocking(5);			//if(current_point_group == 5)
-//					current_point_group = 0;
-////					led_blue_off();		//current_point_group has reseted
-//				}
+				timer16_start();		//hold 1.5 second for next short press
+
+				if(main_flags.current_point_group < 5) {
+					main_flags.current_point_group++;
+					memory_subpoint_ind[main_flags.current_point_group] = 0;	//to start from point 1
+//					led_blue_on();		//main_flags.current_point_group has set
+				}else {
+					shortBeeps(2);			//if(main_flags.current_point_group == 5)
+					main_flags.current_point_group = 0;
+//					led_blue_off();		//main_flags.current_point_group has reseted
+				}
 				break;		//leave case BTN_UP
 
-			case BTN_OK:		//if long pressed && (current_point_group > 0))
-//				HAL_TIM_Base_Stop_IT(&htim17);				//stop before IRQ
-//				__HAL_TIM_CLEAR_FLAG(&htim17, TIM_SR_UIF);	//clear flag
-//				HAL_TIM_Base_Stop_IT(&htim17);				//todo get rid of undue "stop"
-//				if(!pp_devices_menu[this_device]->valid_fix_flag) {
-//					shortBeeps(3);				//if no valid_fix_flag when attempt to save point
-//					current_point_group = 0;
-////					led_blue_off();		//current_point_group has reseted
-//					break;		//leave case BTN_OK
-//				}
-//				if(current_point_group > 0) {
-//					longBeepsBlocking(current_point_group);
-//				}else break;	//leave case BTN_OK
-//
-//				do
-//				{
-//					memory_subpoint_ind[current_point_group]++;
-//					if(memory_subpoint_ind[current_point_group] == MEMORY_SUBPOINTS)
-//					{
-//						memory_subpoint_ind[current_point_group] = 0;								//exist_flag always == 0
-//						pp_points_menu[current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;		//clear subpoint 0
-//					}
-//					point_absolute_index = current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[current_point_group];
-//				} while (pp_points_menu[point_absolute_index]->exist_flag);		// == 1
-//				if(memory_subpoint_ind[current_point_group] == 0)
-//				{
-//					current_point_group = 0;
-////					led_blue_off();		//current_point_group has reseted
-//					break;			//longBeeps(current_point_group) and leave case BTN_OK
-//				}
-//
-//				save_one_point(point_absolute_index);
-//				shortBeepsBlocking(memory_subpoint_ind[current_point_group]);	//number of point to save
-////				memory_points_load();
-////				settings_load();
-//				fillScreen(BLACK);
-////				return_from_points_menu = current_menu;
-//				current_menu = M_POINTS;
-//				set_current_item(current_point_group);
-//				current_point_group = 0;
-////				led_blue_off();		//current_point_group has reseted
+			case BTN_OK:			//if long pressed && (main_flags.current_point_group > 0))
+				timer16_stop();		//stop before IRQ and clear current_point_group
+
+				if(!pp_devices_menu[this_device]->valid_fix_flag) {
+					shortBeeps(2);				//if no valid_fix_flag when attempt to save point
+					main_flags.current_point_group = 0;
+//					led_blue_off();		//main_flags.current_point_group has reseted
+					break;		//leave case BTN_OK
+				}
+				if(main_flags.current_point_group > 0) {
+					longBeeps(main_flags.current_point_group);
+				}else break;	//leave case BTN_OK
+
+				do{
+					memory_subpoint_ind[main_flags.current_point_group]++;
+					if(memory_subpoint_ind[main_flags.current_point_group] == MEMORY_SUBPOINTS)
+					{
+						memory_subpoint_ind[main_flags.current_point_group] = 0;							//exist_flag always == 0
+						pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;	//clear subpoint 0
+					}
+					point_absolute_index = main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group];
+				} while (pp_points_menu[point_absolute_index]->exist_flag);		// == 1
+
+				if(memory_subpoint_ind[main_flags.current_point_group] == 0)
+				{
+					main_flags.current_point_group = 0;
+//					led_blue_off();		//main_flags.current_point_group has reseted
+					break;			//longBeeps(main_flags.current_point_group) and leave case BTN_OK
+				}
+
+				save_one_point(point_absolute_index);
+				points_group_save(main_flags.current_point_group);
+
+				shortBeeps(1);	//memory_subpoint_ind[main_flags.current_point_group]);	//number of point to save
+
+				fill_screen(BLACK);
+//				return_from_points_menu = current_menu;
+				current_menu = M_POINTS;
+				set_current_item(main_flags.current_point_group);
+				main_flags.current_point_group = 0;
+//				led_blue_off();		//main_flags.current_point_group has reseted
 				break;		//leave case BTN_OK
 
 			case BTN_DOWN:				//if short pressed
-//				HAL_TIM_Base_Stop(&htim17);					//if not stopped on State = TX_START
-//				__HAL_TIM_SET_COUNTER(&htim17, 0);
-//				__HAL_TIM_SET_AUTORELOAD(&htim17, 1499);		//hold for 1 second
-//				__HAL_TIM_CLEAR_FLAG(&htim17, TIM_SR_UIF);	//clear flag
-//				HAL_TIM_Base_Start_IT(&htim17);				//start with IRQ interrupt to set (current_point_group = 0) by IRQ
-//				if(current_point_group < 11) {				//5 groups + beaconM + beaconA(RoundRobin)
-//					current_point_group++;
-////					led_blue_on();		//current_point_group has set
-//				}else {
-//					shortBeepsBlocking(5);			//if(current_point_group == 12)
-//					current_point_group = 0;
-////					led_blue_off();		//current_point_group has reseted
-//				}
+				timer16_start();		//hold 1.5 second for next short press
+
+				if(main_flags.current_point_group < 6) {			//5 groups + beacon
+					main_flags.current_point_group++;
+//					led_blue_on();		//main_flags.current_point_group has set
+				}else {
+					shortBeeps(2);			//if(main_flags.current_point_group == 12)
+					main_flags.current_point_group = 0;
+//					led_blue_off();		//main_flags.current_point_group has reseted
+				}
 				break;		//leave case BTN_DOWN
 
-			case BTN_ESC:		//if long pressed && (current_point_group > 0))
-//				HAL_TIM_Base_Stop_IT(&htim17);				//stop before IRQ
-//				__HAL_TIM_CLEAR_FLAG(&htim17, TIM_SR_UIF);	//clear flag
-//				HAL_TIM_Base_Stop_IT(&htim17);				//todo get rid of undue "stop"
-//				if(current_point_group > 0) {
-////					longBeepsBlocking(current_point_group);
+			case BTN_ESC:		//if long pressed && (main_flags.current_point_group > 0))
+				timer16_stop();		//stop before IRQ and clear current_point_group
+
+				if(main_flags.current_point_group > 0) {
+					longBeeps(main_flags.current_point_group);
 //					shortBeeps(1);							//just for notice instead of actual long beeps
-//				}else break;	//leave case BTN_ESC
-//
-//				clear_points_group(current_point_group);
-////				for(int8_t i = 0; i < MEMORY_SUBPOINTS; i++) {	//reset one of 5 groups + beaconM + beaconA(RoundRobin)
-////					point_absolute_index = current_point_group * MEMORY_SUBPOINTS + i;
-////					pp_points_menu[point_absolute_index]->exist_flag = 0;
-////				}
-////				memory_points_save();		//save to flash
-////				memory_points_load();
-////				settings_load();
-//				fillScreen(BLACK);
-////				return_from_points_menu = current_menu;
-//				current_menu = M_POINTS;
-//				set_current_item(current_point_group);
-//				current_point_group = 0;
-////				led_blue_off();		//current_point_group has reseted
+				}else break;	//leave case BTN_ESC
+
+/*as in "confirm_clear_group(void)" function*/
+				clear_points_group(main_flags.current_point_group);
+				int8_t ind;
+				for(uint8_t sub_point = 0; sub_point < MEMORY_SUBPOINTS; sub_point++)
+				{
+					ind = (main_flags.current_point_group * MEMORY_SUBPOINTS) + sub_point;
+				   	pp_points_menu[ind]->exist_flag = 0;
+				}
+			   	saved_group_load(main_flags.current_point_group);
+/******************************************/
+				fill_screen(BLACK);
+//				return_from_points_menu = current_menu;
+				current_menu = M_POINTS;
+				set_current_item(main_flags.current_point_group);
+				main_flags.current_point_group = 0;
+//				led_blue_off();		//main_flags.current_point_group has reseted
 				break;		//leave case BTN_ESC
 
 			default:
-//				current_point_group = 0;
-//				led_blue_off();		//current_point_group has reseted
+				main_flags.current_point_group = 0;
+//				led_blue_off();		//main_flags.current_point_group has reseted
 				break;
 		}	//switch (button_code)
 	}		//if lcd is off
@@ -1457,7 +1452,7 @@ void set_subpoint_ok(void) {
    	flag_group_has_changed[main_flags.current_point_group] = 1;
    	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;			//clear subpoint 0
    	memory_subpoint_ind[main_flags.current_point_group] = 0;
-//   	points_group_save(current_point_group);
+//   	points_group_save(main_flags.current_point_group);
 //    memory_points_save();		//save to flash
 
     current_menu = M_DEVICE_SUBMENU;
@@ -1467,7 +1462,7 @@ void set_subpoint_ok(void) {
 void set_subpoint_esc(void) {
 	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;			//clear subpoint 0
 	memory_subpoint_ind[main_flags.current_point_group] = 0;   //exit no save, reset value
-//	saved_group_load(current_point_group);
+//	saved_group_load(main_flags.current_point_group);
 //	memory_points_load();
     current_menu = M_DEVICE_SUBMENU;
 }
@@ -2078,8 +2073,8 @@ void power_long(void)
 	}
 
 	if (current_menu == M_POINTS) {	//otherwise if some point saved, halt after BTN_PWR_LONG immediately
-//		memory_subpoint_ind[current_point_group] = 0;
-//		current_point_group = 0;
+		memory_subpoint_ind[main_flags.current_point_group] = 0;
+		main_flags.current_point_group = 0;
 	}
 
 	return_from_power_menu = current_menu;

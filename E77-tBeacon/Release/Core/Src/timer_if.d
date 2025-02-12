@@ -45,6 +45,7 @@ Core/Src/timer_if.o: ../Core/Src/timer_if.c ../Core/Inc/timer_if.h \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
+ ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h \
  ../Core/Inc/rtc.h ../Core/Inc/main.h \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rtc.h
 ../Core/Inc/timer_if.h:
@@ -95,6 +96,7 @@ Core/Src/timer_if.o: ../Core/Src/timer_if.c ../Core/Inc/timer_if.h \
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h:
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h:
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
+../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
 ../Core/Inc/rtc.h:
 ../Core/Inc/main.h:
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rtc.h:

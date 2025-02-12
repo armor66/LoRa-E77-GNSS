@@ -150,22 +150,22 @@ void interrupt_init(void)
 
 void enable_buttons_interrupts(void)
 {
-//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 1;		//unmask interrupt
-	EXTI->IMR1 |= EXTI_IMR1_IM5;
-//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 1;		//unmask interrupt
-	EXTI->IMR1 |= EXTI_IMR1_IM1;
-//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 1;		//unmask interrupt
-	EXTI->IMR1 |= EXTI_IMR1_IM0;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 1;		//unmask interrupt
+//	EXTI->IMR1 |= EXTI_IMR1_IM5;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 1;		//unmask interrupt
+//	EXTI->IMR1 |= EXTI_IMR1_IM1;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 1;		//unmask interrupt
+//	EXTI->IMR1 |= EXTI_IMR1_IM0;
 }
 
 void disable_buttons_interrupts(void)
 {
-//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 0;		//mask interrupt
-	EXTI->IMR1 &= ~EXTI_IMR1_IM5;
-//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 0;		//mask interrupt
-	EXTI->IMR1 &= ~EXTI_IMR1_IM1;
-//	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 0;		//mask interrupt
-	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM5) = 0;		//mask interrupt
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM5;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM1) = 0;		//mask interrupt
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM1;
+	BIT_BAND_PERI(EXTI->IMR1, EXTI_IMR1_IM0) = 0;		//mask interrupt
+//	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
 }
 
 void led_toggle(void){

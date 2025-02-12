@@ -125,7 +125,7 @@ void MX_TIM16_Init(void)
   htim16.Instance = TIM16;
   htim16.Init.Prescaler = 47999;
   htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim16.Init.Period = 9999;
+  htim16.Init.Period = 1499;
   htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim16.Init.RepetitionCounter = 0;
   htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -298,6 +298,17 @@ void timer2_stop(void)
     TIM2->CR1 &= ~TIM_CR1_CEN;             		//disable counter
 //	TIM2->CNT = 0;
 	TIM2->EGR = TIM_EGR_UG;
+}
+
+void timer16_start(void)
+{
+	TIM16->EGR = TIM_EGR_UG;					//to reload every start
+    TIM16->CR1 |= TIM_CR1_CEN;               	//enable counter
+}
+
+void timer16_stop(void)
+{
+    TIM16->CR1 &= ~TIM_CR1_CEN;             		//disable counter
 }
 
 void timer17_start(void)

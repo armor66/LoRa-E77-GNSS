@@ -43,6 +43,7 @@ Core/Src/exti_it.o: ../Core/Src/exti_it.c ../Core/Inc/main.h \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
+ ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h \
  ../Core/Inc/gpio.h ../Core/Inc/main.h ../Core/Inc/exti_it.h \
  ../Core/Inc/buttons.h ../Core/Inc/tim.h ../Core/Inc/lrns.h \
  ../Core/Inc/settings.h
@@ -91,6 +92,7 @@ Core/Src/exti_it.o: ../Core/Src/exti_it.c ../Core/Inc/main.h \
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h:
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h:
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
+../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
 ../Core/Inc/gpio.h:
 ../Core/Inc/main.h:
 ../Core/Inc/exti_it.h:

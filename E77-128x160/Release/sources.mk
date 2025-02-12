@@ -26,6 +26,6 @@ SUBDIRS := \
 Core/Src \
 Core/Startup \
 Drivers/BSP/STM32WLxx_Nucleo \
-Drivers/HAL/Src \
 Drivers/Radio \
+Drivers/STM32WLxx_HAL_Driver/Src \
 

@@ -75,8 +75,21 @@ void SystemClock_Config(void);
 struct main_flags_struct main_flags = {0};
 void shortBeeps(int8_t beeps)
 {
+	main_flags.short_beeps_flag = 0;
 	main_flags.short_beeps = beeps;
 }
+void longBeeps(int8_t beeps)
+{
+	main_flags.long_beeps_flag = 0;
+	main_flags.long_beeps = beeps;
+}
+//static void optShortBeeps(void);
+//static void optLongBeeps(void);
+uint8_t stamp_flag = 0;
+uint16_t gap_lit = 499;
+uint8_t short_lit = 9;
+uint16_t long_lit = 499;
+uint32_t time_stamp;
 /* USER CODE END 0 */
 
 /**
@@ -225,6 +238,28 @@ int main(void)
   			main_flags.update_screen = 0;
   		}
   		__NOP();
+
+//  		if(main_flags.opt_long_beeps)
+//  		{
+//  			if(!stamp_flag)
+//  			{
+//  				stamp_flag = 1;
+//  				time_stamp = HAL_GetTick();
+//  			}
+//  			optLongBeeps();
+//  		}
+//  		else // (!main_flags.opt_long_beeps)
+//  		{	 //postpone while if there is long beeps
+//  			if(main_flags.opt_short_beeps)
+//  			{
+//  	  			if(!stamp_flag)
+//  	  			{
+//  	  				stamp_flag = 1;
+//  	  				time_stamp = HAL_GetTick();
+//  	  			}
+//  	  			optShortBeeps();
+//  			}
+//  		}
   }
   /* USER CODE END 3 */
 }

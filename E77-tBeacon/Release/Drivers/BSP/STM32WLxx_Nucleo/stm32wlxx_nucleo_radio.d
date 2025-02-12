@@ -48,6 +48,7 @@ Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.o: \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/Radio/radio_driver.h \
  /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/Radio/radio_conf.h \
  ../Core/Inc/subghz.h ../Core/Inc/main.h \
+ ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h \
  ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.h
 ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.h:
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
@@ -98,4 +99,5 @@ Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.o: \
 /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/Radio/radio_conf.h:
 ../Core/Inc/subghz.h:
 ../Core/Inc/main.h:
+../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
 ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.h:
