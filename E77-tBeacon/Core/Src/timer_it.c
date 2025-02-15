@@ -31,7 +31,8 @@ void timer_it_init(void)
 */
 	TIM1->CR1 |= TIM_CR1_URS;
 	TIM2->CR1 |= TIM_CR1_URS;
-	TIM17->CR1 |= TIM_CR1_URS;
+//	TIM16->CR1 |= TIM_CR1_URS;
+//	TIM17->CR1 |= TIM_CR1_URS;
 
 	p_tx_power_values_tim = get_tx_power_values();
 	p_settings_tim = get_settings();
@@ -41,16 +42,16 @@ const uint8_t timeslot_pattern[2][103] =
 //	| PVT|Slot1 OnRxDone time <642mS		+358mS|Slot2 OnTxDone time <627mS		  | PVT|Slot3					   | draw menu|
 //	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
 //	0 50 100mS	                             1000 1100mS							  2000 2100								 3000
-  {{0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,//4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,6 };
+  {{0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,//4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,6 };
 //	| PVT|Slot3					   | draw menu|PVT|Slot4					| draw menu|PVT|Slot5					 | draw menu|
 //	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
 //	2000 2100mS								 3000 3100mS							  4000 4100mS							   5000mS
-	4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1 },
+	4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1 },
 //	SF = 12, CR3(4/7), Packet duration in air = 1122.3
 // PPS	 |Slot1 		AIR time 1122mS		PPS 		| draw menu|  |Slot2 		 PPS   		AIR time 1122mS      | draw menu|
 //	|----|-----------------------------------|----|-----|-------------|---------------|----|-------------------------|---------|
 //	0 50 100mS	                             1000		1250mS						  2000				    	  	2750	   3000
-   {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,0, 0,0,0,3,4,5,4,7,4,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,6,0,0,0,0,0,0,0,0,3,4,5,4,7,4,1 }};
+   {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,0, 0,0,0,3,4,5,4,5,4,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,6,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1 }};
 //	|----|---------------------------|------------------|-------------|----------------------------|-----------------|---------|
 //	0 50 100mS	                    +700     		   +1150mS	     1600				  	      +700				+1150	   3000
 
@@ -113,6 +114,12 @@ void TIM1_UP_IRQHandler(void)
 			break;
 
 		case 2:			//100mS
+//			led_green_off();
+//			if(main_flags.long_beeps)
+//			{
+//				main_flags.long_beeps_flag = 1;
+//				led_w_on();
+//			}
 
 			if(main_flags.time_slot == p_settings_tim->device_number)	//this device:
 			{	//if this device doesn't get gnss fix via uart 100mS after PPS, delay for full pattern time
@@ -160,17 +167,58 @@ void TIM1_UP_IRQHandler(void)
 
 		case 3:				//check if remote devices on the air, draw menu items
 			led_red_off();	//650ms after OnRxDone
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*******************IF THERE IS ANY OF BEEP FLAGS****************************************/
+//			(p_settings_tim->timeout_threshold || p_settings_tim->fence_threshold)? mute_off(): mute_on();
+			if(main_flags.short_beeps && !main_flags.short_beeps_flag)	// && !main_flags.long_beeps)
+			{
+				main_flags.short_beeps_flag = 1;
+				led_w_on();
+			}
 			if(long_beep_ones)
 			{
 				led_w_off();
 				long_beep_ones = 0;
 			}
+//			if(main_flags.long_beeps && main_flags.long_beeps_flag)
+//			{
+//				main_flags.long_beeps--;
+//				led_w_off();
+//			}
+
+
+
+
+
+
+
+/***********************************************************/
+
+
 			main_flags.short_beeps? led_w_on(): (main_flags.update_screen = 1);
 			main_flags.permit_actions = 1;		//process buttons here after
 			break;
 
 		case 4:
-			if(main_flags.short_beeps)
+			if(main_flags.short_beeps_flag && main_flags.short_beeps)
 			{
 				led_w_off();
 				main_flags.short_beeps--;
@@ -178,14 +226,7 @@ void TIM1_UP_IRQHandler(void)
 			break;
 
 		case 5:
-			if((main_flags.short_beeps) && (main_flags.short_beeps < 3))
-			{
-				led_w_on();
-			}
-			break;
-
-		case 7:
-			if(main_flags.short_beeps == 1)
+			if(main_flags.short_beeps && main_flags.short_beeps_flag)	//(main_flags.short_beeps < 3))
 			{
 				led_w_on();
 			}
@@ -220,9 +261,11 @@ void TIM2_IRQHandler(void)					//Scan buttons interval	void TIM3_IRQHandler(void
 	}
 }
 
-void TIM17_IRQHandler(void)
-{
-	timer17_stop();
-}
+//void TIM16_IRQHandler(void)
+//{
+//	TIM16->SR &= ~TIM_SR_UIF;                    //clear interrupt
+//	timer16_stop();
+//	main_flags.current_point_group = 0;
+//}
 
 

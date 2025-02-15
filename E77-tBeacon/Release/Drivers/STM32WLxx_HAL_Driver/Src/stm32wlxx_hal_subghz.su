@@ -1,5 +1,5 @@
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h:1375:22:LL_PWR_UnselectSUBGHZSPI_NSS	0	static
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h:1385:22:LL_PWR_SelectSUBGHZSPI_NSS	0	static
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h:1375:22:LL_PWR_UnselectSUBGHZSPI_NSS	0	static
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h:1385:22:LL_PWR_SelectSUBGHZSPI_NSS	0	static
 ../Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_subghz.c:418:13:HAL_SUBGHZ_MspInit	0	static
 ../Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_subghz.c:434:13:HAL_SUBGHZ_MspDeInit	0	static
 ../Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_subghz.c:1356:13:HAL_SUBGHZ_TxCpltCallback	0	static

@@ -36,37 +36,37 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := E77-433-beacon
+BUILD_ARTIFACT_NAME := E77-tBeacon
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-E77-433-beacon.elf \
+E77-tBeacon.elf \
 
 MAP_FILES += \
-E77-433-beacon.map \
+E77-tBeacon.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-E77-433-beacon.list \
+E77-tBeacon.list \
 
 OBJCOPY_BIN += \
-E77-433-beacon.bin \
+E77-tBeacon.bin \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: E77-433-beacon.elf secondary-outputs
+main-build: E77-tBeacon.elf secondary-outputs
 
 # Tool invocations
-E77-433-beacon.elf E77-433-beacon.map: $(OBJS) $(USER_OBJS) /home/z/STM32Cube/NewModule/E77-433-beacon/STM32WLE5CCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "E77-433-beacon.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/z/STM32Cube/NewModule/E77-433-beacon/STM32WLE5CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="E77-433-beacon.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+E77-tBeacon.elf E77-tBeacon.map: $(OBJS) $(USER_OBJS) /home/z/STM32Cube/NewModule/E77-tBeacon/STM32WLE5CCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "E77-tBeacon.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/z/STM32Cube/NewModule/E77-tBeacon/STM32WLE5CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="E77-tBeacon.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -75,19 +75,19 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-E77-433-beacon.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "E77-433-beacon.list"
+E77-tBeacon.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "E77-tBeacon.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-E77-433-beacon.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "E77-433-beacon.bin"
+E77-tBeacon.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "E77-tBeacon.bin"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) E77-433-beacon.bin E77-433-beacon.elf E77-433-beacon.list E77-433-beacon.map default.size.stdout
+	-$(RM) E77-tBeacon.bin E77-tBeacon.elf E77-tBeacon.list E77-tBeacon.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_BIN)

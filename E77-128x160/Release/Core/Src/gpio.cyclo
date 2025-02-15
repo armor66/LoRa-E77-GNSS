@@ -18,4 +18,3 @@ gpio.c:211:6:gps_enable	1
 gpio.c:213:6:gps_disable	1
 gpio.c:215:6:hold_power	1
 gpio.c:218:6:release_power	1
-gpio.c:221:6:longBeepsBlocking	2

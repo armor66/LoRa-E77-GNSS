@@ -5,8 +5,8 @@
 ../Core/Src/gnss.c:152:6:restart_uart	0	static
 ../Core/Src/gnss.c:204:6:configure_gps	56	static,ignoring_inline_asm
 ../Core/Src/gnss.c:162:6:init_gnss	16	static
-../Core/Src/gnss.c:346:6:calc_trekpoint_position	56	static
-../Core/Src/gnss.c:376:6:find_nearest_trekpoint	32	static,ignoring_inline_asm
-../Core/Src/gnss.c:404:8:is_point_ahead	0	static
-../Core/Src/gnss.c:426:6:draw_trekpoints	56	static
-../Core/Src/gnss.c:444:6:manage_trekpoints	64	static
+../Core/Src/gnss.c:347:6:calc_trekpoint_position	56	static
+../Core/Src/gnss.c:377:6:find_nearest_trekpoint	32	static,ignoring_inline_asm
+../Core/Src/gnss.c:405:8:is_point_ahead	0	static
+../Core/Src/gnss.c:427:6:draw_trekpoints	56	static
+../Core/Src/gnss.c:445:6:manage_trekpoints	64	static

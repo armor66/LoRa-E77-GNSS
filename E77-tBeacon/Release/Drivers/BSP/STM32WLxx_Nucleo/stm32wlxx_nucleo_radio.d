@@ -1,10 +1,10 @@
 Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.o: \
  ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.c \
  ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h \
  ../Core/Inc/stm32wlxx_hal_conf.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wlxx.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h \
  ../Drivers/CMSIS/Include/core_cm4.h \
@@ -13,48 +13,48 @@ Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.o: \
  ../Drivers/CMSIS/Include/cmsis_gcc.h \
  ../Drivers/CMSIS/Include/mpu_armv7.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/system_stm32wlxx.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dma.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dmamux.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_adc.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_cortex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_exti.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_bus.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_subghz.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_spi.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/Radio/radio_driver.h \
- /home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/Radio/radio_conf.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dma.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dmamux.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma_ex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_adc.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc_ex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_cortex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_exti.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr_ex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_bus.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc_ex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi_ex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_subghz.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_spi.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim_ex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/Radio/radio_driver.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/Radio/radio_conf.h \
  ../Core/Inc/subghz.h ../Core/Inc/main.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h \
  ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.h
 ../Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
 ../Core/Inc/stm32wlxx_hal_conf.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_def.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wlxx.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
 ../Drivers/CMSIS/Include/core_cm4.h:
@@ -63,40 +63,40 @@ Drivers/BSP/STM32WLxx_Nucleo/stm32wlxx_nucleo_radio.o: \
 ../Drivers/CMSIS/Include/cmsis_gcc.h:
 ../Drivers/CMSIS/Include/mpu_armv7.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/system_stm32wlxx.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dma.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dmamux.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_adc.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_cortex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_exti.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_bus.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_subghz.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_spi.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/Radio/radio_driver.h:
-/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/Radio/radio_conf.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/Legacy/stm32_hal_legacy.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dma.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_dmamux.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma_ex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_adc.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_adc_ex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_cortex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_exti.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr_ex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_bus.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rcc_ex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_exti.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_rtc_ex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_spi_ex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_subghz.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_spi.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_tim_ex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/Radio/radio_driver.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/Radio/radio_conf.h:
 ../Core/Inc/subghz.h:
 ../Core/Inc/main.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:

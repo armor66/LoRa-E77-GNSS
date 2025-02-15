@@ -79,8 +79,11 @@ void EXTI9_5_IRQHandler(void)		//(PPS_Pin)
 		//on this device time slot only before uart handling
 		if(p_settings->device_number == (main_flags.time_slot + 1)) clear_fix_data(main_flags.time_slot + 1);
 //		manage_uart();		//manage ADC and UART on each PPS
-	}//else if(main_flags.fix_valid < 3) manage_uart();		//manage ADC and UART on each PPS
-
+	}
+//	else
+//	{
+//		if(main_flags.fix_valid < 3) manage_uart();		//manage ADC and UART on each PPS
+//	}
 	manage_uart();		//manage ADC and UART on each PPS
 
 	if(main_flags.short_beeps_flag)		//avoid extra beeps

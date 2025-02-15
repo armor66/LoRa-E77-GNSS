@@ -218,14 +218,5 @@ void hold_power(void) {
 void release_power(void) {
     GPIOC->BSRR = GPIO_BSRR_BR13;
 }
-void longBeepsBlocking(int8_t beeps)
-{
-	for(int8_t i = 0; i < beeps; i++)
-	{
-		HAL_Delay(100);
-		led_w_on();
-		HAL_Delay(500);
-		led_w_off();
-	}
-}
+
 /* USER CODE END 2 */

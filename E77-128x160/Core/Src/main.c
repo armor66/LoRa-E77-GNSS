@@ -238,28 +238,6 @@ int main(void)
   			main_flags.update_screen = 0;
   		}
   		__NOP();
-
-//  		if(main_flags.opt_long_beeps)
-//  		{
-//  			if(!stamp_flag)
-//  			{
-//  				stamp_flag = 1;
-//  				time_stamp = HAL_GetTick();
-//  			}
-//  			optLongBeeps();
-//  		}
-//  		else // (!main_flags.opt_long_beeps)
-//  		{	 //postpone while if there is long beeps
-//  			if(main_flags.opt_short_beeps)
-//  			{
-//  	  			if(!stamp_flag)
-//  	  			{
-//  	  				stamp_flag = 1;
-//  	  				time_stamp = HAL_GetTick();
-//  	  			}
-//  	  			optShortBeeps();
-//  			}
-//  		}
   }
   /* USER CODE END 3 */
 }

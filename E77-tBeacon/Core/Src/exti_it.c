@@ -79,12 +79,19 @@ void EXTI4_IRQHandler(void)		//(PPS_Pin)
 		//on this device time slot only before uart handling
 		if(p_settings->device_number == (main_flags.time_slot + 1)) clear_fix_data(main_flags.time_slot + 1);
 //		manage_uart();		//manage ADC and UART on each PPS
-	}//else if(main_flags.fix_valid < 3) manage_uart();		//manage ADC and UART on each PPS
-
+	}
+//	else
+//	{
+//		if(main_flags.fix_valid < 3) manage_uart();		//manage ADC and UART on each PPS
+//	}
 	manage_uart();		//manage ADC and UART on each PPS
 
-	led_w_off();						//avoid extra beeps
-//	main_flags.short_beeps = 0;
+	if(main_flags.short_beeps_flag)		//avoid extra beeps
+	{
+		main_flags.short_beeps_flag = 0;
+		main_flags.short_beeps = 0;
+		led_w_off();
+	}
 
 	if(main_flags.pps_counter++ > 60)	//if 60sec no buttons activity
 	{
@@ -94,8 +101,9 @@ void EXTI4_IRQHandler(void)		//(PPS_Pin)
 //for TPS7330 Vthresold=2.64V, for TPS7333 Vthresold=2.87V(287-270=17), 0==270(2.70V) (actually ~2.95V)
 		if(pp_devices[p_settings->device_number]->batt_voltage < 30)
 		{
-			longBeepsBlocking(1);		//long beep to prevent silent "RESET"
-			HAL_Delay(50);
+			led_w_on();		//long beep to prevent silent "RESET"
+			HAL_Delay(750);
+//			led_w_off();
 			release_power();
 		}
 	}

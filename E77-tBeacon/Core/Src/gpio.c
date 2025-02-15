@@ -123,6 +123,10 @@ void interrupt_init(void)
     TIM2->DIER |= TIM_DIER_UIE;         //update interrupt enable
    	NVIC_EnableIRQ(TIM2_IRQn);
 
+    TIM16->SR &= ~TIM_SR_UIF;            //clear update interrupt
+    TIM16->DIER |= TIM_DIER_UIE;         //update interrupt enable
+   	NVIC_EnableIRQ(TIM16_IRQn);
+
 //    //PB2 - GPS PPS interrupt on rising edge
 //    AFIO->EXTICR[0] |= AFIO_EXTICR1_EXTI2_PB;	//exti 2 source is port B
 //    EXTI->RTSR |= EXTI_RTSR_TR2;				//interrupt 2 on rising edge
@@ -145,7 +149,6 @@ void interrupt_init(void)
     NVIC_EnableIRQ(EXTI4_IRQn);               //enable interrupt
 //
 //    EXTI->PR1 = (uint32_t)0x0007FFFF;            //clear all pending interrupts
-//    NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
 void enable_buttons_interrupts(void)
@@ -217,14 +220,5 @@ void hold_power(void) {
 void release_power(void) {
     GPIOC->BSRR = GPIO_BSRR_BR13;
 }
-void longBeepsBlocking(int8_t beeps)
-{
-	for(int8_t i = 0; i < beeps; i++)
-	{
-		HAL_Delay(100);
-		led_w_on();
-		HAL_Delay(500);
-		led_w_off();
-	}
-}
+
 /* USER CODE END 2 */

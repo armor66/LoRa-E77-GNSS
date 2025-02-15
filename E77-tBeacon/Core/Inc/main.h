@@ -115,6 +115,11 @@ struct main_flags_struct
     int8_t time_slot;
     int8_t time_slot_timer_ovf;
 
+//    int8_t long_beeps;
+//    int8_t long_beeps_flag;
+    int8_t short_beeps;
+    int8_t short_beeps_flag;
+
     int8_t nav_pvt_ram_flag;
     int8_t out_ubx_ram_flag;
     int8_t out_nmea_ram_flag;
@@ -123,7 +128,7 @@ struct main_flags_struct
     int8_t GPScheckFlag;
     int8_t GPSconfigureFlag;
     int8_t GPScold_restarted;
-    int8_t find_nearest_trekpoint_flag;
+//    int8_t find_nearest_trekpoint_flag;
 
 	int8_t scanRadioFlag;
     int8_t transmit_iq_inverted_flag;
@@ -138,10 +143,9 @@ struct main_flags_struct
 //    int8_t pattern_started;
 
     int8_t adc_calibration_factor;
+//    int8_t brightness;
     uint8_t uartIdx;
     uint8_t settings_index;
-    int8_t short_beeps;
-    int8_t brightness;
 
     uint16_t endRX_2_TX;
     uint32_t settings_address;

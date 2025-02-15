@@ -106,7 +106,7 @@ const uint8_t ubx_mon_ver[] = {0xB5, 0x62, 0x0a, 0x04, 0x00, 0x00, 0x0e, 0x34};
 //set 38400:
 //uint8_t set_baudrate[] = {0xB5, 0x62, 0x06, 0x8A, 0x0C, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01, 0x00, 0x52, 0x40, 0x00, 0x96, 0x00, 0x00, 0xCC, 0x61};
 //set 57600
-const uint8_t set_baudrate[] = {0xB5, 0x62, 0x06, 0x8A, 0x0C, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01, 0x00, 0x52, 0x40, 0x00, 0xE1, 0x00, 0x00, 0x17, 0x42};
+const uint8_t set_baudrate[] =    {0xB5, 0x62, 0x06, 0x8A, 0x0C, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01, 0x00, 0x52, 0x40, 0x00, 0xE1, 0x00, 0x00, 0x17, 0x42};
 //set 38400
 const uint8_t revert_baudrate[] = {0xB5, 0x62, 0x06, 0x8A, 0x0C, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01, 0x00, 0x52, 0x40, 0x00, 0x96, 0x00, 0x00, 0xCC, 0x61};
 //save to BBR, RAM
@@ -177,8 +177,8 @@ void init_gnss(void)
 	}
 	else
 	{
-		main_flags.GPScheckFlag = 1;					//check valid gnss settings: if "nav_pvt_ram_flag" has set
-		restart_uart(GPS_BAUDRATE_57600);
+		main_flags.GPScheckFlag = 1;				//check valid gnss settings: if "nav_pvt_ram_flag" has set
+		restart_uart(GPS_BAUDRATE_38400);
 		HAL_Delay(100);
 		serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
 		HAL_Delay(400);
@@ -189,8 +189,8 @@ void init_gnss(void)
 //		send_ubx(UBX_CLASS_CFG, UBX_CFG_RST, &cfg_rst_cold_restart[0], sizeof(cfg_rst_cold_restart));
 //		HAL_Delay(100);
 		main_flags.GPScold_restarted = 1;
-		main_flags.GPScheckFlag = 1;					//check valid gnss settings: if "nav_pvt_ram_flag" has set
-		restart_uart(GPS_BAUDRATE_57600);
+		main_flags.GPScheckFlag = 1;				//check valid gnss settings: if "nav_pvt_ram_flag" has set
+		restart_uart(GPS_BAUDRATE_38400);
 		HAL_Delay(100);
 		serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
 		HAL_Delay(400);
@@ -248,7 +248,7 @@ restart_configuration:
     HAL_Delay(50);
 	while(1)
 	{
-		if(baudRateInd == 3)
+		if(baudRateInd == GPS_BAUDRATE_38400)
 		{
 			led_green_on();
 			led_red_off();
@@ -265,7 +265,7 @@ restart_configuration:
 		{
 			sprintf(&string_buffer[row][0], "GNSS version M%d", main_flags.ubx_hwVersion);
 			sprintf(&string_buffer[row+1][0], "Baud rate %4d00", baudRate[baudRateInd]);
-			if(baudRateInd != GPS_BAUDRATE_57600) draw_str_by_rows(7, (row+1)*14+5, &string_buffer[row+1][0], &Font_7x9, RED,BLACK);
+			if(baudRateInd != GPS_BAUDRATE_38400) draw_str_by_rows(7, (row+1)*14+5, &string_buffer[row+1][0], &Font_7x9, RED,BLACK);
 		}else
 		{
 			sprintf(&string_buffer[row+0][0], "  GNSS module");
@@ -301,14 +301,15 @@ restart_configuration:
 			draw_str_by_rows(0, (row+=1)*14+7, "   Press ESC to  ", &Font_7x9, YELLOW,BLACK);
 			draw_str_by_rows(0, (row+=1)*14+5, "  SET BAUD RATE   ", &Font_7x9, ORANGE,BLACK);
 		}
-
+		//both OK and ESC pressed
 		if((new_options_flag != 1) && !(GPIOA->IDR & BTN_2_Pin) && !(GPIOA->IDR & BTN_3_Pin))
 		{
 			new_options_flag = 1;
 			serialPrint(revert_to_default, sizeof(revert_to_default));
 			HAL_Delay(100);
-			serialPrint(revert_baudrate, sizeof(revert_baudrate));
-			HAL_Delay(100);
+			//not need if default 38400 used
+//			serialPrint(revert_baudrate, sizeof(revert_baudrate));
+//			HAL_Delay(100);
     		goto restart_configuration;
 		}
 		if ((new_options_flag != 2) && !(GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))	//OK to set values
@@ -324,10 +325,10 @@ restart_configuration:
 			HAL_Delay(100);
 			goto restart_configuration;
 	    }
-		if ((new_options_flag != 3) && !(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin) && (baudRateInd != GPS_BAUDRATE_57600))
+		if ((new_options_flag != 3) && !(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin) && (baudRateInd != GPS_BAUDRATE_38400))	//ESC pressed
     	{
 			new_options_flag = 3;
-			serialPrint(set_baudrate, sizeof(set_baudrate));
+			serialPrint(revert_baudrate, sizeof(revert_baudrate));
 			HAL_Delay(100);
     		goto restart_configuration;
     	}

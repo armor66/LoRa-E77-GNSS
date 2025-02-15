@@ -63,7 +63,6 @@ void gps_disable(void);
 void hold_power(void);
 void release_power(void);
 
-void longBeepsBlocking(int8_t beeps);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

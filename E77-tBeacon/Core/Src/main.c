@@ -70,8 +70,14 @@ void SystemClock_Config(void);
 struct main_flags_struct main_flags = {0};
 void shortBeeps(int8_t beeps)
 {
+	main_flags.short_beeps_flag = 0;
 	main_flags.short_beeps = beeps;
 }
+//void longBeeps(int8_t beeps)
+//{
+//	main_flags.long_beeps_flag = 0;
+//	main_flags.long_beeps = beeps;
+//}
 /* USER CODE END 0 */
 
 /**

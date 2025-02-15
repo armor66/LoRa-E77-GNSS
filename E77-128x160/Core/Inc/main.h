@@ -121,10 +121,6 @@ struct main_flags_struct
     int8_t long_beeps_flag;
     int8_t short_beeps;
     int8_t short_beeps_flag;
-    int8_t opt_short_beeps;
-    int8_t opt_long_beeps;
-    int8_t brightness;
-    uint16_t endRX_2_TX;
 
     int8_t nav_pvt_ram_flag;
     int8_t out_ubx_ram_flag;
@@ -134,6 +130,7 @@ struct main_flags_struct
     int8_t GPScheckFlag;
     int8_t GPSconfigureFlag;
     int8_t GPScold_restarted;
+//    int8_t flwtrek_flag;
     int8_t find_nearest_trekpoint_flag;
 
 	int8_t scanRadioFlag;
@@ -149,9 +146,11 @@ struct main_flags_struct
 //    int8_t pattern_started;
 
     int8_t adc_calibration_factor;
+    int8_t brightness;
     uint8_t uartIdx;
     uint8_t settings_index;
 
+    uint16_t endRX_2_TX;
     uint32_t settings_address;
 };
 //struct main_flags_struct *get_main_flags(void);

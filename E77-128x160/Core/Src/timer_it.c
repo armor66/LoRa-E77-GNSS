@@ -109,12 +109,12 @@ void TIM1_UP_IRQHandler(void)
 
 
 			if(main_flags.pps_synced) led_green_on();	//to shorten it, instead of PPS start
-			led_blue_off();								//led_blue_on on case 6 or PPS IRQ
+			led_blue_off();								//led_blue_on new pattern or PPS IRQ
 			led_red_off();								//after new pattern started
 			break;
 
 		case 2:			//100mS
-			led_green_off();
+			led_green_off();			//if PVT not received or half pattern on SF12
 			if(main_flags.long_beeps)
 			{
 				main_flags.long_beeps_flag = 1;
@@ -140,18 +140,22 @@ void TIM1_UP_IRQHandler(void)
 			{
 				if(p_settings_tim->spreading_factor == 12)	//for device3 only
 				{
-					(main_flags.fix_valid > 0)? (main_flags.fix_valid--): (main_flags.fix_valid = 0);
-					//transmit on demand if beeper_flag has set(choose witch beacon to send) with LORA_IQ_INVERTED
-					if(pp_devices_tim[3]->beeper_flag == main_flags.time_slot)	//1 for beacon2 or 2 for beacon1
-					{	//beeper_flags inverted to transmit in the slot, beacon can get: slot1 for beacon2, slot2 for beacon1
+					if(!pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag) main_flags.fix_valid--;
+//					(main_flags.fix_valid > 0)? (main_flags.fix_valid--): (main_flags.fix_valid = 0);
+					if(main_flags.fix_valid > 0)	//do not transmit if no GNSS FIX
+					{
+						//transmit on demand if beeper_flag has set(choose witch beacon to send) with LORA_IQ_INVERTED
+						if(pp_devices_tim[3]->beeper_flag == main_flags.time_slot)	//1 for beacon2 or 2 for beacon1
+						{	//beeper_flags inverted to transmit in the slot, beacon can get: slot1 for beacon2, slot2 for beacon1
 							main_flags.permit_actions = 0;
 							main_flags.transmit_iq_inverted_flag = 1;	//set transmit LORA_IQ_INVERTED
 							Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_tim[p_settings_tim->tx_power_opt], 0,
-						LORA_BANDWIDTH,	p_settings_tim->spreading_factor, p_settings_tim->coding_rate_opt,
-						LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_INVERTED, TX_TIMEOUT_VALUE);
+								LORA_BANDWIDTH,	p_settings_tim->spreading_factor, p_settings_tim->coding_rate_opt,
+								LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_INVERTED, TX_TIMEOUT_VALUE);
 							led_red_on();
 							set_transmit_data();	//transmit flags and time only with buffer_to_transmit = 3
-					}else Radio.Rx(0);		//start to receive on slot 1 or 2
+						}else Radio.Rx(0);		//start to receive on slot 1 or 2
+					}else main_flags.fix_valid = 0;
 				}
 				else Radio.Rx(0);			//start to receive if SF != 12
 
@@ -200,8 +204,11 @@ void TIM1_UP_IRQHandler(void)
 			}
 			if(main_flags.long_beeps && main_flags.long_beeps_flag)
 			{
-				main_flags.long_beeps--;
-				led_w_off();
+				if(p_settings_tim->spreading_factor != 12)	//SF12 use case 6 instead
+				{
+					main_flags.long_beeps--;
+					led_w_off();
+				}
 			}
 /******************IF MENU NAVIGATION ENTERED*****************************************/
 			if(main_flags.find_nearest_trekpoint_flag)

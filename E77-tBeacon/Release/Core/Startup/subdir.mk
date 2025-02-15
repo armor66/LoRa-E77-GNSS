@@ -16,7 +16,7 @@ S_DEPS += \
 
 # Each subdirectory must supply rules for building sources it contributes
 Core/Startup/%.o: ../Core/Startup/%.s Core/Startup/subdir.mk
-	arm-none-eabi-gcc -mcpu=cortex-m4 -c -I"/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/BSP/STM32WLxx_Nucleo" -I"/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/Radio" -I"/home/z/STM32Cube/NewModule/E77-433-beacon/Drivers/STM32WLxx_HAL_Driver/Inc" -x assembler-with-cpp -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfloat-abi=soft -mthumb -o "$@" "$<"
+	arm-none-eabi-gcc -mcpu=cortex-m4 -c -I"/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/BSP/STM32WLxx_Nucleo" -I"/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/Radio" -I"/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc" -x assembler-with-cpp -MMD -MP -MF"$(@:%.o=%.d)" -MT"$@" --specs=nano.specs -mfloat-abi=soft -mthumb -o "$@" "$<"
 
 clean: clean-Core-2f-Startup
 
