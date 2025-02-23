@@ -146,7 +146,7 @@ void st7735_init(uint8_t rotation)
 	CS_GPIO_Port->BSRR = ( CS_Pin << 16 );
 
 	RST_GPIO_Port->BSRR = (RST_Pin << 16);
-	HAL_Delay(20);
+	HAL_Delay(50);	//20
 	RST_GPIO_Port->BSRR = RST_Pin;
 
     displayInit(init_cmds1);

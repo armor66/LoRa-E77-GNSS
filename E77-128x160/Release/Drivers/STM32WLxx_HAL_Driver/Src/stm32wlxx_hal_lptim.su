@@ -1,4 +1,4 @@
-/home/z/STM32Cube/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:2119:22:LL_RCC_SetLPTIMClockSource	0	static
+C:/Users/user/STM32CubeIDE/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:2119:22:LL_RCC_SetLPTIMClockSource	0	static
 ../Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_lptim.c:2499:26:LPTIM_WaitForFlag	8	static
 ../Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_lptim.c:451:13:HAL_LPTIM_MspInit	0	static
 ../Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_lptim.c:466:13:HAL_LPTIM_MspDeInit	0	static

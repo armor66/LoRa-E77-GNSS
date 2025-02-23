@@ -24,6 +24,7 @@ Core/Src/eeprom.o: ../Core/Src/eeprom.c ../Core/Inc/eeprom.h \
  /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h \
  /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h \
  /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h \
+ /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h \
  /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h \
  /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h \
  /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr_ex.h \
@@ -70,6 +71,7 @@ Core/Src/eeprom.o: ../Core/Src/eeprom.c ../Core/Inc/eeprom.h \
 /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_flash_ex.h:
 /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio.h:
 /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_gpio_ex.h:
+/home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_iwdg.h:
 /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr.h:
 /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_pwr.h:
 /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_pwr_ex.h:

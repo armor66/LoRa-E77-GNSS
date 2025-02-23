@@ -20,6 +20,7 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
+#include "iwdg.h"
 #include "spi.h"
 #include "subghz.h"
 #include "tim.h"
@@ -117,6 +118,7 @@ int main(void)
   MX_TIM17_Init();
   MX_ADC_Init();
   MX_SUBGHZ_Init();
+//  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
 //  disable_buttons_interrupts();
 //  EXTI->IMR1 &= ~EXTI_IMR1_IM8;			//interrupt disabled on PPS front
@@ -127,6 +129,12 @@ int main(void)
 //  led_green_off();
   led_blue_off();
 
+  if(RCC->CSR & RCC_CSR_IWDGRSTF)
+  {
+	  RCC->CSR |= RCC_CSR_RMVF;		//clear reset flag IWDGRSTF by writing bit to the RMVF
+	  NVIC_SystemReset();
+  }
+
   if(!(RCC->CSR & RCC_CSR_SFTRSTF))	// || !(RCC->CSR & RCC_CSR_IWDGRSTF))	//if the reset is not caused by software (save & restart after settings changed)
   {																		//or not independent watchdog reset occurs
 	  release_power();					//initially set off position
@@ -134,7 +142,7 @@ int main(void)
 	  NVIC_SystemReset();
   }else								//if Software reset or Independent watchdog reset occurred
   {
-	  RCC->CSR |= RCC_CSR_RMVF;		//clear the reset flags IWDGRSTF, SFTRSTF by writing bit to the RMVF
+	  RCC->CSR |= RCC_CSR_RMVF;		//clear reset flag SFTRSTF by writing bit to the RMVF
 	  led_w_on();
   }
   HAL_Delay(10);
@@ -152,13 +160,13 @@ int main(void)
   	else if(!(GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))
 	{
   		TIM1->CR1 |= TIM_CR1_URS;		//Only counter overflow/underflow generates an update interrupt
-  		TIM1->SR &= ~TIM_SR_UIF;                //clear update interrupt
-  		TIM1->DIER |= TIM_DIER_UIE;             //update interrupt enable
+  		TIM1->SR &= ~TIM_SR_UIF;        //clear update interrupt
+  		TIM1->DIER |= TIM_DIER_UIE;     //update interrupt enable
   	    NVIC_EnableIRQ(TIM1_UP_IRQn);
-		main_flags.scanRadioFlag = 1;		//if OK button is pressed and DOWN button is released upon power up
+		main_flags.scanRadioFlag = 1;	//if OK button is pressed and DOWN button is released upon power up
 		radio_init();
 	}
-  	else
+  	else	//normal procedure
   	{
   		main_flags.adc_calibration_factor = getADC_calibration();
   		init_menu();
@@ -172,6 +180,7 @@ int main(void)
   		radio_init();
   		timer1_start();
   		main_flags.update_screen = 1;
+  	  MX_IWDG_Init();
   	}
   /* USER CODE END 2 */
 
@@ -191,7 +200,7 @@ int main(void)
 
 		if (main_flags.update_screen)	//buttons processed or on case 3 or if no PPS signal
 		{
-//			HAL_IWDG_Refresh(&hiwdg);
+			HAL_IWDG_Refresh(&hiwdg);
 			draw_current_menu();
 			main_flags.update_screen = 0;
 		}
@@ -220,10 +229,13 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB buses clocks
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE
+                              |RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS_PWR;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+  RCC_OscInitStruct.LSIDiv = RCC_LSI_DIV1;
   RCC_OscInitStruct.HSEDiv = RCC_HSE_DIV1;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV2;
