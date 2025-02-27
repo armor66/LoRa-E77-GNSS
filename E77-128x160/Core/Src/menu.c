@@ -1123,6 +1123,21 @@ void draw_beacons(void)
 		draw_arrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
 		draw_arrow(63, 97, 57, north_rad, 28, CYANB, RED);
 		north_rad_old = north_rad;
+
+		if(distance[current_device] > range * range_scale[range_ind])
+		{
+			for(; range_ind < 6; range_ind++)
+			{
+				if(distance[current_device] < range * range_scale[range_ind]) break;
+			}
+		}
+		else if(distance[current_device] < range * range_scale[range_ind] / 2)
+		{
+			for(; range_ind > 0; range_ind--)
+			{
+				if(distance[current_device] > range * range_scale[range_ind] / 2) break;
+			}
+		}
 	}else
 	{
 		draw_str_by_rows(0, (row+=1)*18, "TURN AROUND", &Font_11x18, RED,BLACK);

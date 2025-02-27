@@ -1,4 +1,4 @@
-C:/Users/user/STM32CubeIDE/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_bus.h:449:22:LL_AHB2_GRP1_EnableClock	8	static
+/home/z/STM32Cube/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_bus.h:449:22:LL_AHB2_GRP1_EnableClock	8	static
 ../Core/Src/gpio.c:42:6:MX_GPIO_Init	48	static
 ../Core/Src/gpio.c:119:6:interrupt_init	0	static,ignoring_inline_asm
 ../Core/Src/gpio.c:157:6:enable_buttons_interrupts	0	static

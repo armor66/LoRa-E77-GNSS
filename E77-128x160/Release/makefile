@@ -65,8 +65,8 @@ all: main-build
 main-build: E77-128x160.elf secondary-outputs
 
 # Tool invocations
-E77-128x160.elf E77-128x160.map: $(OBJS) $(USER_OBJS) C:\Users\user\STM32CubeIDE\NewModule\E77-128x160\STM32WLE5CCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "E77-128x160.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\user\STM32CubeIDE\NewModule\E77-128x160\STM32WLE5CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="E77-128x160.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+E77-128x160.elf E77-128x160.map: $(OBJS) $(USER_OBJS) /home/z/STM32Cube/NewModule/E77-128x160/STM32WLE5CCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "E77-128x160.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/z/STM32Cube/NewModule/E77-128x160/STM32WLE5CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="E77-128x160.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

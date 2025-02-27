@@ -1,7 +1,7 @@
-C:/Users/user/STM32CubeIDE/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:1059:26:LL_RCC_HSE_IsReady	0	static
-C:/Users/user/STM32CubeIDE/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:1447:26:LL_RCC_MSI_IsReady	0	static
-C:/Users/user/STM32CubeIDE/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:1594:22:LL_RCC_MSI_SetCalibTrimming	0	static
-C:/Users/user/STM32CubeIDE/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:2411:26:LL_RCC_PLL_IsReady	0	static
+/home/z/STM32Cube/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:1059:26:LL_RCC_HSE_IsReady	0	static
+/home/z/STM32Cube/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:1447:26:LL_RCC_MSI_IsReady	0	static
+/home/z/STM32Cube/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:1594:22:LL_RCC_MSI_SetCalibTrimming	0	static
+/home/z/STM32Cube/NewModule/E77-128x160/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_rcc.h:2411:26:LL_RCC_PLL_IsReady	0	static
 ../Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_rcc.c:1583:26:RCC_SetFlashLatencyFromMSIRange	32	static
 ../Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_rcc.c:228:19:HAL_RCC_DeInit	16	static
 ../Drivers/STM32WLxx_HAL_Driver/Src/stm32wlxx_hal_rcc.c:1188:6:HAL_RCC_MCOConfig	40	static

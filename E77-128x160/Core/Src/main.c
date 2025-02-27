@@ -191,7 +191,7 @@ int main(void)
 		main_flags.calibrateCompassFlag = 1;
 		init_compass();
 	}
-  	else
+  	else	//normal procedure
   	{
   		main_flags.adc_calibration_factor = getADC_calibration();
   		init_compass();
