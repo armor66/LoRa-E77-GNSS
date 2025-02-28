@@ -6,7 +6,7 @@ E77-tBeacon is new tiny 36x26mm pcb design.
 For the very first time use CubeProgrammer with "Hardware reset" mode. Hold Reset button, press Connect, release Reset button. 
 After that Browse for E77-128x160.bin or E77-tBeacon.bin and Start Programming.
 
-As compass it is supposed to use external bno055 "blue" board with LDO![module photo](Photos/bno055blue.jpeg)
+As compass it is supposed to use external bno055 "blue" board with LDO. S0 and S1 pads sould be soldered to GND![module photo](Photos/bno055blue.jpeg)
 
 Although it seemed more reliable "pink" board without LDO![module photo](Photos/bno055pink.png) However, it should be found another VCC connection point (after internal LDO)
 
@@ -14,7 +14,7 @@ As GNSS module suggested to use 27x27mm QUESCAN with full set of connectors. Pow
 
 As GNSS module for tBeacon proposing to use cheap 18x18mm SoloGood which demands soldering PPS after "PPS LED" being removed![module photo](Photos/solgood_pinout.png)
 
-or find a more suitable one that has PPS connector
+or find a more suitable 18x18mm one that has PPS connector
 
 ##### Some photos
 st7735 1.8" and nv3023 2.08" modules
