@@ -7,9 +7,10 @@ For the very first time use CubeProgrammer with "Hardware reset" mode. Hold Rese
 After that Browse for E77-128x160.bin or E77-tBeacon.bin and Start Programming.
 
 As compass it is supposed to use external bno055 "blue" board with LDO![module photo](Photos/bno055blue.jpeg)
-although it seemed more reliable "pink" board without LDO![module photo](Photos/bno055pink.png) and is expected to find another VCC connection point (after internal LDO)
 
-As GNSS module suggest to use QUESCAN with full set of connectors. Power Enable "EN" should not be connected (this MCU pin engaged for MUTE purpose)([module photo](Photos/QUESCAN_GNSS.png)
+Although it seemed more reliable "pink" board without LDO![module photo](Photos/bno055pink.png) and is expected to find another VCC connection point (after internal LDO)
+
+As GNSS module suggest to use QUESCAN with full set of connectors. Power Enable "EN" should not be connected (this MCU pin engaged for MUTE purpose)![module photo](Photos/QUESCAN_GNSS.png)
 ##### Some photos
 st7735 1.8" and nv3023 2.08" modules
 ![module photo](Photos/modules.jpg)
