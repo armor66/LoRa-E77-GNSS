@@ -12,7 +12,7 @@ Although it seemed more reliable "pink" board without LDO![module photo](Photos/
 
 As GNSS module suggested to use 27x27mm QUESCAN with full set of connectors. Power Enable "EN" should not be connected (this MCU pin engaged for MUTE purpose)![module photo](Photos/QUESCAN_GNSS.png)
 
-As GNSS module for tBeacon suppose to use cheap 18x18mm SoloGood which demands soldering PPS ![module photo](Photos/solgood_pinout.png)
+As GNSS module for tBeacon proposing to use cheap 18x18mm SoloGood which demands soldering PPS after "PPS LED" being removed![module photo](Photos/solgood_pinout.png)
 
 or find a more suitable one that has PPS connector
 
