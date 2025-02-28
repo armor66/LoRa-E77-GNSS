@@ -10,7 +10,12 @@ As compass it is supposed to use external bno055 "blue" board with LDO![module p
 
 Although it seemed more reliable "pink" board without LDO![module photo](Photos/bno055pink.png) and is expected to find another VCC connection point (after internal LDO)
 
-As GNSS module suggest to use QUESCAN with full set of connectors. Power Enable "EN" should not be connected (this MCU pin engaged for MUTE purpose)![module photo](Photos/QUESCAN_GNSS.png)
+As GNSS module suggested to use 27x27mm QUESCAN with full set of connectors. Power Enable "EN" should not be connected (this MCU pin engaged for MUTE purpose)![module photo](Photos/QUESCAN_GNSS.png)
+
+As GNSS module for tBeacon suppose to use cheap 18x18mm SoloGood which demands soldering PPS ![module photo](Photos/solgood_pinout.png)
+
+or find a more suitable one that has PPS connector
+
 ##### Some photos
 st7735 1.8" and nv3023 2.08" modules
 ![module photo](Photos/modules.jpg)
