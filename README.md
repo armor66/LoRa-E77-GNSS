@@ -6,7 +6,7 @@ E77-tBeacon is new tiny 36x26mm pcb design.
 For the very first time use CubeProgrammer with "Hardware reset" mode. Hold Reset button, press Connect, release Reset button. 
 After that Browse for E77-128x160.bin or E77-tBeacon.bin and Start Programming.
 
-As compass it is supposed to use external bno055 "blue" board with LDO. S0 and S1 pads sould be soldered to GND![module photo](Photos/bno055-pinout.jpeg)
+As compass it is supposed to use external bno055 "blue" board with LDO. S0 and S1 pads sould be soldered to GND![module photo](Photos/bno055-pinout.jpg)
 
 Although it seemed more reliable "pink" board without LDO![module photo](Photos/bno055pink.png) However, it should be found another VCC connection point (after internal LDO)
 
