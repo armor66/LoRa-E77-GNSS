@@ -668,7 +668,7 @@ void change_menu(uint8_t button_code)
 			case BTN_DOWN:				//if short pressed
 				timer16_start();		//hold 1.5 second for next short press
 
-				if(main_flags.current_point_group < 6) {			//5 groups + beacon
+				if(main_flags.current_point_group < 7) {			//5 groups + beacon + 1 for all devices
 					main_flags.current_point_group++;
 //					led_blue_on();		//main_flags.current_point_group has set
 				}else {
@@ -681,20 +681,35 @@ void change_menu(uint8_t button_code)
 			case BTN_ESC:		//if long pressed && (main_flags.current_point_group > 0))
 				timer16_stop();		//stop before IRQ and clear current_point_group
 
-				if(main_flags.current_point_group > 0) {
+				if(main_flags.current_point_group > 0)
+				{
 					longBeeps(main_flags.current_point_group);
 //					shortBeeps(1);							//just for notice instead of actual long beeps
 				}else break;	//leave case BTN_ESC
 
-/*as in "confirm_clear_group(void)" function*/
-				clear_points_group(main_flags.current_point_group);
-				int8_t ind;
-				for(uint8_t sub_point = 0; sub_point < MEMORY_SUBPOINTS; sub_point++)
+				if(main_flags.current_point_group < 7)			//5 groups + beacon
 				{
-					ind = (main_flags.current_point_group * MEMORY_SUBPOINTS) + sub_point;
-				   	pp_points_menu[ind]->exist_flag = 0;
+/*as in "confirm_clear_group(void)" function*/
+					clear_points_group(main_flags.current_point_group);
+					int8_t ind;
+					for(uint8_t sub_point = 0; sub_point < MEMORY_SUBPOINTS; sub_point++)
+					{
+						ind = (main_flags.current_point_group * MEMORY_SUBPOINTS) + sub_point;
+						pp_points_menu[ind]->exist_flag = 0;
+					}
+					saved_group_load(main_flags.current_point_group);
 				}
-			   	saved_group_load(main_flags.current_point_group);
+
+				if(main_flags.current_point_group == 7)			//for all devices
+				{
+					erase_saved_devices();
+
+					for(uint8_t i = 57; i < 96; i++)	//57 to 96: 8 for saved device each
+					{
+						pp_points_menu[i]->exist_flag = 0;
+					}
+				}
+
 /******************************************/
 				fill_screen(BLACK);
 //				return_from_points_menu = current_menu;

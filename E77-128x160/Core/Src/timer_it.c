@@ -184,6 +184,7 @@ void TIM1_UP_IRQHandler(void)
 					{
 //							memory_points_save();		//save beacon trace if it was traced and no validFixFlag[main_flags.time_slot] for timeout_threshold
 						lost_device_save(main_flags.time_slot);
+						main_flags.current_point_group = 0;		//to prevent accidental saved device point by long pressed BTN_ESC
 					//start long beep on next case 2 в слоте того устройства, которое пропало
 						pp_devices_tim[main_flags.time_slot]->beeper_flag = 1;
 //							shortBeeps(main_flags.time_slot);
