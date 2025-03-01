@@ -820,20 +820,16 @@ void draw_navigation(void)	//int8_t menu)
 			break;			//do not exceed "devices_on_air" on exit
 		}
 	}
-//	(this_device == 1)? (dev = 2): (dev = 1);
+
 	pp_devices_menu[dev]->beacon_flag? sprintf(&Line[0][0], "Bcn:%d", dev): sprintf(&Line[0][0], "Dev:%d", dev);	//if is beacon
-//		(buffer[0] >> 7)? sprintf(&Line[0][0], "Bcn:%d", dev): sprintf(&Line[0][0], "Dev:%d", dev);	//if is beacon
-	//show azimuth and distance to remote
+
 		azimuth_relative_deg = azimuth_deg_signed[dev] - heading_deg;
 		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
 		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
 		sprintf(&Line[1][0], "%4d%%", azimuth_relative_deg);
 		sprintf(&Line[2][0], "%4dm", ((uint16_t)distance[dev] & 0x1FFF));
-		sprintf(&Line[3][0], "%3ddB", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
-//		if((buffer[14] & 0x0F) == 0)
-//		{
-//			sprintf(&Line[4][0], "low");		//< 2.7 volt
-//		} else sprintf(&Line[4][0], "%d.%dV", ((buffer[14] & 0x0F)+27)/10, ((buffer[14] & 0x0F)+27)%10);
+		sprintf(&Line[3][0], "%4ddB", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
+
 		for (uint8_t k = 0; k < 4; k++) {
 			if(pp_devices_menu[dev]->valid_fix_flag) draw_str_by_rows(0, k*11, &Line[k][0], Font_7x10, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
 			else draw_str_by_rows(0, k*11, &Line[k][0], Font_7x10, MAGENTA,BLACK);
@@ -844,20 +840,18 @@ void draw_navigation(void)	//int8_t menu)
 		if(dev != this_device)
 		{
 			if(pp_devices_menu[dev]->valid_fix_flag) break;
-//			if(dev == 1) break;	"dev = 0" if no "valid_fix_flag" received
 		}
 	}
-//	(this_device == 3)? (dev = 2): (dev = 3);
+
 	pp_devices_menu[dev]->beacon_flag? sprintf(&Line[0][13], "Bcn:%d", dev): sprintf(&Line[0][13], "Dev:%d", dev);	//if is beacon
-//		(buffer[0] >> 7)? sprintf(&Line[0][13], "Bcn:%d", dev): sprintf(&Line[0][13], "Dev:%d", dev);	//if is beacon
-	//show azimuth and distance to remote
+
 		azimuth_relative_deg = azimuth_deg_signed[dev] - heading_deg;
 		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
 		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
 
 		sprintf(&Line[1][13], "%4d%%", azimuth_relative_deg);
 		sprintf(&Line[2][13], "%4dm", ((uint16_t)distance[dev] & 0x1FFF));
-		sprintf(&Line[3][13], "%3ddB", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
+		sprintf(&Line[3][13], "%4dd", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
 
 		for (uint8_t k = 0; k < 4; k++) {
 			if(pp_devices_menu[dev]->valid_fix_flag) draw_str_by_rows(91, k*11, &Line[k][13], Font_7x10, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])

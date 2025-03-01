@@ -1011,7 +1011,7 @@ void draw_navigation(void)	//int8_t menu)
 		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
 		sprintf(&string_buffer[1][0], "%4d%%", azimuth_relative_deg);
 		sprintf(&string_buffer[2][0], "%4dm", ((uint16_t)distance[dev] & 0x1FFF));
-		sprintf(&string_buffer[3][0], "%3ddB", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
+		sprintf(&string_buffer[3][0], "%4ddB", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
 
 		for (uint8_t k = 0; k < 4; k++) {
 			if(pp_devices_menu[dev]->valid_fix_flag) draw_str_by_rows(0, k*11, &string_buffer[k][0], &Font_7x9, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
@@ -1034,7 +1034,7 @@ void draw_navigation(void)	//int8_t menu)
 
 		sprintf(&string_buffer[1][13], "%4d%%", azimuth_relative_deg);
 		sprintf(&string_buffer[2][13], "%4dm", ((uint16_t)distance[dev] & 0x1FFF));
-		sprintf(&string_buffer[3][13], "%3ddB", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
+		sprintf(&string_buffer[3][13], "%4dd", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
 
 		for (uint8_t k = 0; k < 4; k++) {
 			if(pp_devices_menu[dev]->valid_fix_flag) draw_str_by_rows(91, k*11, &string_buffer[k][13], &Font_7x9, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
