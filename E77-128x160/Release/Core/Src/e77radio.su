@@ -1,6 +1,0 @@
-../Core/Src/e77radio.c:89:13:OnRxTimeout	0	static
-../Core/Src/e77radio.c:95:13:OnTxDone	0	static
-../Core/Src/e77radio.c:67:13:OnRxDone	24	static
-../Core/Src/e77radio.c:35:6:radio_init	80	static,ignoring_inline_asm
-../Core/Src/e77radio.c:101:6:set_transmit_data	32	static
-../Core/Src/e77radio.c:161:6:timer1_scanRadio_handle	24	static
