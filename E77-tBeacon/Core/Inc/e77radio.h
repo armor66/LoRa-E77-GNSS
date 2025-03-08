@@ -12,16 +12,16 @@
 #define TX_TIMEOUT_VALUE            0		//3000
 //#define TCXO_WORKAROUND_TIME_MARGIN	50
 
-typedef enum
-{
-  RX_DONE,
-  RX_TO,
-  RX_ERR,
-  TX_START,
-  TX_DONE,
-  RX_START,
-  TX_TO,
-} States_t;
+//typedef enum
+//{
+//  RX_DONE,
+//  RX_TO,
+//  RX_ERR,
+//  TX_START,
+//  TX_DONE,
+//  RX_START,
+//  TX_TO,
+//} States_t;
 
 void radio_init(void);
 void set_transmit_data(void);

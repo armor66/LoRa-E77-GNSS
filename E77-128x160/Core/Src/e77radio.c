@@ -14,7 +14,7 @@
 #include "lcd_display.h"
 
 static RadioEvents_t RadioEvents;
-static States_t State = RX_START;
+//static States_t State = RX_START;
 
 uint8_t bufferTx[BUFFER_AIR_SIZE];
 uint8_t bufferRx[BUFFER_RX];
@@ -27,7 +27,8 @@ int8_t channel_ind;
 static void scanChannels(void);
 static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraSnr_FskCfo);
 static void OnTxDone(void);
-static void OnRxTimeout(void);
+static void OnRxError(void);
+//static void OnRxTimeout(void);
 
 struct settings_struct *p_settings_rf;
 struct devices_struct **pp_devices_rf;
@@ -40,7 +41,8 @@ void radio_init(void)
 
 	RadioEvents.RxDone = OnRxDone;
 	RadioEvents.TxDone = OnTxDone;
-	RadioEvents.RxTimeout = OnRxTimeout;
+	RadioEvents.RxError = OnRxError;
+//	RadioEvents.RxTimeout = OnRxTimeout;
 
 	Radio.Init(&RadioEvents);		//Initializes driver callback functions: *TxDone *TxTimeout *RxDone *RxTimeout *FhssChangeChannel
 	srand(Radio.Random());			//sets the radio in LoRa modem mode and disables all interrupts
@@ -61,7 +63,7 @@ void radio_init(void)
 
     HAL_Delay(Radio.GetWakeupTime());	// + TCXO_WORKAROUND_TIME_MARGIN);
 
-	    if(main_flags.scanRadioFlag) scanChannels();
+	if(main_flags.scanRadioFlag) scanChannels();
 }
 
 static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraSnr_FskCfo)
@@ -70,7 +72,7 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 	if(main_flags.display_status) timer17_start();
 
 	memcpy(bufferRx, payload, BUFFER_AIR_SIZE);		//BufferAirSize
-	bufferRx[BUFFER_AIR_SIZE] = (int8_t)rssi;				//BufferAirSize + 1
+	bufferRx[BUFFER_AIR_SIZE] = (int8_t)rssi;		//BufferAirSize + 1
 	bufferRx[BUFFER_AIR_SIZE + 1] = LoraSnr_FskCfo;	//BufferAirSize + 2
 	//if received time slot == device number and it fix is valid
 	if(((bufferRx[0] & 0x07) == main_flags.time_slot) && ((bufferRx[1] & 0x10) >> 4))
@@ -78,19 +80,23 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 		rx_to_devices(main_flags.time_slot); //where (uint8_t *buffer = bufferRx;)
 	}
 	//host device valid GPS fix - pDop and accuracy
-	if(main_flags.fix_valid) calc_relative_position(main_flags.time_slot);
+	if(main_flags.fix_valid && !main_flags.rx_crc_error) calc_relative_position(main_flags.time_slot);
 //	if(pp_devices_rf[p_settings_rf->device_number]->valid_fix_flag)	calc_relative_position(main_flags.time_slot);
 
 	memset(bufferRx, 0, BUFFER_RX);
 
-	State = RX_DONE;
+//	State = RX_DONE;
 }
 
-static void OnRxTimeout(void)
+static void OnRxError(void)
 {
-//	led_red_off();
-	State = RX_TO;
+	main_flags.rx_crc_error = 1;	//reset on case 2:100mS
 }
+
+//static void OnRxTimeout(void)
+//{
+//	State = RX_TO;
+//}
 
 static void OnTxDone(void)
 {
@@ -100,10 +106,12 @@ static void OnTxDone(void)
 
 void set_transmit_data(void)
 {
+	int8_t emergency_to_transmit;
 	int8_t beeper_flag_to_transmit;
 	int8_t device_number;
 	int8_t buffer_to_transmit;
 
+	(pp_devices_rf[p_settings_rf->device_number]->emergency_flag)? (emergency_to_transmit = 5): (emergency_to_transmit = 2);
 	(pp_devices_rf[p_settings_rf->device_number]->beeper_flag)? (beeper_flag_to_transmit = 1): (beeper_flag_to_transmit = 0);
 
 	if(p_settings_rf->spreading_factor == 12)
@@ -117,10 +125,10 @@ void set_transmit_data(void)
 		buffer_to_transmit = BUFFER_AIR_SIZE;
 	}
 
-   	  bufferTx[0] =	(IS_BEACON << 7) +
-    		  (pp_devices_rf[p_settings_rf->device_number]->emergency_flag << 6) +
-			  (pp_devices_rf[p_settings_rf->device_number]->alarm_flag << 5) +
-			  (pp_devices_rf[p_settings_rf->device_number]->gather_flag << 4) +
+   	  bufferTx[0] =	(IS_BEACON << 7) + (emergency_to_transmit << 4) +
+//    		  (pp_devices_rf[p_settings_rf->device_number]->emergency_flag << 6) +
+//			  (pp_devices_rf[p_settings_rf->device_number]->alarm_flag << 5) +
+//			  (pp_devices_rf[p_settings_rf->device_number]->gather_flag << 4) +
 			  (beeper_flag_to_transmit << 3) + device_number;
 
    	  (pp_devices_rf[p_settings_rf->device_number]->gps_speed > GPS_SPEED_THRS)? (bufferTx[1] |= 1 << 7): (bufferTx[1] &= ~(1 << 7));	//if device is moving

@@ -120,9 +120,11 @@ void rx_to_devices(uint8_t device_number)
 	uint8_t *buffer = bufferRx;
 
 	devices[device_number].beacon_flag = buffer[0] >> 7;
-	devices[device_number].emergency_flag = (buffer[0] & 0x40) >> 6;
-	devices[device_number].alarm_flag = (buffer[0] & 0x20) >> 5;
-	devices[device_number].gather_flag = (buffer[0] & 0x10) >> 4;
+	if(((buffer[0] & 0x70) >> 4) == 5) devices[device_number].emergency_flag = 1;
+	else if(((buffer[0] & 0x70) >> 4) == 2) devices[device_number].emergency_flag = 0;
+//	devices[device_number].emergency_flag = (buffer[0] & 0x40) >> 6;
+//	devices[device_number].alarm_flag = (buffer[0] & 0x20) >> 5;
+//	devices[device_number].gather_flag = (buffer[0] & 0x10) >> 4;
 	devices[device_number].beeper_flag = (buffer[0] & 0x8) >> 3;
 //	main_flags.beeper_flag_received = (buffer[0] & 0x8) >> 3;
 	devices[device_number].device_num = buffer[0] & 0x07;

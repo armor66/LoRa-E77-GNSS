@@ -114,6 +114,7 @@ void TIM1_UP_IRQHandler(void)
 			break;
 
 		case 2:			//100mS
+			main_flags.rx_crc_error = 0;
 			led_green_off();			//if PVT not received or half pattern on SF12
 			if(main_flags.long_beeps)
 			{

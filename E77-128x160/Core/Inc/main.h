@@ -94,8 +94,8 @@ void Error_Handler(void);
 #define BATT_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-//#define NV3023
-#define ST7735
+#define NV3023
+//#define ST7735
 //#define ST7735_IS_160X128_BLUE
 //#define ST7735_IS_160X128_RED
 #define BUFFER_AIR_SIZE            	13  	/* Define the payload size here */
@@ -143,6 +143,7 @@ struct main_flags_struct
     int8_t pps_counter;
     int8_t pps_synced;
     int8_t current_point_group;
+    int8_t rx_crc_error;
 //    int8_t pattern_started;
 
     int8_t adc_calibration_factor;

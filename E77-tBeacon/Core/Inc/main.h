@@ -140,6 +140,7 @@ struct main_flags_struct
     int8_t pps_counter;
     int8_t pps_synced;
     int8_t current_point_group;
+    int8_t rx_crc_error;
 //    int8_t pattern_started;
 
     int8_t adc_calibration_factor;
