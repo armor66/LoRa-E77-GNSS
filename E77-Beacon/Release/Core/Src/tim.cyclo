@@ -1,7 +1,0 @@
-stm32wlxx_ll_bus.h:1303:22:LL_APB2_GRP1_EnableClock	1
-tim.c:33:6:MX_TIM1_Init	4
-tim.c:75:6:MX_TIM2_Init	4
-tim.c:115:6:MX_TIM16_Init	2
-tim.c:142:6:MX_TIM17_Init	2
-tim.c:169:6:HAL_TIM_Base_MspInit	5
-tim.c:234:6:HAL_TIM_Base_MspDeInit	5

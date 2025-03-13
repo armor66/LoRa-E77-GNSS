@@ -1,5 +1,0 @@
-../Core/Src/eeprom.c:57:6:flash_lock	0	static
-../Core/Src/eeprom.c:61:9:flash_unlock	0	static
-../Core/Src/eeprom.c:77:6:flash_erase_page	0	static,ignoring_inline_asm
-../Core/Src/eeprom.c:98:6:flash_write_array	32	static,ignoring_inline_asm
-../Core/Src/eeprom.c:159:6:read_page	12	static

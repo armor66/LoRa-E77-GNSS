@@ -1,3 +1,0 @@
-adc.c:31:6:MX_ADC_Init	5
-adc.c:99:6:HAL_ADC_MspInit	3
-adc.c:144:6:HAL_ADC_MspDeInit	2
