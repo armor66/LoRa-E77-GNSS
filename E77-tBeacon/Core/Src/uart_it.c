@@ -73,7 +73,7 @@ void USART2_IRQHandler(void)
 	   		{
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
 	   			ublox_to_this_device(p_settings->device_number);
-	   			led_green_off();			//led_green_on on PPS IRQ
+//	   			led_green_off();			//led_green_on on PPS IRQ
 	   		} else main_flags.uartIdx++;	//do not increment index in case 1 or 2
 		}
 	}

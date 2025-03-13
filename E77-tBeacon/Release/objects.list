@@ -1,4 +1,3 @@
-"./Core/Src/ST7735.o"
 "./Core/Src/adc.o"
 "./Core/Src/buttons.o"
 "./Core/Src/dma.o"
@@ -9,6 +8,7 @@
 "./Core/Src/gnss.o"
 "./Core/Src/gpio.o"
 "./Core/Src/iwdg.o"
+"./Core/Src/lcd_display.o"
 "./Core/Src/lrns.o"
 "./Core/Src/main.o"
 "./Core/Src/menu.o"

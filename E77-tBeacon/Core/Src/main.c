@@ -20,7 +20,6 @@
 #include "main.h"
 #include "adc.h"
 #include "dma.h"
-#include "iwdg.h"
 #include "spi.h"
 #include "subghz.h"
 #include "tim.h"
@@ -34,10 +33,12 @@
 #include "timer_it.h"
 #include "settings.h"
 #include "lrns.h"
-#include "ST7735.h"
+//#include "ST7735.h"
+#include "lcd_display.h"
 #include "menu.h"
 #include "gnss.h"
 #include "e77radio.h"
+#include "iwdg.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -118,7 +119,6 @@ int main(void)
   MX_TIM17_Init();
   MX_ADC_Init();
   MX_SUBGHZ_Init();
-//  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
 //  disable_buttons_interrupts();
 //  EXTI->IMR1 &= ~EXTI_IMR1_IM8;			//interrupt disabled on PPS front
@@ -149,8 +149,11 @@ int main(void)
   led_w_off();
 
 	settings_load();
-	st7735_init(0);
-    fill_screen(BLACK);
+#ifdef ST7735
+	st7735_init(2);
+#else
+  	nv3023_init();
+#endif
 
   	if(!(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin))
 	{

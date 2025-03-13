@@ -57,7 +57,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPS_EN_GPIO_Port, GPS_EN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, RF_CTRL1_Pin|RF_CTRL2_Pin|CS_Pin|DC_Pin
+  HAL_GPIO_WritePin(GPIOA, RF_CTRL1_Pin|RF_CTRL2_Pin|LCD_Pin|DC_Pin
                           |RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
@@ -97,7 +97,7 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PAPin PAPin PAPin */
-  GPIO_InitStruct.Pin = CS_Pin|DC_Pin|RST_Pin;
+  GPIO_InitStruct.Pin = LCD_Pin|DC_Pin|RST_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -149,6 +149,10 @@ void interrupt_init(void)
     NVIC_EnableIRQ(EXTI4_IRQn);               //enable interrupt
 //
 //    EXTI->PR1 = (uint32_t)0x0007FFFF;            //clear all pending interrupts
+
+    /* DMA1_Channel1_IRQn interrupt configuration */
+//    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+    NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 }
 
 void enable_buttons_interrupts(void)
@@ -201,17 +205,17 @@ void led_w_off(void){
 }
 
 void lcd_on(void){
-	CS_GPIO_Port->BSRR = (CS_Pin << 16);
+	LCD_GPIO_Port->BSRR = (LCD_Pin << 16);
 }
 void lcd_off(void){
-	CS_GPIO_Port->BSRR = CS_Pin;
+	LCD_GPIO_Port->BSRR = LCD_Pin;
 }
 
 void gps_enable(void){
-	GPIOB->BSRR = GPIO_BSRR_BS8;
+//	GPIOB->BSRR = GPIO_BSRR_BS8;
 }
 void gps_disable(void){
-	GPIOB->BSRR = GPIO_BSRR_BR8;
+//	GPIOB->BSRR = GPIO_BSRR_BR8;
 }
 
 void hold_power(void) {

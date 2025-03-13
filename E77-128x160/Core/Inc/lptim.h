@@ -32,7 +32,7 @@ extern "C" {
 
 /* USER CODE END Includes */
 
-//extern LPTIM_HandleTypeDef hlptim1;
+extern LPTIM_HandleTypeDef hlptim1;
 
 /* USER CODE BEGIN Private defines */
 

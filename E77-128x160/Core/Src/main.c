@@ -21,7 +21,6 @@
 #include "adc.h"
 #include "dma.h"
 #include "i2c.h"
-#include "iwdg.h"
 #include "lptim.h"
 #include "spi.h"
 #include "subghz.h"
@@ -43,6 +42,7 @@
 #include "compass.h"
 #include "gnss.h"
 #include "e77radio.h"
+#include "iwdg.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -132,7 +132,6 @@ int main(void)
   MX_ADC_Init();
   MX_LPTIM1_Init();
   MX_SUBGHZ_Init();
-//  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
 //  disable_buttons_interrupts();
 //  EXTI->IMR1 &= ~EXTI_IMR1_IM8;			//interrupt disabled on PPS front

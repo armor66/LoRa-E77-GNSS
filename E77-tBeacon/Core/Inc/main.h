@@ -80,8 +80,8 @@ void Error_Handler(void);
 #define RF_CTRL1_GPIO_Port GPIOA
 #define RF_CTRL2_Pin GPIO_PIN_7
 #define RF_CTRL2_GPIO_Port GPIOA
-#define CS_Pin GPIO_PIN_9
-#define CS_GPIO_Port GPIOA
+#define LCD_Pin GPIO_PIN_9
+#define LCD_GPIO_Port GPIOA
 #define DC_Pin GPIO_PIN_11
 #define DC_GPIO_Port GPIOA
 #define RST_Pin GPIO_PIN_12
@@ -93,7 +93,7 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 #define BEACON
-//#define ST7735
+#define ST7735
 //#define ST7735_IS_160X128_BLUE
 //#define ST7735_IS_160X128_RED
 #define BUFFER_AIR_SIZE            	13  	/* Define the payload size here */
@@ -159,7 +159,7 @@ void shortBeeps(int8_t beeps);
 extern uint8_t PVTbuffer[];
 extern uint8_t bufferRx[];
 extern uint8_t points_array[];
-extern char Line[20][27];
+extern char string_buffer[20][27];
 
 extern int16_t heading_deg;			//compass.c
 extern double heading_rad;

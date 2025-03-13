@@ -8,7 +8,8 @@
 #include "gpio.h"
 #include "usart.h"
 //#include "lptim.h"
-#include "ST7735.h"
+//#include "ST7735.h"
+#include "lcd_display.h"
 
 const double rad_2_deg = 57.29577951308232;        //rad to deg multiplyer
 const double deg_2_rad = 0.00000000174532925199433;       //deg to rad multiplyer
@@ -264,43 +265,43 @@ restart_configuration:
 
 		if(baudRate[baudRateInd])
 		{
-			sprintf(&Line[row][0], "GNSS version M%d", main_flags.ubx_hwVersion);
-			sprintf(&Line[row+1][0], "Baud rate %4d00", baudRate[baudRateInd]);
-			if(baudRateInd != GPS_BAUDRATE_38400) draw_str_by_rows(7, (row+1)*14+5, &Line[row+1][0], Font_7x10, RED,BLACK);
+			sprintf(&string_buffer[row][0], "GNSS version M%d", main_flags.ubx_hwVersion);
+			sprintf(&string_buffer[row+1][0], "Baud rate %4d00", baudRate[baudRateInd]);
+			if(baudRateInd != GPS_BAUDRATE_38400) draw_str_by_rows(7, (row+1)*14+5, &string_buffer[row+1][0], &Font_7x9, RED,BLACK);
 		}else
 		{
-			sprintf(&Line[row+0][0], "  GNSS module");
-			sprintf(&Line[row+1][0], "   NOT FOUND");
+			sprintf(&string_buffer[row+0][0], "  GNSS module");
+			sprintf(&string_buffer[row+1][0], "   NOT FOUND");
 		}
 		for (; row < 2; row++) {
-			draw_str_by_rows(7, row*14+5, &Line[row][0], Font_7x10, YLWGRN,BLACK);
+			draw_str_by_rows(7, row*14+5, &string_buffer[row][0], &Font_7x9, YLWGRN,BLACK);
 		}
 
 		row	= 2;
 		char *boolean[] = {"false", "true"};
 
-		sprintf(&Line[row][0],   "Output NAVPVT%5s", boolean[main_flags.nav_pvt_ram_flag]);
-		(!main_flags.nav_pvt_ram_flag)? draw_str_by_rows(0, row*14+5, &Line[row][0], Font_7x10, RED,BLACK):
-		draw_str_by_rows(0, row*14+5, &Line[row][0], Font_7x10, GREEN,BLACK);
+		sprintf(&string_buffer[row][0],   "Output NAVPVT%5s", boolean[main_flags.nav_pvt_ram_flag]);
+		(!main_flags.nav_pvt_ram_flag)? draw_str_by_rows(0, row*14+5, &string_buffer[row][0], &Font_7x9, RED,BLACK):
+		draw_str_by_rows(0, row*14+5, &string_buffer[row][0], &Font_7x9, GREEN,BLACK);
 
-		sprintf(&Line[row+1][0], "Output UBLOX %5s", boolean[main_flags.out_ubx_ram_flag]); //", baudRate[baudRateInd]);
-		(!main_flags.out_ubx_ram_flag)? draw_str_by_rows(0, (row+1)*14+5, &Line[row+1][0], Font_7x10, RED,BLACK):
-		draw_str_by_rows(0, (row+1)*14+5, &Line[row+1][0], Font_7x10, GREEN,BLACK);
+		sprintf(&string_buffer[row+1][0], "Output UBLOX %5s", boolean[main_flags.out_ubx_ram_flag]); //", baudRate[baudRateInd]);
+		(!main_flags.out_ubx_ram_flag)? draw_str_by_rows(0, (row+1)*14+5, &string_buffer[row+1][0], &Font_7x9, RED,BLACK):
+		draw_str_by_rows(0, (row+1)*14+5, &string_buffer[row+1][0], &Font_7x9, GREEN,BLACK);
 
-		sprintf(&Line[row+2][0], "Output NMEA  %5s", boolean[main_flags.out_nmea_ram_flag]);
-		(main_flags.out_nmea_ram_flag)? draw_str_by_rows(0, (row+2)*14+5, &Line[row+2][0], Font_7x10, RED,BLACK):
-		draw_str_by_rows(0, (row+2)*14+5, &Line[row+2][0], Font_7x10, GREEN,BLACK);
+		sprintf(&string_buffer[row+2][0], "Output NMEA  %5s", boolean[main_flags.out_nmea_ram_flag]);
+		(main_flags.out_nmea_ram_flag)? draw_str_by_rows(0, (row+2)*14+5, &string_buffer[row+2][0], &Font_7x9, RED,BLACK):
+		draw_str_by_rows(0, (row+2)*14+5, &string_buffer[row+2][0], &Font_7x9, GREEN,BLACK);
 
 
 		row	= 5;	//+=3;
 		if(1)
 		{
-			draw_str_by_rows(0, (row)*14+7, "   Press PWR to  ", Font_7x10, YELLOW,BLACK);
-			draw_str_by_rows(0, (row+=1)*14+5, "  RESTART DEVICE ", Font_7x10, ORANGE,BLACK);
-			draw_str_by_rows(0, (row+=1)*14+7, "   Press OK to   ", Font_7x10, YELLOW,BLACK);
-			draw_str_by_rows(0, (row+=1)*14+5, "  SET NEW DATA   ", Font_7x10, ORANGE,BLACK);
-			draw_str_by_rows(0, (row+=1)*14+7, "   Press ESC to  ", Font_7x10, YELLOW,BLACK);
-			draw_str_by_rows(0, (row+=1)*14+5, "  SET BAUD RATE   ", Font_7x10, ORANGE,BLACK);
+			draw_str_by_rows(0, (row)*14+7, "   Press PWR to  ", &Font_7x9, YELLOW,BLACK);
+			draw_str_by_rows(0, (row+=1)*14+5, "  RESTART DEVICE ", &Font_7x9, ORANGE,BLACK);
+			draw_str_by_rows(0, (row+=1)*14+7, "   Press OK to   ", &Font_7x9, YELLOW,BLACK);
+			draw_str_by_rows(0, (row+=1)*14+5, "  SET NEW DATA   ", &Font_7x9, ORANGE,BLACK);
+			draw_str_by_rows(0, (row+=1)*14+7, "   Press ESC to  ", &Font_7x9, YELLOW,BLACK);
+			draw_str_by_rows(0, (row+=1)*14+5, "  SET BAUD RATE   ", &Font_7x9, ORANGE,BLACK);
 		}
 		//both OK and ESC pressed
 		if((new_options_flag != 1) && !(GPIOA->IDR & BTN_2_Pin) && !(GPIOA->IDR & BTN_3_Pin))

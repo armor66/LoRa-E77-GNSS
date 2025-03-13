@@ -10,8 +10,8 @@
 #include "gpio.h"
 #include "spi.h"
 #include "tim.h"
-
-#include "ST7735.h"
+//#include "ST7735.h"
+#include "lcd_display.h"
 
 static RadioEvents_t RadioEvents;
 //static States_t State = RX_START;
@@ -172,7 +172,7 @@ void timer1_scanRadio_handle(void)
 	  Radio.SetChannel((433000 + 50 + ((channel_ind+1)*5 + FREQ_CHANNEL_FIRST) * 25) * 1000);	//(RF_FREQUENCY);
 	  Radio.Rx(45);
 	  rssi_by_channel[1][channel_ind] = Radio.Rssi(MODEM_LORA);
-	  sprintf(&Line[channel_ind + 1][0], "Ch %02d RSSI %04ddBm", (channel_ind*5 + FREQ_CHANNEL_FIRST), Radio.Rssi(MODEM_LORA));
+	  sprintf(&string_buffer[channel_ind + 1][0], "Ch %02d RSSI %04ddBm", (channel_ind*5 + FREQ_CHANNEL_FIRST), Radio.Rssi(MODEM_LORA));
 	  channel_ind++;
 	  if(((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5 - 1) < channel_ind) timer1_stop();	// 12 < channel_ind
 }
@@ -183,12 +183,12 @@ void scanChannels(void)
 //	lcd_on
 	while (1)//(GPIOA->IDR & BTN_2_Pin)		//wait for OK click to start cal
 	{
-		draw_str_by_rows(3, 33, "     TO SCAN", Font_7x10, YELLOW,BLACK);
-		draw_str_by_rows(3, 44, "    FREQUENCY", Font_7x10, YELLOW,BLACK);
-		draw_str_by_rows(0, 55, "     CHANNELS", Font_7x10, YELLOW,BLACK);
-		draw_str_by_rows(0, 77, "  Click ESC/DOWN", Font_7x10, GREEN,BLACK);
-		draw_str_by_rows(0, 99, "        OR", Font_7x10, YELLOW,BLACK);
-		draw_str_by_rows(3, 121, " POWER FOR REBOOT", Font_7x10, GREEN,BLACK);
+		draw_str_by_rows(3, 33, "     TO SCAN", &Font_7x9, YELLOW,BLACK);
+		draw_str_by_rows(3, 44, "    FREQUENCY", &Font_7x9, YELLOW,BLACK);
+		draw_str_by_rows(0, 55, "     CHANNELS", &Font_7x9, YELLOW,BLACK);
+		draw_str_by_rows(0, 77, "  Click ESC/DOWN", &Font_7x9, GREEN,BLACK);
+		draw_str_by_rows(0, 99, "        OR", &Font_7x9, YELLOW,BLACK);
+		draw_str_by_rows(3, 121, " POWER FOR REBOOT", &Font_7x9, GREEN,BLACK);
 
 		while (GPIOA->IDR & BTN_1_Pin)
 		{
@@ -199,25 +199,25 @@ void scanChannels(void)
 					rssi_by_channel[0][i] = -127;
 				}
 				fill_screen(BLACK);
-//				sprintf(&Lines[0][0], "pressPWR to reboot");
-//				sprintf(&Lines[1][0], "pressESC to rescan");
+//				sprintf(&string_buffers[0][0], "pressPWR to reboot");
+//				sprintf(&string_buffers[1][0], "pressESC to rescan");
 				for(int8_t i = 0; i < 7; i++)
 				{
 					channel_ind = 0;
 					timer1_start();
 					HAL_Delay(999);
 //					timer1_stop();
-					sprintf(&Line[0][0], "channels = %02d", channel_ind);
-					draw_str_by_rows(0, 4+0*11, &Line[0][0], Font_7x10, CYAN,BLACK);
+					sprintf(&string_buffer[0][0], "channels = %02d", channel_ind);
+					draw_str_by_rows(0, 4+0*11, &string_buffer[0][0], &Font_7x9, CYAN,BLACK);
 
 					for (uint8_t j = 0; j < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); j++)		// j < 13
 					{
 						if(rssi_by_channel[0][j] < rssi_by_channel[1][j]) rssi_by_channel[0][j] = rssi_by_channel[1][j];
-						sprintf(&Line[j + 1][0], "Ch %02d RSSI %04ddBm", (j*5 + FREQ_CHANNEL_FIRST), rssi_by_channel[0][j]);
+						sprintf(&string_buffer[j + 1][0], "Ch %02d RSSI %04ddBm", (j*5 + FREQ_CHANNEL_FIRST), rssi_by_channel[0][j]);
 
-						if(rssi_by_channel[0][j] > -60) draw_str_by_rows(0, 4+(j+1)*11, &Line[j+1][0], Font_7x10, RED,BLACK);
-						else if(rssi_by_channel[0][j] < -80) draw_str_by_rows(0, 4+(j+1)*11, &Line[j+1][0], Font_7x10, GREEN,BLACK);
-						else draw_str_by_rows(0, 4+(j+1)*11, &Line[j+1][0], Font_7x10, YELLOW,BLACK);
+						if(rssi_by_channel[0][j] > -60) draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, RED,BLACK);
+						else if(rssi_by_channel[0][j] < -80) draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, GREEN,BLACK);
+						else draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, YELLOW,BLACK);
 					}
 				}
 			}

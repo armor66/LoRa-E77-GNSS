@@ -1,6 +1,6 @@
-../Core/Src/gnss.c:41:9:UBLOX_verify_checksum	20	static
-../Core/Src/gnss.c:145:6:serialPrint	0	static
-../Core/Src/gnss.c:65:6:send_ubx	288	static
-../Core/Src/gnss.c:153:6:restart_uart	0	static
-../Core/Src/gnss.c:205:6:configure_gps	64	static,ignoring_inline_asm
-../Core/Src/gnss.c:163:6:init_gnss	16	static
+../Core/Src/gnss.c:42:9:UBLOX_verify_checksum	20	static
+../Core/Src/gnss.c:146:6:serialPrint	0	static
+../Core/Src/gnss.c:66:6:send_ubx	288	static
+../Core/Src/gnss.c:154:6:restart_uart	0	static
+../Core/Src/gnss.c:206:6:configure_gps	56	static,ignoring_inline_asm
+../Core/Src/gnss.c:164:6:init_gnss	16	static

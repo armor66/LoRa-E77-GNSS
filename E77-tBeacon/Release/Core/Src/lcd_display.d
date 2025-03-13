@@ -1,4 +1,5 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
+Core/Src/lcd_display.o: ../Core/Src/lcd_display.c \
+ ../Core/Inc/lcd_display.h ../Core/Inc/main.h \
  /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h \
  ../Core/Inc/stm32wlxx_hal_conf.h \
  /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_dma.h \
@@ -45,12 +46,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h \
  /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h \
- ../Core/Inc/adc.h ../Core/Inc/main.h ../Core/Inc/dma.h ../Core/Inc/spi.h \
- ../Core/Inc/subghz.h ../Core/Inc/tim.h ../Core/Inc/usart.h \
- ../Core/Inc/gpio.h ../Core/Inc/bitmap.h ../Core/Inc/buttons.h \
- ../Core/Inc/timer_it.h ../Core/Inc/settings.h ../Core/Inc/lrns.h \
- ../Core/Inc/lcd_display.h ../Core/Inc/fonts.h ../Core/Inc/menu.h \
- ../Core/Inc/gnss.h ../Core/Inc/e77radio.h ../Core/Inc/iwdg.h
+ ../Core/Inc/fonts.h
+../Core/Inc/lcd_display.h:
 ../Core/Inc/main.h:
 /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
 ../Core/Inc/stm32wlxx_hal_conf.h:
@@ -98,22 +95,4 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal_uart_ex.h:
 /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_ll_system.h:
 ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h:
-../Core/Inc/adc.h:
-../Core/Inc/main.h:
-../Core/Inc/dma.h:
-../Core/Inc/spi.h:
-../Core/Inc/subghz.h:
-../Core/Inc/tim.h:
-../Core/Inc/usart.h:
-../Core/Inc/gpio.h:
-../Core/Inc/bitmap.h:
-../Core/Inc/buttons.h:
-../Core/Inc/timer_it.h:
-../Core/Inc/settings.h:
-../Core/Inc/lrns.h:
-../Core/Inc/lcd_display.h:
 ../Core/Inc/fonts.h:
-../Core/Inc/menu.h:
-../Core/Inc/gnss.h:
-../Core/Inc/e77radio.h:
-../Core/Inc/iwdg.h:

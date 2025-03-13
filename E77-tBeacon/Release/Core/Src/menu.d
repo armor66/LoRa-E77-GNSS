@@ -48,7 +48,7 @@ Core/Src/menu.o: ../Core/Src/menu.c ../Core/Inc/main.h \
  ../Core/Inc/gpio.h ../Core/Inc/main.h ../Core/Inc/menu.h \
  ../Core/Inc/buttons.h ../Core/Inc/tim.h ../Core/Inc/adc.h \
  ../Core/Inc/settings.h ../Core/Inc/lrns.h ../Core/Inc/gnss.h \
- ../Core/Inc/ST7735.h ../Core/Inc/fonts.h
+ ../Core/Inc/lcd_display.h ../Core/Inc/fonts.h
 ../Core/Inc/main.h:
 /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/STM32WLxx_HAL_Driver/Inc/stm32wlxx_hal.h:
 ../Core/Inc/stm32wlxx_hal_conf.h:
@@ -105,5 +105,5 @@ Core/Src/menu.o: ../Core/Src/menu.c ../Core/Inc/main.h \
 ../Core/Inc/settings.h:
 ../Core/Inc/lrns.h:
 ../Core/Inc/gnss.h:
-../Core/Inc/ST7735.h:
+../Core/Inc/lcd_display.h:
 ../Core/Inc/fonts.h:

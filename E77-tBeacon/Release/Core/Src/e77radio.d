@@ -49,7 +49,7 @@ Core/Src/e77radio.o: ../Core/Src/e77radio.c ../Core/Inc/e77radio.h \
  ../Drivers/CMSIS/Device/ST/STM32WLxx/Include/stm32wle5xx.h \
  ../Core/Inc/settings.h ../Core/Inc/main.h ../Core/Inc/lrns.h \
  ../Core/Inc/gpio.h ../Core/Inc/spi.h ../Core/Inc/tim.h \
- ../Core/Inc/ST7735.h ../Core/Inc/fonts.h
+ ../Core/Inc/lcd_display.h ../Core/Inc/fonts.h
 ../Core/Inc/e77radio.h:
 /home/z/STM32Cube/NewModule/E77-tBeacon/Drivers/Radio/radio.h:
 ../Core/Inc/main.h:
@@ -105,5 +105,5 @@ Core/Src/e77radio.o: ../Core/Src/e77radio.c ../Core/Inc/e77radio.h \
 ../Core/Inc/gpio.h:
 ../Core/Inc/spi.h:
 ../Core/Inc/tim.h:
-../Core/Inc/ST7735.h:
+../Core/Inc/lcd_display.h:
 ../Core/Inc/fonts.h:

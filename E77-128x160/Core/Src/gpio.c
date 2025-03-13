@@ -89,7 +89,7 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = RF_CTRL1_Pin|RF_CTRL2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PAPin PAPin PAPin */
@@ -152,6 +152,10 @@ void interrupt_init(void)
     NVIC_EnableIRQ(EXTI4_IRQn);               //enable interrupt
 //
 //    EXTI->PR1 = (uint32_t)0x0007FFFF;            //clear all pending interrupts
+
+    /* DMA1_Channel1_IRQn interrupt configuration */
+//    HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+    NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 }
 
 void enable_buttons_interrupts(void)
