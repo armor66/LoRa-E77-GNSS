@@ -9,7 +9,7 @@
 #define LORA_FIX_LENGTH_PAYLOAD_ON	true
 #define LORA_IQ_NORMAL				0
 #define LORA_IQ_INVERTED			1
-#define TX_TIMEOUT_VALUE            0		//3000
+#define TX_TIMEOUT_VALUE            700		//700 for SF12, 650 for SF11 payload
 //#define TCXO_WORKAROUND_TIME_MARGIN	50
 
 //typedef enum

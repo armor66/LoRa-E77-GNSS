@@ -47,15 +47,15 @@ void radio_init(void)
 	Radio.Init(&RadioEvents);		//Initializes driver callback functions: *TxDone *TxTimeout *RxDone *RxTimeout *FhssChangeChannel
 	srand(Radio.Random());			//sets the radio in LoRa modem mode and disables all interrupts
 
-    Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_rf[p_settings_rf->tx_power_opt], 0, LORA_BANDWIDTH,			//MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
-    		  p_settings_rf->spreading_factor, p_settings_rf->coding_rate_opt,				//LORA_SPREADING_FACTOR, LORA_CODINGRATE,
+    Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_rf[p_settings_rf->tx_power_opt], 0, LORA_BANDWIDTH,
+    		  p_settings_rf->spreading_factor, p_settings_rf->coding_rate_opt,
                         LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
-                        true, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);
+                        true, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);			//CRC, Hop, HopPer, IQ, timeout
 
-    Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_rf->spreading_factor,		//MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
+    Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_rf->spreading_factor,
     		  p_settings_rf->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH,
                         LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
-						BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, true);				//0, true, 0, 0, LORA_IQ_INVERSION_ON, true);
+						BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, false);	//CRC, Hop, HopPer, IQ, single mode
 
     Radio.SetMaxPayloadLength(MODEM_LORA, BUFFER_AIR_SIZE);
 
@@ -170,7 +170,7 @@ void timer1_scanRadio_handle(void)
 {
 	  led_toggle();	//led_red
 	  Radio.SetChannel((433000 + 50 + ((channel_ind+1)*5 + FREQ_CHANNEL_FIRST) * 25) * 1000);	//(RF_FREQUENCY);
-	  Radio.Rx(45);
+	  Radio.RxBoosted(45);
 	  rssi_by_channel[1][channel_ind] = Radio.Rssi(MODEM_LORA);
 	  sprintf(&string_buffer[channel_ind + 1][0], "Ch %02d RSSI %04ddBm", (channel_ind*5 + FREQ_CHANNEL_FIRST), Radio.Rssi(MODEM_LORA));
 	  channel_ind++;

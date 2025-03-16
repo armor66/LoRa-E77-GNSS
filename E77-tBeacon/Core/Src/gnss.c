@@ -8,7 +8,6 @@
 #include "gpio.h"
 #include "usart.h"
 //#include "lptim.h"
-//#include "ST7735.h"
 #include "lcd_display.h"
 
 const double rad_2_deg = 57.29577951308232;        //rad to deg multiplyer
@@ -106,7 +105,6 @@ uint8_t new_options_flag = 0;
 const uint8_t ubx_mon_ver[] = {0xB5, 0x62, 0x0a, 0x04, 0x00, 0x00, 0x0e, 0x34};
 //set 38400:
 //uint8_t set_baudrate[] = {0xB5, 0x62, 0x06, 0x8A, 0x0C, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01, 0x00, 0x52, 0x40, 0x00, 0x96, 0x00, 0x00, 0xCC, 0x61};
-//set 57600
 //set 57600
 const uint8_t set_baudrate[] =    {0xB5, 0x62, 0x06, 0x8A, 0x0C, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01, 0x00, 0x52, 0x40, 0x00, 0xE1, 0x00, 0x00, 0x17, 0x42};
 //set 38400
@@ -237,17 +235,17 @@ restart_configuration:
 	restart_uart(baudRateInd);
 //    while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_RX)	//if gps module does not transmit
     serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
-    HAL_Delay(50);
+    HAL_Delay(75);
 
 	restart_uart(baudRateInd);
 //    while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_RX)	//if gps module does not transmit
     serialPrint(req_out_ubx_ram, sizeof(req_out_ubx_ram));
-    HAL_Delay(50);
+    HAL_Delay(75);
 
 	restart_uart(baudRateInd);
 //    while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_RX)	//if gps module does not transmit
     serialPrint(req_out_nmea_ram, sizeof(req_out_nmea_ram));
-    HAL_Delay(50);
+    HAL_Delay(75);
 	while(1)
 	{
 		if(baudRateInd == GPS_BAUDRATE_38400)
@@ -321,8 +319,8 @@ restart_configuration:
 			serialPrint(set_crucial_opts, sizeof(set_crucial_opts));
 			HAL_Delay(100);
 //			serialPrint(set_aggressive_pm, sizeof(set_agressive_pm));
-			serialPrint(set_balanced_pm, sizeof(set_balanced_pm));	//not need if aggressive was not saved
-			HAL_Delay(100);
+//			serialPrint(set_balanced_pm, sizeof(set_balanced_pm));	//not need if aggressive was not saved
+//			HAL_Delay(100);
 			serialPrint(to_ram_bbr_flash, sizeof(to_ram_bbr_flash));
 			HAL_Delay(100);
 			goto restart_configuration;

@@ -104,7 +104,7 @@ void TIM1_UP_IRQHandler(void)
 
 				Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_tim->spreading_factor,
 				p_settings_tim->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH, LORA_SYMBOL_TIMEOUT,
-				LORA_FIX_LENGTH_PAYLOAD_ON,	BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, true);
+				LORA_FIX_LENGTH_PAYLOAD_ON,	BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, false);	//CRC, Hop, HopPer, IQ, single mode
 			}
 
 
@@ -122,7 +122,7 @@ void TIM1_UP_IRQHandler(void)
 				led_w_on();
 			}
 
-			if(main_flags.time_slot == p_settings_tim->device_number)	//this device:
+			if(main_flags.time_slot == p_settings_tim->device_number)	//this device, never met in case SF12(slots 1 and 2 only)
 			{	//if this device doesn't get gnss fix via uart 100mS after PPS, delay for full pattern time
 				if(!pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag) main_flags.fix_valid--;
 				if(main_flags.fix_valid > 0)	//do not transmit if no GNSS FIX
@@ -155,10 +155,10 @@ void TIM1_UP_IRQHandler(void)
 								LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_INVERTED, TX_TIMEOUT_VALUE);
 							led_red_on();
 							set_transmit_data();	//transmit flags and time only with buffer_to_transmit = 3
-						}else Radio.Rx(0);		//start to receive on slot 1 or 2
+						}else Radio.RxBoosted(1150);		//start to receive SF12 on slot 1 or 2
 					}else main_flags.fix_valid = 0;
 				}
-				else Radio.Rx(0);			//start to receive if SF != 12
+				else Radio.RxBoosted(650);			//start to receive if SF != 12
 
 //manage (pp_devices_tim[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
 				if(pp_devices_tim[main_flags.time_slot]->beeper_flag)

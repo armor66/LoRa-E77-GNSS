@@ -313,12 +313,13 @@ void timer16_stop(void)
 
 void timer17_start(void)
 {
+	TIM17->EGR = TIM_EGR_UG;					//to reload every start
     TIM17->CR1 |= TIM_CR1_CEN;               	//enable counter
 }
 
 void timer17_stop(void)
 {
     TIM17->CR1 &= ~TIM_CR1_CEN;             		//disable counter
-	TIM17->EGR = TIM_EGR_UG;
+//	TIM17->EGR = TIM_EGR_UG;
 }
 /* USER CODE END 1 */

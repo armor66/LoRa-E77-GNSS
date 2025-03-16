@@ -235,17 +235,17 @@ restart_configuration:
 	restart_uart(baudRateInd);
 //    while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_RX)	//if gps module does not transmit
     serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
-    HAL_Delay(50);
+    HAL_Delay(75);
 
 	restart_uart(baudRateInd);
 //    while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_RX)	//if gps module does not transmit
     serialPrint(req_out_ubx_ram, sizeof(req_out_ubx_ram));
-    HAL_Delay(50);
+    HAL_Delay(75);
 
 	restart_uart(baudRateInd);
 //    while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_RX)	//if gps module does not transmit
     serialPrint(req_out_nmea_ram, sizeof(req_out_nmea_ram));
-    HAL_Delay(50);
+    HAL_Delay(75);
 	while(1)
 	{
 		if(baudRateInd == GPS_BAUDRATE_38400)
@@ -319,8 +319,8 @@ restart_configuration:
 			serialPrint(set_crucial_opts, sizeof(set_crucial_opts));
 			HAL_Delay(100);
 //			serialPrint(set_aggressive_pm, sizeof(set_agressive_pm));
-			serialPrint(set_balanced_pm, sizeof(set_balanced_pm));	//not need if aggressive was not saved
-			HAL_Delay(100);
+//			serialPrint(set_balanced_pm, sizeof(set_balanced_pm));	//not need if aggressive was not saved
+//			HAL_Delay(100);
 			serialPrint(to_ram_bbr_flash, sizeof(to_ram_bbr_flash));
 			HAL_Delay(100);
 			goto restart_configuration;

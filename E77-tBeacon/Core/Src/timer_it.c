@@ -102,11 +102,11 @@ void TIM1_UP_IRQHandler(void)
 					LORA_BANDWIDTH,	p_settings_tim->spreading_factor, p_settings_tim->coding_rate_opt,
 					LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);
 				}//set RX iq_inversion = 1 to not receive from other beacon but receive from module №3
-				if(p_settings_tim->device_number != main_flags.time_slot)	//receive LORA_IQ_INVERTED
+				if(p_settings_tim->device_number != main_flags.time_slot)	//receive LORA_IQ_INVERTED, BUFFER_AIR_SIZE = 3
 				{
 					Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_tim->spreading_factor,
 					p_settings_tim->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH, LORA_SYMBOL_TIMEOUT,
-					LORA_FIX_LENGTH_PAYLOAD_ON,	3, true, 0, 0, LORA_IQ_INVERTED, true);		//BUFFER_AIR_SIZE = 3
+					LORA_FIX_LENGTH_PAYLOAD_ON,	3, true, 0, 0, LORA_IQ_INVERTED, false);			//CRC, Hop, HopPer, IQ, single mode
 				}
 			}//end of spreading_factor == 12
 			led_blue_off();				//led_blue_on on case 6 or PPS IRQ
@@ -153,7 +153,7 @@ void TIM1_UP_IRQHandler(void)
 
 
 
-				Radio.Rx(0);			//start to receive SF=12 or not
+				Radio.RxBoosted(700);			//start to receive SF=12 or not
 
 //manage (pp_devices_phy[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
 				if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
