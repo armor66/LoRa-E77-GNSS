@@ -488,7 +488,7 @@ double azimuth_relative_rad_old[10];
 
 int8_t row;
 int8_t this_device;								//device number of this device, see init_menu()
-int8_t current_device;
+//int8_t main_flags.current_device;
 
 int8_t current_menu;
 uint8_t return_from_power_menu; 							//Menu to return to after exit from power menu. Power menu can be accessed from different menus, therefore we have to store menu to return.
@@ -518,7 +518,7 @@ void init_menu(void)
 	//Load settings and create a local copy
 	p_settings_menu = get_settings();
 	settings_copy_menu = *p_settings_menu;
-	current_device = this_device = p_settings_menu->device_number;
+	main_flags.current_device = this_device = p_settings_menu->device_number;
 
 	p_coding_rate_values = get_coding_rate_values();
 	p_tx_power_values = get_tx_power_values();
@@ -707,6 +707,11 @@ void change_menu(uint8_t button_code)
 					for(uint8_t i = 57; i < 96; i++)	//57 to 96: 8 for saved device each
 					{
 						pp_points_menu[i]->exist_flag = 0;
+					}
+
+					for(uint8_t i = 1; i < (DEVICES_ON_AIR_MAX+1); i++)
+					{
+						lost_device_load(i);
 					}
 				}
 
@@ -1075,11 +1080,11 @@ void draw_navigation(void)	//int8_t menu)
 }
 void draw_beacons(void)
 {
-	if(current_device == this_device) current_device++;
-	if(current_device > p_settings_menu->devices_on_air) current_device = 1;
+	if(main_flags.current_device == this_device) main_flags.current_device++;
+	if(main_flags.current_device > p_settings_menu->devices_on_air) main_flags.current_device = 1;
 
 	row = 0;
-	uint8_t beacons_group_start = (MEMORY_POINT_GROUPS + current_device - 1) * MEMORY_SUBPOINTS;	//points_group_ind * MEMORY_SUBPOINTS;
+	uint8_t beacons_group_start = (MEMORY_POINT_GROUPS + main_flags.current_device - 1) * MEMORY_SUBPOINTS;	//points_group_ind * MEMORY_SUBPOINTS;
 
 	pp_points_menu[beacons_group_start]->exist_flag = 0;			//clear sub-point 0
 	for(uint8_t j = 1; j < MEMORY_SUBPOINTS; j++)
@@ -1090,25 +1095,40 @@ void draw_beacons(void)
 		}
 	}
 
-	pp_devices_menu[current_device]->beacon_flag? sprintf(&string_buffer[row][0], "tBcn%d", current_device): sprintf(&string_buffer[row][0], "Dev%d:", current_device);	//if is beacon or device
+	pp_devices_menu[main_flags.current_device]->beacon_flag?
+			sprintf(&string_buffer[row][0], "tBcn%d", main_flags.current_device): sprintf(&string_buffer[row][0], "Dev%d:", main_flags.current_device);	//if is beacon or device
 	draw_str_by_rows(0, row*18, &string_buffer[row][0], &Font_11x18, YELLOW,BLACK);
-	if(pp_devices_menu[current_device]->beacon_traced)
-	{
-		(pp_devices_menu[current_device]->gps_speed)?
-				sprintf(&string_buffer[row][5], "%2dkm/h", pp_devices_menu[current_device]->gps_speed):
-				sprintf(&string_buffer[row][5], "Traced");		//"Trcd%2d", pp_devices_menu[current_device]->beacon_traced);
 
-		(pp_devices_menu[current_device]->gps_speed)?
+	if(pp_devices_menu[main_flags.current_device]->beacon_traced)	// && p_settings_menu->timeout_threshold "ignore"
+	{
+		(pp_devices_menu[main_flags.current_device]->gps_speed)?
+				sprintf(&string_buffer[row][5], "%2dkm/h", pp_devices_menu[main_flags.current_device]->gps_speed):
+				sprintf(&string_buffer[row][5], "traced");		//"Trcd%2d", pp_devices_menu[main_flags.current_device]->beacon_traced);
+
+		(pp_devices_menu[main_flags.current_device]->gps_speed)?
 				draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, CYAN,BLACK):
 				draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, GREEN,BLACK);
-	}else if(pp_devices_menu[current_device]->beacon_lost)
+	}else if(pp_devices_menu[main_flags.current_device]->beacon_lost)
 	{
 		sprintf(&string_buffer[row][5], "!LOST!");
 		draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, RED,BLACK);
 	}else if(pp_points_menu[beacons_group_start]->exist_flag)
 	{
-		sprintf(&string_buffer[row][5], "%dsaved", pp_points_menu[beacons_group_start]->exist_flag);	//amount of saved sub-points);
-		draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, CYAN,BLACK);
+		if(!p_settings_menu->timeout_threshold	&& pp_devices_menu[main_flags.current_device]->valid_fix_flag)
+		{
+			draw_str_by_rows(50, row*18, "ignored", &Font_11x18, YELLOW,BLACK);		//will be forgotten
+//		}else if(pp_devices_menu[main_flags.current_device]->index_in_flash != -1)
+//		{
+//			sprintf(&string_buffer[row][5], "%dsaved", pp_points_menu[beacons_group_start]->exist_flag);	//amount of saved sub-points);
+//			draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, CYAN,BLACK);
+		}else if(pp_devices_menu[main_flags.current_device]->index_in_flash == -1)
+		{
+			draw_str_by_rows(60, row*18, "tempor", &Font_11x18, YELLOW,BLACK);		//will be forgotten
+		}else	//(pp_devices_menu[main_flags.current_device]->index_in_flash != -1)
+		{
+			sprintf(&string_buffer[row][5], "%dsaved", pp_points_menu[beacons_group_start]->exist_flag);	//amount of saved sub-points);
+			draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, CYAN,BLACK);
+		}
 	}else
 	{
 		sprintf(&string_buffer[row][5], "absent");
@@ -1118,20 +1138,20 @@ void draw_beacons(void)
 	if(is_north_ready())
 	{
 		//show azimuth and distance to remote
-		if(pp_devices_menu[current_device]->valid_fix_flag)
+		if(pp_devices_menu[main_flags.current_device]->valid_fix_flag)
 		{
-			azimuth_relative_deg = azimuth_deg_signed[current_device] - heading_deg;
+			azimuth_relative_deg = azimuth_deg_signed[main_flags.current_device] - heading_deg;
 		}else
 		{
 			azimuth_relative_deg = pp_points_menu[beacons_group_start + 1]->azimuth_deg_signed - heading_deg;
-			distance[current_device] = (pp_points_menu[beacons_group_start + 1]->distance);
+			distance[main_flags.current_device] = (pp_points_menu[beacons_group_start + 1]->distance);
 		}
 
 		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
 		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
 
-		sprintf(&string_buffer[++row][0], "%4d%%%5dm", azimuth_relative_deg, (uint16_t)distance[current_device]);
-		if(pp_devices_menu[current_device]->valid_fix_flag) draw_str_by_rows(0, row*18, &string_buffer[row][0], &Font_11x18, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
+		sprintf(&string_buffer[++row][0], "%4d%%%5dm", azimuth_relative_deg, (uint16_t)distance[main_flags.current_device]);
+		if(pp_devices_menu[main_flags.current_device]->valid_fix_flag) draw_str_by_rows(0, row*18, &string_buffer[row][0], &Font_11x18, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
 		else draw_str_by_rows(0, row*18, &string_buffer[row][0], &Font_11x18, MAGENTA,BLACK);
 		//draw magnet arrow
 		(heading_rad < 0)? (north_rad = -heading_rad): (north_rad = 2*M_PI - heading_rad);
@@ -1139,18 +1159,18 @@ void draw_beacons(void)
 		draw_arrow(63, 97, 57, north_rad, 28, CYANB, RED);
 		north_rad_old = north_rad;
 
-		if(distance[current_device] > range * range_scale[range_ind])
+		if(distance[main_flags.current_device] > range * range_scale[range_ind])
 		{
 			for(; range_ind < 6; range_ind++)
 			{
-				if(distance[current_device] < range * range_scale[range_ind]) break;
+				if(distance[main_flags.current_device] < range * range_scale[range_ind]) break;
 			}
 		}
-		else if(distance[current_device] < range * range_scale[range_ind] / 2)
+		else if(distance[main_flags.current_device] < range * range_scale[range_ind] / 2)
 		{
 			for(; range_ind > 0; range_ind--)
 			{
-				if(distance[current_device] > range * range_scale[range_ind] / 2) break;
+				if(distance[main_flags.current_device] > range * range_scale[range_ind] / 2) break;
 			}
 		}
 	}else
@@ -1159,15 +1179,15 @@ void draw_beacons(void)
 		draw_arrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
 	}
 
-	if(pp_devices_menu[current_device]->batt_voltage < 32)
+	if(pp_devices_menu[main_flags.current_device]->batt_voltage < 32)
 	{
 		sprintf(&string_buffer[++row][0], " LOW");		//< 3.2 volt
-	} else sprintf(&string_buffer[++row][0], "%d.%dV", pp_devices_menu[current_device]->batt_voltage/10, pp_devices_menu[current_device]->batt_voltage%10);
-	if(pp_devices_menu[current_device]->valid_fix_flag) draw_str_by_rows(0, row*18, &string_buffer[row][0], &Font_7x9, CYAN,BLACK);
+	} else sprintf(&string_buffer[++row][0], "%d.%dV", pp_devices_menu[main_flags.current_device]->batt_voltage/10, pp_devices_menu[main_flags.current_device]->batt_voltage%10);
+	if(pp_devices_menu[main_flags.current_device]->valid_fix_flag) draw_str_by_rows(0, row*18, &string_buffer[row][0], &Font_7x9, CYAN,BLACK);
 	else draw_str_by_rows(0, row*18, &string_buffer[row][0], &Font_7x9, MAGENTA,BLACK);
 
-	sprintf(&string_buffer[row][12], "%4ddB", pp_devices_menu[current_device]->rssi);
-	if(pp_devices_menu[current_device]->valid_fix_flag) draw_str_by_rows(85, row*18, &string_buffer[row][12], &Font_7x9, CYAN,BLACK);		//if remote fix valid (validFixFlag[dev])
+	sprintf(&string_buffer[row][12], "%4ddB", pp_devices_menu[main_flags.current_device]->rssi);
+	if(pp_devices_menu[main_flags.current_device]->valid_fix_flag) draw_str_by_rows(85, row*18, &string_buffer[row][12], &Font_7x9, CYAN,BLACK);		//if remote fix valid (validFixFlag[dev])
 	else draw_str_by_rows(85, row*18, &string_buffer[row][12], &Font_7x9, MAGENTA,BLACK);
 
 	row = 13;
@@ -1207,24 +1227,24 @@ void draw_beacons(void)
 			}//else if(i == this_device) draw_position(63, 97, 0, 0, 7, i, YELLOW);
 		}
 
-		if(pp_devices_menu[current_device]->valid_fix_flag)		//draw current device points
+		if(pp_devices_menu[main_flags.current_device]->valid_fix_flag)		//draw current device points
 		{									//if remote fix valid
 			fix_valid = 1;
-			scaled_dist = ((int16_t)distance[current_device] & 0x1FFF)*2  / range_scale[range_ind];
-			azimuth_relative_rad = azimuth_rad[current_device] - heading_rad;
-			erase_position(63, 97, distance_old[current_device], azimuth_relative_rad_old[current_device], 7);
+			scaled_dist = ((int16_t)distance[main_flags.current_device] & 0x1FFF)*2  / range_scale[range_ind];
+			azimuth_relative_rad = azimuth_rad[main_flags.current_device] - heading_rad;
+			erase_position(63, 97, distance_old[main_flags.current_device], azimuth_relative_rad_old[main_flags.current_device], 7);
 			if(scaled_dist > range * 2)
 			{
 				scaled_dist = range * 2;
-				draw_position(63, 97, scaled_dist, azimuth_relative_rad, 7, current_device, RED);
-			}else draw_position(63, 97, scaled_dist, azimuth_relative_rad, 7, current_device, YELLOW);
-			distance_old[current_device] = scaled_dist;
-			azimuth_relative_rad_old[current_device] = azimuth_relative_rad;
+				draw_position(63, 97, scaled_dist, azimuth_relative_rad, 7, main_flags.current_device, RED);
+			}else draw_position(63, 97, scaled_dist, azimuth_relative_rad, 7, main_flags.current_device, YELLOW);
+			distance_old[main_flags.current_device] = scaled_dist;
+			azimuth_relative_rad_old[main_flags.current_device] = azimuth_relative_rad;
 		}
-		else if((distance_old[current_device] > 3) && fix_valid)
+		else if((distance_old[main_flags.current_device] > 3) && fix_valid)
 		{
 			fix_valid = 0;
-			erase_position(63, 97, distance_old[current_device], azimuth_relative_rad_old[current_device], 7);	//erase or change CYAN to MAGENTA
+			erase_position(63, 97, distance_old[main_flags.current_device], azimuth_relative_rad_old[main_flags.current_device], 7);	//erase or change CYAN to MAGENTA
 		}
 	}
 
@@ -1250,8 +1270,8 @@ void navigation_ok(void) {		//other points on loop
 }
 void beacons_ok(void)
 {
-	if(current_device == p_settings_menu->devices_on_air) current_device = 1;
-	else current_device++;
+	if(main_flags.current_device == p_settings_menu->devices_on_air) main_flags.current_device = 1;
+	else main_flags.current_device++;
 }
 void beacons_esc(void)
 {
@@ -1297,8 +1317,8 @@ void draw_this_device(void)
 			draw_str_by_rows(0, k*11, &string_buffer[k][0], &Font_7x9, YELLOW,BLACK);
 		}
 
-		sprintf(&string_buffer[7][0], " %5s pDop:%2d.%02d ", fixType[pp_devices_menu[current_device]->fix_type_opt],
-				pp_devices_menu[current_device]->p_dop/100, pp_devices_menu[current_device]->p_dop%100);
+		sprintf(&string_buffer[7][0], " %5s pDop:%2d.%02d ", fixType[pp_devices_menu[main_flags.current_device]->fix_type_opt],
+				pp_devices_menu[main_flags.current_device]->p_dop/100, pp_devices_menu[main_flags.current_device]->p_dop%100);
 
 		sprintf(&string_buffer[8][0], "%02d/%02d/%02d  %02d:%02d:%02d", day, month, year, hour, PVTbuffer[15], PVTbuffer[16]);
 
@@ -1313,86 +1333,86 @@ void draw_this_device(void)
 
 		for (uint8_t k = 7; k < 14; k++)
 		{
-			if(pp_devices_menu[current_device]->valid_fix_flag) draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, GREEN,BLACK);	//(PVTbuffer[21+6] & 0x01)
+			if(pp_devices_menu[main_flags.current_device]->valid_fix_flag) draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, GREEN,BLACK);	//(PVTbuffer[21+6] & 0x01)
 			else draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, MAGENTA,BLACK);
 		}
 }
 
 void draw_devices(void)
 {
-	if(current_device == this_device) draw_this_device();
+	if(main_flags.current_device == this_device) draw_this_device();
 	else
 	{
-		if(pp_devices_menu[current_device]->device_num == current_device)		//data has received
+		if(pp_devices_menu[main_flags.current_device]->device_num == main_flags.current_device)		//data has received
 		{
-			if(pp_devices_menu[current_device]->beacon_flag)		//(buffer[0] >> 7)		//if is beacon
+			if(pp_devices_menu[main_flags.current_device]->beacon_flag)		//(buffer[0] >> 7)		//if is beacon
 			{
-				sprintf(&string_buffer[0][0], "tBcn%d data:", pp_devices_menu[current_device]->device_num);			//(buffer[0] & 0x03));
-			}else sprintf(&string_buffer[0][0], " Dev%d data:", pp_devices_menu[current_device]->device_num);		//(buffer[0] & 0x03));
+				sprintf(&string_buffer[0][0], "tBcn%d data:", pp_devices_menu[main_flags.current_device]->device_num);			//(buffer[0] & 0x03));
+			}else sprintf(&string_buffer[0][0], " Dev%d data:", pp_devices_menu[main_flags.current_device]->device_num);		//(buffer[0] & 0x03));
 		}
-		else sprintf(&string_buffer[0][0], " NoDevice %d", current_device);
+		else sprintf(&string_buffer[0][0], " NoDevice %d", main_flags.current_device);
 
 		draw_str_by_rows(0, 0, &string_buffer[0][0], &Font_11x18, YELLOW,BLACK);
 
 		//fixType only 2 bits used to transmit, pDop/10 (0...25.5)	buffer[15]/10, buffer[15]%10);
-		sprintf(&string_buffer[2][0], " %5s pDop:%2d.%d", fixType[pp_devices_menu[current_device]->fix_type_opt],
-				pp_devices_menu[current_device]->p_dop/10, pp_devices_menu[current_device]->p_dop%10);
+		sprintf(&string_buffer[2][0], " %5s pDop:%2d.%d", fixType[pp_devices_menu[main_flags.current_device]->fix_type_opt],
+				pp_devices_menu[main_flags.current_device]->p_dop/10, pp_devices_menu[main_flags.current_device]->p_dop%10);
 
-//	sprintf(&string_buffer[3][0], "Date../09 %02d:%02d:%02d", pp_devices_menu[current_device]->time_hours,
-//			pp_devices_menu[current_device]->time_minutes, pp_devices_menu[current_device]->time_seconds);
-		sprintf(&string_buffer[3][0], "Distance:%5d m", ((uint16_t)distance[current_device] & 0xFFFF));
-		azimuth_relative_deg = azimuth_deg_signed[current_device] - heading_deg;
+//	sprintf(&string_buffer[3][0], "Date../09 %02d:%02d:%02d", pp_devices_menu[main_flags.current_device]->time_hours,
+//			pp_devices_menu[main_flags.current_device]->time_minutes, pp_devices_menu[main_flags.current_device]->time_seconds);
+		sprintf(&string_buffer[3][0], "Distance:%5d m", ((uint16_t)distance[main_flags.current_device] & 0xFFFF));
+		azimuth_relative_deg = azimuth_deg_signed[main_flags.current_device] - heading_deg;
 		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
 		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
 		sprintf(&string_buffer[4][0], "AzRelative: %03d%%", azimuth_relative_deg);
 
-		sprintf(&string_buffer[5][0], "Speed:   %3d km/h", pp_devices_menu[current_device]->gps_speed);
-		if(pp_devices_menu[current_device]->gps_speed)
+		sprintf(&string_buffer[5][0], "Speed:   %3d km/h", pp_devices_menu[main_flags.current_device]->gps_speed);
+		if(pp_devices_menu[main_flags.current_device]->gps_speed)
 		{
-			sprintf(&string_buffer[6][0], "HeadingGPS:  %03d%% ", pp_devices_menu[current_device]->gps_heading);
-		}else 	sprintf(&string_buffer[6][0], "Device%d not moving", current_device);
+			sprintf(&string_buffer[6][0], "HeadingGPS:  %03d%% ", pp_devices_menu[main_flags.current_device]->gps_heading);
+		}else 	sprintf(&string_buffer[6][0], "Device%d not moving", main_flags.current_device);
 
-//	sprintf(&string_buffer[6][0], "Azimuth_s : %03d%%", azimuth_deg_signed[current_device]);
-//	sprintf(&string_buffer[7][0], "Azimuth_u : %03d%%", azimuth_deg_unsigned[current_device]);
+//	sprintf(&string_buffer[6][0], "Azimuth_s : %03d%%", azimuth_deg_signed[main_flags.current_device]);
+//	sprintf(&string_buffer[7][0], "Azimuth_u : %03d%%", azimuth_deg_unsigned[main_flags.current_device]);
 		sprintf(&string_buffer[7][0], "                  ");
 
-		if(pp_devices_menu[current_device]->batt_voltage < 32)
+		if(pp_devices_menu[main_flags.current_device]->batt_voltage < 32)
 		{
 			sprintf(&string_buffer[8][0], "Battery :  low    ");		//<=3.2 volt
-		} else sprintf(&string_buffer[8][0], "Battery: %d.%d Volt ", pp_devices_menu[current_device]->batt_voltage/10, pp_devices_menu[current_device]->batt_voltage%10);
+		} else sprintf(&string_buffer[8][0], "Battery: %d.%d Volt ", pp_devices_menu[main_flags.current_device]->batt_voltage/10, pp_devices_menu[main_flags.current_device]->batt_voltage%10);
 
-		sprintf(&string_buffer[9][0], "RSSI: %ddBm", pp_devices_menu[current_device]->rssi);
-		sprintf(&string_buffer[10][0], " SNR: %02ddB", pp_devices_menu[current_device]->snr);
+		sprintf(&string_buffer[9][0], "RSSI: %ddBm", pp_devices_menu[main_flags.current_device]->rssi);
+		sprintf(&string_buffer[10][0], " SNR: %02ddB", pp_devices_menu[main_flags.current_device]->snr);
 
 		(p_settings_menu->spreading_factor == 12)? sprintf(&string_buffer[11][0], "                  "):
-		sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS", pp_devices_menu[current_device]->device_num, this_device, main_flags.endRX_2_TX);
+		sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS", pp_devices_menu[main_flags.current_device]->device_num, this_device, main_flags.endRX_2_TX);
 
-		sprintf(&string_buffer[12][0], "Latit : %ld", pp_devices_menu[current_device]->latitude.as_integer);
-		sprintf(&string_buffer[13][0], "Longit: %ld", pp_devices_menu[current_device]->longitude.as_integer);
+		sprintf(&string_buffer[12][0], "Latit : %ld", pp_devices_menu[main_flags.current_device]->latitude.as_integer);
+		sprintf(&string_buffer[13][0], "Longit: %ld", pp_devices_menu[main_flags.current_device]->longitude.as_integer);
 
 		for (uint8_t k = 2; k < 14; k++)
 		{
-			if(pp_devices_menu[current_device]->valid_fix_flag) draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, GREEN,BLACK);
+			if(pp_devices_menu[main_flags.current_device]->valid_fix_flag) draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, GREEN,BLACK);
 			else draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, MAGENTA,BLACK);
 		}
-	}// end of else (current_device != this_device)
+	}// end of else (main_flags.current_device != this_device)
 }
 //-----------------------------DEVICES MENU SET------------------------------------
 void scroll_devices_up(void) {
-        if (current_device == p_settings_menu->devices_on_air)
+        if (main_flags.current_device == p_settings_menu->devices_on_air)
         {
-        	current_device = 1;
+        	main_flags.current_device = 1;
         }else {
-        	current_device++;
+        	main_flags.current_device++;
         }
         draw_devices();
 }
 void scroll_devices_down(void) {
-        if (current_device == 1)
+        if (main_flags.current_device == 1)
         {
-        	current_device = p_settings_menu->devices_on_air;
+        	main_flags.current_device = p_settings_menu->devices_on_air;
         }else {
-        	current_device--;
+        	main_flags.current_device--;
         }
         draw_devices();
 }
@@ -1418,9 +1438,9 @@ void draw_device_submenu(void)
 		}
 	}
 
-	if(pp_devices_menu[current_device]->valid_fix_flag)		//if fix valid for this or current remote device
+	if(pp_devices_menu[main_flags.current_device]->valid_fix_flag)		//if fix valid for this or current remote device
 	{
-		sprintf(&string_buffer[0][0], " Save %d as:", current_device);
+		sprintf(&string_buffer[0][0], " Save %d as:", main_flags.current_device);
 		draw_str_by_rows(0, 0, &string_buffer[0][0], &Font_11x18, CYAN,BLACK);
 
 		row = get_current_item();
@@ -1443,7 +1463,7 @@ void draw_device_submenu(void)
 }
 void draw_set_points(void)
 {
-	sprintf(&string_buffer[0][0], " Save %d as:", current_device);
+	sprintf(&string_buffer[0][0], " Save %d as:", main_flags.current_device);
 	draw_str_by_rows(0, 0, &string_buffer[0][0], &Font_11x18, CYAN,BLACK);
 
 	main_flags.current_point_group = row;
@@ -1482,8 +1502,8 @@ void set_subpoint_ok(void) {
     if (memory_subpoint_ind[main_flags.current_point_group]) {    //if (!= 0) copy current device/point to selected mem point
 
    	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->exist_flag = 1;
-   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->latitude.as_integer = pp_devices_menu[current_device]->latitude.as_integer;
-   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->longitude.as_integer = pp_devices_menu[current_device]->longitude.as_integer;
+   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->latitude.as_integer = pp_devices_menu[main_flags.current_device]->latitude.as_integer;
+   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->longitude.as_integer = pp_devices_menu[main_flags.current_device]->longitude.as_integer;
 
    	flag_group_has_changed[main_flags.current_point_group] = 1;
    	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;			//clear subpoint 0
@@ -1642,7 +1662,7 @@ void draw_points(void)
 	row = get_current_item();
 	for (uint8_t k = 1; k < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); k++)
 	{
-		sprintf(&string_buffer[k][0], "%2d", k);
+		sprintf(&string_buffer[k][0], "%2d", ((k < 7)? k: 7));
 		draw_str_by_rows(0, 14+k*12, &string_buffer[k][0], &Font_7x9, CYAN,BLACK);
 	}
 	for (uint8_t k = 0; k < (MEMORY_POINT_GROUPS + BEACON_POINT_GROUPS); k++)		//draw points groups
@@ -1664,7 +1684,7 @@ void points_esc(void)
 		(pp_points_menu[row * MEMORY_SUBPOINTS]->exist_flag)? (current_menu = M_NAVTO_POINTS): (current_menu = M_MAIN);
 	}else
 	{
-		current_device = row - MEMORY_POINT_GROUPS + 1;
+		main_flags.current_device = row - MEMORY_POINT_GROUPS + 1;
 		(pp_points_menu[row * MEMORY_SUBPOINTS]->exist_flag)? (current_menu = M_BEACONS): (current_menu = M_MAIN);
 	}
 }
@@ -2138,14 +2158,14 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 					(pp_devices_menu[this_device]->emergency_flag = 0);
 			break;
 		case M_ACTIONS_I_ALARM:		//toggle_alarm();
-//			(pp_devices_menu[current_device]->alarm_flag == 0)?
-//					(pp_devices_menu[current_device]->alarm_flag = 1):
-//					(pp_devices_menu[current_device]->alarm_flag = 0);
+//			(pp_devices_menu[main_flags.current_device]->alarm_flag == 0)?
+//					(pp_devices_menu[main_flags.current_device]->alarm_flag = 1):
+//					(pp_devices_menu[main_flags.current_device]->alarm_flag = 0);
 			break;
 		case M_ACTIONS_I_GATHER:	//toggle_gather();
-//			(pp_devices_menu[current_device]->gather_flag == 0)?
-//					(pp_devices_menu[current_device]->gather_flag = 1):
-//					(pp_devices_menu[current_device]->gather_flag = 0);
+//			(pp_devices_menu[main_flags.current_device]->gather_flag == 0)?
+//					(pp_devices_menu[main_flags.current_device]->gather_flag = 1):
+//					(pp_devices_menu[main_flags.current_device]->gather_flag = 0);
 			break;
 		case M_ACTIONS_I_ERASE_POINTS:
 			current_menu = M_ERASE_POINTS;

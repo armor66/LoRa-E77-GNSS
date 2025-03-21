@@ -69,7 +69,7 @@ void radio_init(void)
 static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraSnr_FskCfo)
 {
 	led_red_on();
-	if(main_flags.display_status) timer17_start();
+	if((main_flags.display_status) && (main_flags.time_slot == main_flags.current_device)) timer17_start();
 
 	memcpy(bufferRx, payload, BUFFER_AIR_SIZE);		//BufferAirSize
 	bufferRx[BUFFER_AIR_SIZE] = (int8_t)rssi;		//BufferAirSize + 1
