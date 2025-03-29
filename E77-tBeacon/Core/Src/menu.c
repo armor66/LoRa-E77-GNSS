@@ -213,13 +213,8 @@ enum
 {
 	M_ACTIONS_I_POWER_OFF = 0,
     M_ACTIONS_I_EMERGENCY,
-	M_ACTIONS_I_ALARM,
-	M_ACTIONS_I_GATHER,
-	M_ACTIONS_I_ERASE_POINTS,
 	M_ACTIONS_I_SET_DEFAULTS,
-	M_ACTIONS_I_BEEPER,
-	M_ACTIONS_I_FLWTREK,						//last item
-	M_ACTIONS_I_LAST = M_ACTIONS_I_FLWTREK		//copy last item here
+	M_ACTIONS_I_LAST = M_ACTIONS_I_SET_DEFAULTS		//copy last item here
 };
 //Only exclusive (non default) actions here, for example edit a variable in settings
 const struct
@@ -707,7 +702,7 @@ void draw_main(void)
 	if((p_settings_menu->spreading_factor == 12) && (this_device > 2))
 	{
 		sprintf(&string_buffer[row][0], "!set device 1 or 2");
-	}else if(pp_devices_menu[this_device]->batt_voltage < 50)		// U < 3.2volt (!pp_devices_menu[this_device]->batt_voltage)
+	}else if(pp_devices_menu[this_device]->batt_voltage < 30)		// U < 3.2volt (!pp_devices_menu[this_device]->batt_voltage)
 	{
 		sprintf(&string_buffer[row][0], "DevID:%02d  ADC %3d", this_device, main_flags.adc_calibration_factor);
 //		sprintf(&string_buffer[row][0], "DevID:%02d Batt low!", this_device);
@@ -734,26 +729,14 @@ void draw_main(void)
 	else draw_str_by_rows(0, 1+row*11, "GPS not configured", &Font_7x9, ORANGE,BLACK);
 
 	row+=1;	//3
-	int8_t dev;
-	for(dev = 1; dev < 1 + p_settings_menu->devices_on_air; dev++)
+
+	if(main_flags.antitheft_flag_received)
 	{
-		if(dev != this_device)
-		{
-			if(pp_devices_menu[dev]->emergency_flag)	// || (dev == p_settings_menu->devices_on_air))		//do not exceed devices_max
-			{
-				break;
-			}
-		}
-		if(dev == p_settings_menu->devices_on_air)		//do not exceed devices_max and if this_device
-		{
-			dev = 0;
-			break;
-		}
+		draw_str_by_rows(0, 1+row*11, "AntiTheft Mode SET", &Font_7x9, CYAN,BLACK);
 	}
-	if(pp_devices_menu[dev]->emergency_flag)
+	else if(main_flags.bcntohalt_flag_received)
 	{
-		sprintf(&string_buffer[row][0], "Dev%d set EMERGENCY", dev);
-		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, CYAN,BLACK);
+		draw_str_by_rows(0, 1+row*11, "BcntoHalt Mode SET", &Font_7x9, CYAN,BLACK);
 	}
 	else
 	{
@@ -968,12 +951,12 @@ void draw_devices(void)	//int8_t menu)
 	if(current_device == this_device) draw_this_device();
 	else
 	{
-		if(pp_devices_menu[current_device]->device_num == current_device)		//data has received
+		if(pp_devices_menu[current_device]->device_received == current_device)		//data has received
 		{
 			if(pp_devices_menu[current_device]->beacon_flag)		//(buffer[0] >> 7)		//if is beacon
 			{
-				sprintf(&string_buffer[0][0], "tBcn%d data:", pp_devices_menu[current_device]->device_num);			//(buffer[0] & 0x03));
-			}else sprintf(&string_buffer[0][0], " Dev%d data:", pp_devices_menu[current_device]->device_num);		//(buffer[0] & 0x03));
+				sprintf(&string_buffer[0][0], "tBcn%d data:", pp_devices_menu[current_device]->device_received);			//(buffer[0] & 0x03));
+			}else sprintf(&string_buffer[0][0], " Dev%d data:", pp_devices_menu[current_device]->device_received);		//(buffer[0] & 0x03));
 		}
 		else sprintf(&string_buffer[0][0], " NoDevice %d", current_device);
 
@@ -1010,7 +993,7 @@ void draw_devices(void)	//int8_t menu)
 		sprintf(&string_buffer[10][0], " SNR: %02ddB", pp_devices_menu[current_device]->snr);
 
 		(p_settings_menu->spreading_factor == 12)? sprintf(&string_buffer[11][0], "                  "):
-		sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS", pp_devices_menu[current_device]->device_num, this_device, main_flags.endRX_2_TX);
+		sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS", pp_devices_menu[current_device]->device_received, this_device, main_flags.endRX_2_TX);
 
 		sprintf(&string_buffer[12][0], "Latit : %ld", pp_devices_menu[current_device]->latitude.as_integer);
 		sprintf(&string_buffer[13][0], "Longit: %ld", pp_devices_menu[current_device]->longitude.as_integer);
@@ -1054,8 +1037,8 @@ void devices_esc(void) {
 int8_t ind = 0;
 void draw_navto_points(void)
 {
-	draw_str_by_rows(0, 70, "  Nothing ", &Font_11x18, CYAN,BLACK);
-	draw_str_by_rows(6, 90, "   Here   ", &Font_11x18, CYAN,BLACK);
+	draw_str_by_rows(0, 60, "  Nothing ", &Font_11x18, CYAN,BLACK);
+	draw_str_by_rows(6, 80, "   Here   ", &Font_11x18, CYAN,BLACK);
 }
 //------------------------------NAV TO POINTS MENU SET----------------------------
 void navto_points_ok(void)
@@ -1071,8 +1054,8 @@ void navto_points_esc(void)
 //----------------------------------POINTS MENU--------------------------------
 void draw_points(void)
 {
-	draw_str_by_rows(0, 70, "  Nothing ", &Font_11x18, CYAN,BLACK);
-	draw_str_by_rows(6, 90, "   Here   ", &Font_11x18, CYAN,BLACK);
+	draw_str_by_rows(0, 60, "  Nothing ", &Font_11x18, CYAN,BLACK);
+	draw_str_by_rows(6, 80, "   Here   ", &Font_11x18, CYAN,BLACK);
 }
 void points_esc(void)
 {
@@ -1102,8 +1085,8 @@ void draw_settings(void)
 			if(k == row) draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, YELLOW,BLACK);
 			else draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, GREEN,BLACK);
 		}
-	//	sprintf(&string_buffer[row][0], ">");
-		draw_char(3, 10+row*19, 62, &Font_11x18, YELLOW,BLACK);
+
+		draw_char(3, 10+row*19, *">", &Font_11x18, YELLOW,BLACK);
 }
 
 void draw_set_settings(void)
@@ -1126,8 +1109,8 @@ void draw_set_settings(void)
 				if(k == row) draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, CYAN,BLACK);
 				else draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, GREEN,BLACK);
 			}
-			sprintf(&string_buffer[row][0], ">");
-			draw_char(3, 10+row*19, 62, &Font_11x18, CYAN,BLACK);
+
+			draw_char(3, 10+row*19, *">", &Font_11x18, CYAN,BLACK);
 	}
 //---------------------------------SETTINGS SET-----------------------------------
 void set_device_number_up(void)
@@ -1423,41 +1406,32 @@ void donot_save_settings(void)
 //----------------------------- MENU ACTIONS------------------------
 void draw_actions(void)
 {
-//	current_device = this_device;
 	draw_str_by_rows(0, 0, "     ACTIONS    ", &Font_7x9, CYAN,BLACK);
 
 	sprintf(&string_buffer[0][0], " Power OFF");
-	(pp_devices_menu[this_device]->emergency_flag)? sprintf(&string_buffer[1][0], " Emerge  on"): sprintf(&string_buffer[1][0], " Emerge off");
-	(pp_devices_menu[this_device]->alarm_flag)?     sprintf(&string_buffer[2][0], " Alarm   on"): sprintf(&string_buffer[2][0], " Alarm  ---");
-	(pp_devices_menu[this_device]->gather_flag)?    sprintf(&string_buffer[3][0], " Gather  on"): sprintf(&string_buffer[3][0], " Gather ---");
-	sprintf(&string_buffer[4][0], "           ");
-	sprintf(&string_buffer[5][0], " SetDefault");
-//	(pp_devices_menu[this_device]->beeper_flag)?    sprintf(&string_buffer[6][0], " Beeper  on"): sprintf(&string_buffer[6][0], " Beeper off");
-	if(pp_devices_menu[this_device]->beeper_flag == 0) sprintf(&string_buffer[6][0], "           ");
-	else if(p_settings_menu->spreading_factor == 12)
-    {//SF12 only: invert flags to transmit in the slot, beacon can get: slot1 for beacon2, slot2 for beacon1
-		if(pp_devices_menu[this_device]->beeper_flag == 2) sprintf(&string_buffer[6][0], "           ");
-		else if(pp_devices_menu[this_device]->beeper_flag == 1) sprintf(&string_buffer[6][0], "           ");
-	}
-	else sprintf(&string_buffer[6][0], "           ");
-
-	(pp_devices_menu[this_device]->flwtrek_flag)?   sprintf(&string_buffer[7][0], "           "): sprintf(&string_buffer[7][0], "           ");
+	(main_flags.emergency_flag)? sprintf(&string_buffer[1][0], " Emerge  on"): sprintf(&string_buffer[1][0], " Emerge off");
+	sprintf(&string_buffer[2][0], " SetDefault");
 
 	row = get_current_item();
-	for (uint8_t k = 0; k < 8; k++)
+	for (uint8_t k = 0; k < 3; k++)
 	{
 		if(k == row) draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, YELLOW,BLACK);
 		else {
 			draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, GREEN,BLACK);
-//			ST7735_WriteString(3, 10+k*19, &string_buffer[k][0], &Font_11x18, CYAN,BLACK);
 		}
 	}
-//	sprintf(&string_buffer[row][0], ">");
-	draw_char(3, 10+row*19, 62, &Font_11x18, YELLOW,BLACK);
+
+	draw_char(3, 10+row*19, *">", &Font_11x18, YELLOW,BLACK);
 }
 
 void power_long(void)
 {
+	if(current_menu == M_ACTIONS)
+	{
+		main_flags.emergency_flag = 1;
+		set_current_item(1);
+	}
+
 	return_from_power_menu = current_menu;
 	current_menu = M_ACTIONS;
 
@@ -1473,21 +1447,14 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 			HAL_Delay(20);
 			release_power();
 			break;
+
 		case M_ACTIONS_I_EMERGENCY:
+			(main_flags.emergency_flag == 0)? (main_flags.emergency_flag = 1): (main_flags.emergency_flag = 0);
 			break;
-		case M_ACTIONS_I_ALARM:		//toggle_alarm();
-			break;
-		case M_ACTIONS_I_GATHER:	//toggle_gather();
-			break;
-		case M_ACTIONS_I_ERASE_POINTS:
-			break;
+
 		case M_ACTIONS_I_SET_DEFAULTS:
 			current_menu = M_CONFIRM_RESTORING;
-			break;
-		case M_ACTIONS_I_BEEPER:	//toggle_trigger();
-			break;
-		case M_ACTIONS_I_FLWTREK:	//initial set in init_gnss() of gnss.c
-			break;
+
 		default:
 			break;
 	}
@@ -1530,3 +1497,13 @@ void confirm_settings_restore(void)
     HAL_Delay(1000);
     NVIC_SystemReset();
 }
+
+void to_halt(void)
+{
+	current_menu = M_ACTIONS;
+	return_from_power_menu = current_menu;
+	set_current_item(0);
+	shortBeeps(2);
+	main_flags.display_status = 1;
+}
+

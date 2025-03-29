@@ -100,10 +100,6 @@ void Error_Handler(void);
 //#define ST7735_IS_160X128_RED
 #define BUFFER_AIR_SIZE            	13  	/* Define the payload size here */
 #define BUFFER_RX                  	15		//BUFFER_SIZE + 2 rssi and snr
-#define PPS_SKIP	(2)		//how many first PPS pulses are skipped before switching to active mode
-
-//void shortBeeps(int8_t beeps);
-uint32_t get_abs_pps_cntr(void);
 
 struct main_flags_struct
 {
@@ -176,13 +172,13 @@ extern uint16_t endRX_2_TX;
 extern int8_t RssiValue;
 extern int8_t SnrValue;
 extern int8_t actual_menu;
-extern char *region[];
+//extern char *region[];
 extern char *fixType[];
 
-extern int16_t x;
-extern int16_t y;
-extern double comp_x;
-extern double comp_y;
+//extern int16_t x;
+//extern int16_t y;
+//extern double comp_x;
+//extern double comp_y;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

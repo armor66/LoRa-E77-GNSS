@@ -84,8 +84,6 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 //	if(pp_devices_rf[p_settings_rf->device_number]->valid_fix_flag)	calc_relative_position(main_flags.time_slot);
 
 	memset(bufferRx, 0, BUFFER_RX);
-
-//	State = RX_DONE;
 }
 
 static void OnRxError(void)
@@ -106,17 +104,30 @@ static void OnTxDone(void)
 
 void set_transmit_data(void)
 {
-	int8_t emergency_to_transmit;
+	int8_t flags_to_transmit;
 	int8_t beeper_flag_to_transmit;
 	int8_t device_number;
 	int8_t buffer_to_transmit;
 
-	(pp_devices_rf[p_settings_rf->device_number]->emergency_flag)? (emergency_to_transmit = 5): (emergency_to_transmit = 2);
+	if(pp_devices_rf[p_settings_rf->device_number]->antitheft_flag)
+	{
+		flags_to_transmit = 6;
+	}
+	else if(pp_devices_rf[p_settings_rf->device_number]->bcntohalt_flag)
+	{
+		flags_to_transmit = 5;
+	}
+	else if(pp_devices_rf[p_settings_rf->device_number]->emergency_flag)
+	{
+		flags_to_transmit = 3;
+	}
+	else flags_to_transmit = 0;
+
 	(pp_devices_rf[p_settings_rf->device_number]->beeper_flag)? (beeper_flag_to_transmit = 1): (beeper_flag_to_transmit = 0);
 
 	if(p_settings_rf->spreading_factor == 12)
 	{
-		device_number = pp_devices_rf[3]->beeper_flag;	//beacon slot to beep
+		device_number = (pp_devices_rf[3]->bcntohalt_flag | pp_devices_rf[3]->antitheft_flag | pp_devices_rf[3]->beeper_flag);
 		buffer_to_transmit = 3;							//transmit flags and gnss fix data
 	}
 	else
@@ -125,10 +136,7 @@ void set_transmit_data(void)
 		buffer_to_transmit = BUFFER_AIR_SIZE;
 	}
 
-   	  bufferTx[0] =	(IS_BEACON << 7) + (emergency_to_transmit << 4) +
-//    		  (pp_devices_rf[p_settings_rf->device_number]->emergency_flag << 6) +
-//			  (pp_devices_rf[p_settings_rf->device_number]->alarm_flag << 5) +
-//			  (pp_devices_rf[p_settings_rf->device_number]->gather_flag << 4) +
+   	  bufferTx[0] =	(IS_BEACON << 7) + (flags_to_transmit << 4) +
 			  (beeper_flag_to_transmit << 3) + device_number;
 
    	  (pp_devices_rf[p_settings_rf->device_number]->gps_speed > GPS_SPEED_THRS)? (bufferTx[1] |= 1 << 7): (bufferTx[1] &= ~(1 << 7));	//if device is moving

@@ -63,7 +63,7 @@ void init_lrns(void)
 	//Get external things
 	p_settings_lrns = get_settings();
 	pp_points_lrns = get_points();
-//	pp_lost_device_lrns = get_lost_device();
+
 //	pp_trekpoints_lrns = get_tekpoints();
 	pp_devices = get_devices();
 	pp_point_groups = get_point_groups();
@@ -120,14 +120,14 @@ void rx_to_devices(uint8_t device_number)
 	uint8_t *buffer = bufferRx;
 
 	devices[device_number].beacon_flag = buffer[0] >> 7;
-	if(((buffer[0] & 0x70) >> 4) == 5) devices[device_number].emergency_flag = 1;
-	else if(((buffer[0] & 0x70) >> 4) == 2) devices[device_number].emergency_flag = 0;
-//	devices[device_number].emergency_flag = (buffer[0] & 0x40) >> 6;
-//	devices[device_number].alarm_flag = (buffer[0] & 0x20) >> 5;
-//	devices[device_number].gather_flag = (buffer[0] & 0x10) >> 4;
+//	flags_to_transmit((buffer[0] & 0x70) >> 4) == 3 and beeper_flag((buffer[0] & 0x8) >> 3) == 0
+	(((buffer[0] & 0x78) >> 3) == 0x6)? (devices[device_number].emergency_flag = 1): (devices[device_number].emergency_flag = 0);
+//	anti theft from beacon confirmed (is_beacon + antitheft_flag + no beep flag)
+	(((buffer[0] & 0xF8) >> 3) == 0x1C)? (devices[device_number].antitheft_flag = 1): (devices[device_number].antitheft_flag = 0);
+
 	devices[device_number].beeper_flag = (buffer[0] & 0x8) >> 3;
 //	main_flags.beeper_flag_received = (buffer[0] & 0x8) >> 3;
-	devices[device_number].device_num = buffer[0] & 0x07;
+	devices[device_number].device_received = buffer[0] & 0x07;
 
 //	devices[device_number].is_moving =
 	devices[device_number].fix_type_opt = (buffer[1] & 0x60) >> 5;			//only 2 bits used to transmit
@@ -167,18 +167,21 @@ void rx_to_devices(uint8_t device_number)
 				pp_points_lrns[group_start_index + ind + 1]->latitude.as_integer = pp_points_lrns[group_start_index + ind]->latitude.as_integer;
 				pp_points_lrns[group_start_index + ind + 1]->longitude.as_integer = pp_points_lrns[group_start_index + ind]->longitude.as_integer;
 			}
-		}		//fill subpoint1 new data in any case
-/*		pp_lost_device_lrns[device_number][0].exist_flag = 1;
-		pp_lost_device_lrns[device_number][0].latitude.as_integer = devices[device_number].latitude.as_integer;
-		pp_lost_device_lrns[device_number][0].longitude.as_integer = devices[device_number].longitude.as_integer;
-*/
+		}
+		//fill subpoint1 new data in any case
 		pp_points_lrns[group_start_index + 1]->exist_flag = 1;
 		pp_points_lrns[group_start_index + 1]->latitude.as_integer = devices[device_number].latitude.as_integer;
 		pp_points_lrns[group_start_index + 1]->longitude.as_integer = devices[device_number].longitude.as_integer;
 
-/*beacon_traced always zero if timeout_threshold=0*/
+		//zero if "timeout_threshold=0"
 		devices[device_number].beacon_traced = p_settings_lrns->timeout_threshold / p_settings_lrns->devices_on_air;		//!validFixFlag[time_slot] delay
-		if(devices[device_number].beacon_flag) devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
+		//beacon always traced, except this device does not transmit "bcntohalt_flag"
+		//if(devices[device_number].beacon_flag)
+		if(!pp_devices[p_settings_lrns->device_number]->bcntohalt_flag && devices[device_number].beacon_flag)
+		{
+			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
+		}
+
 		devices[device_number].beacon_lost = 0;
 
 		if(devices[device_number].emergency_flag)
@@ -189,22 +192,7 @@ void rx_to_devices(uint8_t device_number)
 			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
 			if(!main_flags.display_status) shortBeeps(device_number);				//emergency_flag received
 		}
-		if(devices[device_number].alarm_flag)
-		{	//Alarms group = 0, sub point 1
-			pp_points_lrns[0 + device_number]->exist_flag = 1;	//5
-			pp_points_lrns[0 + device_number]->latitude.as_integer = devices[device_number].latitude.as_integer;
-			pp_points_lrns[0 + device_number]->longitude.as_integer = devices[device_number].longitude.as_integer;
-			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
-		}
-		if(devices[device_number].gather_flag)
-		{	//Alarms group = 0, sub point 1
-			pp_points_lrns[0 + device_number]->exist_flag = 1;	//9
-			pp_points_lrns[0 + device_number]->latitude.as_integer = devices[device_number].latitude.as_integer;
-			pp_points_lrns[0 + device_number]->longitude.as_integer = devices[device_number].longitude.as_integer;
-			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
-		}
 	}
-
 }
 
 void check_traced(uint8_t device_number)
@@ -308,7 +296,7 @@ uint8_t check_any_alarm_fence_timeout(void)
 	{
 		if (devices[dev].exist_flag)
 		{
-			if ((devices[dev].alarm_flag) || (devices[dev].fence_flag) || (devices[dev].timeout_flag))
+			if (devices[dev].emergency_flag || devices[dev].fence_flag || devices[dev].timeout_flag)
 			{
 				return 1;
 			}

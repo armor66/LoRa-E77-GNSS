@@ -93,7 +93,12 @@ void TIM1_UP_IRQHandler(void)
 			}
 			if(p_settings_tim->spreading_factor != 12) main_flags.time_slot++;
 //clear what should be received or not in this slot after draw menu has finished
-			if(p_settings_tim->device_number != main_flags.time_slot) clear_fix_data(main_flags.time_slot);
+			if(p_settings_tim->device_number != main_flags.time_slot)
+			{
+				clear_fix_data(main_flags.time_slot);
+
+				pp_devices_tim[main_flags.time_slot]->antitheft_flag = 0;
+			}
 
 //set receive LORA_IQ_NORMAL in other time slot whilst transmitting with LORA_IQ_INVERTED has occurred
 //(for [p_settings_tim->device_number == 3] only)
@@ -146,7 +151,9 @@ void TIM1_UP_IRQHandler(void)
 					if(main_flags.fix_valid > 0)	//do not transmit if no GNSS FIX
 					{
 						//transmit on demand if beeper_flag has set(choose witch beacon to send) with LORA_IQ_INVERTED
-						if(pp_devices_tim[3]->beeper_flag == main_flags.time_slot)	//1 for beacon2 or 2 for beacon1
+						if((pp_devices_tim[3]->antitheft_flag == main_flags.time_slot) ||
+								(pp_devices_tim[3]->bcntohalt_flag == main_flags.time_slot) ||
+								(pp_devices_tim[3]->beeper_flag == main_flags.time_slot))	//1 for beacon2 or 2 for beacon1
 						{	//beeper_flags inverted to transmit in the slot, beacon can get: slot1 for beacon2, slot2 for beacon1
 							main_flags.permit_actions = 0;
 							main_flags.transmit_iq_inverted_flag = 1;	//set transmit LORA_IQ_INVERTED
@@ -174,21 +181,28 @@ void TIM1_UP_IRQHandler(void)
 			led_red_off();	//650ms after OnRxDone
 			if(main_flags.time_slot != p_settings_tim->device_number)	//for receiver slot only
 			{
-				if(pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag &&		//host gps data is valid (implemented in rx_to_devices())
+				if(pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag &&		//host gnss data is valid (implemented in rx_to_devices())
 						pp_devices_tim[main_flags.time_slot]->beacon_traced &&			//timeout_threshold is set & valid data has received once
 						!pp_devices_tim[main_flags.time_slot]->valid_fix_flag)			//not valid data received now
 				{	//do decrement beacon_traced in lrns.c, except when beep flag sent to one of two beacon in beacon mode (SF12)
-					if(!((p_settings_tim->spreading_factor == 12) && (pp_devices_tim[3]->beeper_flag == main_flags.time_slot))) check_traced(main_flags.time_slot);
-					//if(pp_devices_tim[main_flags.time_slot]->beacon_flag && !!! do it not for beacon only:
-					if(pp_devices_tim[main_flags.time_slot]->beacon_traced * (p_settings_tim->devices_on_air - 1) < 14) shortBeeps(1);	//do beeps if beacon was traced and lost gps fix
+//					if(!((p_settings_tim->spreading_factor == 12) && (pp_devices_tim[3]->beeper_flag == main_flags.time_slot)))
+					if(!((p_settings_tim->spreading_factor == 12) && ((pp_devices_tim[3]->antitheft_flag == main_flags.time_slot) ||
+																   (pp_devices_tim[3]->bcntohalt_flag == main_flags.time_slot) ||
+																	(pp_devices_tim[3]->beeper_flag == main_flags.time_slot))))
+					{
+						check_traced(main_flags.time_slot);
+					}
+
+					//do beeps if beacon was traced and lost gnss fix
+					if(pp_devices_tim[main_flags.time_slot]->beacon_traced * (p_settings_tim->devices_on_air - 1) < 14) shortBeeps(1);
 					if(pp_devices_tim[main_flags.time_slot]->beacon_lost)						//if beacon_traced became zero
 					{
-//							memory_points_save();		//save beacon trace if it was traced and no validFixFlag[main_flags.time_slot] for timeout_threshold
+						//save beacon trace if it was traced and no validFixFlag[main_flags.time_slot] for timeout_threshold
 						lost_device_save(main_flags.time_slot);
 						main_flags.current_point_group = 0;		//to prevent accidental erase saved device point by long pressed BTN_ESC
-					//start long beep on next case 2 в слоте того устройства, которое пропало
+						//start long beep on next case 2 в слоте того устройства, которое пропало
 						pp_devices_tim[main_flags.time_slot]->beeper_flag = 1;
-//							shortBeeps(main_flags.time_slot);
+						//shortBeeps(main_flags.time_slot);
 					}
 				}
 			}
@@ -241,7 +255,7 @@ void TIM1_UP_IRQHandler(void)
 			}
 			break;
 
-		case 6:	//for SF12 only
+		case 6:	//for SF12 to shorten long beeps only
 			if(main_flags.long_beeps && main_flags.long_beeps_flag)
 			{
 				main_flags.long_beeps--;

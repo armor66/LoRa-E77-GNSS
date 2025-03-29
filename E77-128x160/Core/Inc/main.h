@@ -95,15 +95,11 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 //#define NV3023
-#define ST7735
+//#define ST7735
 //#define ST7735_IS_160X128_BLUE
 //#define ST7735_IS_160X128_RED
 #define BUFFER_AIR_SIZE            	13  	/* Define the payload size here */
 #define BUFFER_RX                  	15		//BUFFER_SIZE + 2 rssi and snr
-#define PPS_SKIP	(2)		//how many first PPS pulses are skipped before switching to active mode
-
-void shortBeeps(int8_t beeps);
-uint32_t get_abs_pps_cntr(void);
 
 struct main_flags_struct
 {
@@ -130,7 +126,6 @@ struct main_flags_struct
     int8_t GPScheckFlag;
     int8_t GPSconfigureFlag;
     int8_t GPScold_restarted;
-//    int8_t flwtrek_flag;
     int8_t find_nearest_trekpoint_flag;
 
 	int8_t scanRadioFlag;
@@ -166,8 +161,6 @@ extern uint8_t bufferRx[];
 extern uint8_t points_array[];
 extern char string_buffer[20][27];
 
-//extern uint8_t gps_speed;		//subghz_phy_app.c
-//extern int16_t gps_heading;		//subghz_phy_app.c
 extern int16_t heading_deg;			//compass.c
 extern double heading_rad;
 
@@ -181,7 +174,7 @@ extern uint16_t endRX_2_TX;
 extern int8_t RssiValue;
 extern int8_t SnrValue;
 extern int8_t actual_menu;
-extern char *region[];
+//extern char *region[];
 extern char *fixType[];
 
 extern int16_t x;

@@ -215,11 +215,11 @@ enum
 {
 	M_ACTIONS_I_POWER_OFF = 0,
     M_ACTIONS_I_EMERGENCY,
-	M_ACTIONS_I_ALARM,
-	M_ACTIONS_I_GATHER,
+	M_ACTIONS_I_ANTITHEFT,
+	M_ACTIONS_I_BCNHALT,
+	M_ACTIONS_I_BEEPER,
 	M_ACTIONS_I_ERASE_POINTS,
 	M_ACTIONS_I_SET_DEFAULTS,
-	M_ACTIONS_I_BEEPER,
 	M_ACTIONS_I_FLWTREK,						//last item
 	M_ACTIONS_I_LAST = M_ACTIONS_I_FLWTREK		//copy last item here
 };
@@ -857,7 +857,7 @@ void draw_current_menu(void)
 		{
 			if(i != this_device)
 			{
-				if(pp_devices_menu[i]->emergency_flag || pp_devices_menu[i]->alarm_flag || pp_devices_menu[i]->gather_flag)
+				if(pp_devices_menu[i]->emergency_flag)	// || pp_devices_menu[i]->antitheft_flag)
 				{
 					fill_screen(BLACK);
 					lptim1_start(16, main_flags.brightness);
@@ -924,6 +924,10 @@ void draw_main(void)
 			{
 				break;
 			}
+			else if(pp_devices_menu[dev]->antitheft_flag)
+			{
+				break;
+			}
 		}
 		if(dev == p_settings_menu->devices_on_air)		//do not exceed devices_max and if this_device
 		{
@@ -931,9 +935,15 @@ void draw_main(void)
 			break;
 		}
 	}
+
 	if(pp_devices_menu[dev]->emergency_flag)
 	{
 		sprintf(&string_buffer[row][0], "Dev%d set EMERGENCY", dev);
+		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, CYAN,BLACK);
+	}
+	else if(pp_devices_menu[dev]->antitheft_flag)
+	{
+		sprintf(&string_buffer[row][0], "Bcn%d AntiTheftMode", dev);
 		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, CYAN,BLACK);
 	}
 	else
@@ -1108,28 +1118,29 @@ void draw_beacons(void)
 		(pp_devices_menu[main_flags.current_device]->gps_speed)?
 				draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, CYAN,BLACK):
 				draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, GREEN,BLACK);
-	}else if(pp_devices_menu[main_flags.current_device]->beacon_lost)
+	}
+	else if(pp_devices_menu[main_flags.current_device]->beacon_lost)
 	{
-		sprintf(&string_buffer[row][5], "!LOST!");
-		draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, RED,BLACK);
-	}else if(pp_points_menu[beacons_group_start]->exist_flag)
+//		sprintf(&string_buffer[row][5], "!LOST!");	&string_buffer[row][5]
+		draw_str_by_rows(60, row*18, "!LOST!", &Font_11x18, RED,BLACK);
+	}
+	else if(pp_points_menu[beacons_group_start]->exist_flag)
 	{
 		if(!p_settings_menu->timeout_threshold	&& pp_devices_menu[main_flags.current_device]->valid_fix_flag)
 		{
-			draw_str_by_rows(50, row*18, "ignored", &Font_11x18, YELLOW,BLACK);		//will be forgotten
-//		}else if(pp_devices_menu[main_flags.current_device]->index_in_flash != -1)
-//		{
-//			sprintf(&string_buffer[row][5], "%dsaved", pp_points_menu[beacons_group_start]->exist_flag);	//amount of saved sub-points);
-//			draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, CYAN,BLACK);
-		}else if(pp_devices_menu[main_flags.current_device]->index_in_flash == -1)
+			draw_str_by_rows(60, row*18, "ignore", &Font_11x18, YELLOW,BLACK);		//traced but will be forgotten
+		}
+		else if(pp_devices_menu[main_flags.current_device]->index_in_flash == -1)
 		{
-			draw_str_by_rows(60, row*18, "tempor", &Font_11x18, YELLOW,BLACK);		//will be forgotten
-		}else	//(pp_devices_menu[main_flags.current_device]->index_in_flash != -1)
+			draw_str_by_rows(60, row*18, "tempor", &Font_11x18, YELLOW,BLACK);		// lost and will be forgotten
+		}
+		else	//(pp_devices_menu[main_flags.current_device]->index_in_flash != -1)
 		{
 			sprintf(&string_buffer[row][5], "%dsaved", pp_points_menu[beacons_group_start]->exist_flag);	//amount of saved sub-points);
 			draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, CYAN,BLACK);
 		}
-	}else
+	}
+	else
 	{
 		sprintf(&string_buffer[row][5], "absent");
 		draw_str_by_rows(60, row*18, &string_buffer[row][5], &Font_11x18, MAGENTA,BLACK);
@@ -1141,7 +1152,8 @@ void draw_beacons(void)
 		if(pp_devices_menu[main_flags.current_device]->valid_fix_flag)
 		{
 			azimuth_relative_deg = azimuth_deg_signed[main_flags.current_device] - heading_deg;
-		}else
+		}
+		else
 		{
 			azimuth_relative_deg = pp_points_menu[beacons_group_start + 1]->azimuth_deg_signed - heading_deg;
 			distance[main_flags.current_device] = (pp_points_menu[beacons_group_start + 1]->distance);
@@ -1179,7 +1191,7 @@ void draw_beacons(void)
 		draw_arrow(63, 97, 57, north_rad_old, 28, BLACK, BLACK);
 	}
 
-	if(pp_devices_menu[main_flags.current_device]->batt_voltage < 32)
+	if(pp_devices_menu[main_flags.current_device]->batt_voltage < 32)		//<3.2V
 	{
 		sprintf(&string_buffer[++row][0], " LOW");		//< 3.2 volt
 	} else sprintf(&string_buffer[++row][0], "%d.%dV", pp_devices_menu[main_flags.current_device]->batt_voltage/10, pp_devices_menu[main_flags.current_device]->batt_voltage%10);
@@ -1343,12 +1355,13 @@ void draw_devices(void)
 	if(main_flags.current_device == this_device) draw_this_device();
 	else
 	{
-		if(pp_devices_menu[main_flags.current_device]->device_num == main_flags.current_device)		//data has received
+		if(pp_devices_menu[main_flags.current_device]->device_received == main_flags.current_device)		//data has received
 		{
 			if(pp_devices_menu[main_flags.current_device]->beacon_flag)		//(buffer[0] >> 7)		//if is beacon
 			{
-				sprintf(&string_buffer[0][0], "tBcn%d data:", pp_devices_menu[main_flags.current_device]->device_num);			//(buffer[0] & 0x03));
-			}else sprintf(&string_buffer[0][0], " Dev%d data:", pp_devices_menu[main_flags.current_device]->device_num);		//(buffer[0] & 0x03));
+				sprintf(&string_buffer[0][0], "tBcn%d data:", pp_devices_menu[main_flags.current_device]->device_received);			//(buffer[0] & 0x03));
+			}
+			else sprintf(&string_buffer[0][0], " Dev%d data:", pp_devices_menu[main_flags.current_device]->device_received);		//(buffer[0] & 0x03));
 		}
 		else sprintf(&string_buffer[0][0], " NoDevice %d", main_flags.current_device);
 
@@ -1385,7 +1398,7 @@ void draw_devices(void)
 		sprintf(&string_buffer[10][0], " SNR: %02ddB", pp_devices_menu[main_flags.current_device]->snr);
 
 		(p_settings_menu->spreading_factor == 12)? sprintf(&string_buffer[11][0], "                  "):
-		sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS", pp_devices_menu[main_flags.current_device]->device_num, this_device, main_flags.endRX_2_TX);
+		sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS", pp_devices_menu[main_flags.current_device]->device_received, this_device, main_flags.endRX_2_TX);
 
 		sprintf(&string_buffer[12][0], "Latit : %ld", pp_devices_menu[main_flags.current_device]->latitude.as_integer);
 		sprintf(&string_buffer[13][0], "Longit: %ld", pp_devices_menu[main_flags.current_device]->longitude.as_integer);
@@ -1767,8 +1780,8 @@ void draw_settings(void)
 		if(k == row) draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, YELLOW,BLACK);
 		else draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, GREEN,BLACK);
 	}
-//	sprintf(&string_buffer[row][0], ">");
-	draw_char(3, 10+row*19, 62, &Font_11x18, YELLOW,BLACK);
+
+	draw_char(3, 10+row*19, *">", &Font_11x18, YELLOW,BLACK);
 }
 
 void draw_set_settings(void)
@@ -1790,8 +1803,8 @@ void draw_set_settings(void)
 		if(k == row) draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, CYAN,BLACK);
 		else draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, GREEN,BLACK);
 	}
-	sprintf(&string_buffer[row][0], ">");
-	draw_char(3, 10+row*19, 62, &Font_11x18, CYAN,BLACK);
+
+	draw_char(3, 10+row*19, *">", &Font_11x18, CYAN,BLACK);
 }
 //---------------------------------SETTINGS SET-----------------------------------
 	/*********************DEVICE NUMBER************************/
@@ -2092,18 +2105,36 @@ void draw_actions(void)
 
 	sprintf(&string_buffer[0][0], " Power OFF");
 	(pp_devices_menu[this_device]->emergency_flag)? sprintf(&string_buffer[1][0], " Emerge  on"): sprintf(&string_buffer[1][0], " Emerge off");
-	(pp_devices_menu[this_device]->alarm_flag)?     sprintf(&string_buffer[2][0], " Alarm   on"): sprintf(&string_buffer[2][0], " Alarm  ---");
-	(pp_devices_menu[this_device]->gather_flag)?    sprintf(&string_buffer[3][0], " Gather  on"): sprintf(&string_buffer[3][0], " Gather ---");
-	sprintf(&string_buffer[4][0], " Del points");
-	sprintf(&string_buffer[5][0], " SetDefault");
+
+//	(pp_devices_menu[this_device]->antitheft_flag)?     sprintf(&string_buffer[2][0], " ATheft  on"): sprintf(&string_buffer[2][0], " ATheft off");
+	if(pp_devices_menu[this_device]->antitheft_flag == 0) sprintf(&string_buffer[2][0], " ATheft off");
+	else if(p_settings_menu->spreading_factor == 12)
+	{
+		if(pp_devices_menu[this_device]->antitheft_flag == 2) sprintf(&string_buffer[2][0], " ATheft1 on");
+		else if(pp_devices_menu[this_device]->antitheft_flag == 1) sprintf(&string_buffer[2][0], " ATheft2 on");
+	}
+	else sprintf(&string_buffer[2][0], " ATheft  on");
+
+//	(pp_devices_menu[this_device]->bcntohalt_flag)?    sprintf(&string_buffer[3][0], " BeaconHalt"): sprintf(&string_buffer[3][0], " BeaconLive");
+	if(pp_devices_menu[this_device]->bcntohalt_flag == 0) sprintf(&string_buffer[3][0], " BeaconLive");
+	else if(p_settings_menu->spreading_factor == 12)
+	{
+		if(pp_devices_menu[this_device]->bcntohalt_flag == 2) sprintf(&string_buffer[3][0], " tBcn1 halt");
+		else if(pp_devices_menu[this_device]->bcntohalt_flag == 1) sprintf(&string_buffer[3][0], " tBcn2 halt");
+	}
+	else sprintf(&string_buffer[3][0], " BeaconHalt");
+
 //	(pp_devices_menu[this_device]->beeper_flag)?    sprintf(&string_buffer[6][0], " Beeper  on"): sprintf(&string_buffer[6][0], " Beeper off");
-	if(pp_devices_menu[this_device]->beeper_flag == 0) sprintf(&string_buffer[6][0], " Beeper off");
+	if(pp_devices_menu[this_device]->beeper_flag == 0) sprintf(&string_buffer[4][0], " Beeper off");
 	else if(p_settings_menu->spreading_factor == 12)
     {//SF12 only: invert flags to transmit in the slot, beacon can get: slot1 for beacon2, slot2 for beacon1
-		if(pp_devices_menu[this_device]->beeper_flag == 2) sprintf(&string_buffer[6][0], " Beeper1 on");
-		else if(pp_devices_menu[this_device]->beeper_flag == 1) sprintf(&string_buffer[6][0], " Beeper2 on");
+		if(pp_devices_menu[this_device]->beeper_flag == 2) sprintf(&string_buffer[4][0], " Beeper1 on");
+		else if(pp_devices_menu[this_device]->beeper_flag == 1) sprintf(&string_buffer[4][0], " Beeper2 on");
 	}
-	else sprintf(&string_buffer[6][0], " Beeper  on");
+	else sprintf(&string_buffer[4][0], " Beeper  on");
+
+	sprintf(&string_buffer[5][0], " Del points");
+	sprintf(&string_buffer[6][0], " SetDefault");
 
 	(pp_devices_menu[this_device]->flwtrek_flag)?   sprintf(&string_buffer[7][0], " FlwTrek on"): sprintf(&string_buffer[7][0], " FlwTrekOff");
 
@@ -2113,11 +2144,10 @@ void draw_actions(void)
 		if(k == row) draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, YELLOW,BLACK);
 		else {
 			draw_str_by_rows(3, 10+k*19, &string_buffer[k][0], &Font_11x18, GREEN,BLACK);
-//			ST7735_WriteString(3, 10+k*19, &string_buffer[k][0], &Font_11x18, CYAN,BLACK);
 		}
 	}
-//	sprintf(&string_buffer[row][0], ">");
-	draw_char(3, 10+row*19, 62, &Font_11x18, YELLOW,BLACK);
+
+	draw_char(3, 10+row*19, *">", &Font_11x18, YELLOW,BLACK);
 }
 
 void power_long(void)
@@ -2151,22 +2181,68 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 			led_w_on();
 			HAL_Delay(20);
 			release_power();
+
 			break;
 		case M_ACTIONS_I_EMERGENCY:
 			(pp_devices_menu[this_device]->emergency_flag == 0)?
 					(pp_devices_menu[this_device]->emergency_flag = 1):
 					(pp_devices_menu[this_device]->emergency_flag = 0);
 			break;
-		case M_ACTIONS_I_ALARM:		//toggle_alarm();
-//			(pp_devices_menu[main_flags.current_device]->alarm_flag == 0)?
-//					(pp_devices_menu[main_flags.current_device]->alarm_flag = 1):
-//					(pp_devices_menu[main_flags.current_device]->alarm_flag = 0);
+
+		case M_ACTIONS_I_ANTITHEFT:		//toggle_alarm();
+			if(!pp_devices_menu[this_device]->bcntohalt_flag && !pp_devices_menu[this_device]->beeper_flag)
+			{
+				if(p_settings_menu->spreading_factor == 12)
+				{
+					if(pp_devices_menu[this_device]->antitheft_flag == 0) pp_devices_menu[this_device]->antitheft_flag = 2;			//0x10
+					else if(pp_devices_menu[this_device]->antitheft_flag == 2) pp_devices_menu[this_device]->antitheft_flag = 1;	//0x01
+					else pp_devices_menu[this_device]->antitheft_flag = 0;															//0x00
+				}
+				else
+				{
+					(pp_devices_menu[main_flags.current_device]->antitheft_flag == 0)?
+					(pp_devices_menu[main_flags.current_device]->antitheft_flag = 1):
+					(pp_devices_menu[main_flags.current_device]->antitheft_flag = 0);
+				}
+			}
 			break;
-		case M_ACTIONS_I_GATHER:	//toggle_gather();
-//			(pp_devices_menu[main_flags.current_device]->gather_flag == 0)?
-//					(pp_devices_menu[main_flags.current_device]->gather_flag = 1):
-//					(pp_devices_menu[main_flags.current_device]->gather_flag = 0);
+
+		case M_ACTIONS_I_BCNHALT:	//toggle_gather();
+			if(!pp_devices_menu[this_device]->antitheft_flag &&	!pp_devices_menu[this_device]->beeper_flag)
+			{
+				if(p_settings_menu->spreading_factor == 12)
+				{
+					if(pp_devices_menu[this_device]->bcntohalt_flag == 0) pp_devices_menu[this_device]->bcntohalt_flag = 2;			//0x10
+					else if(pp_devices_menu[this_device]->bcntohalt_flag == 2) pp_devices_menu[this_device]->bcntohalt_flag = 1;	//0x01
+					else pp_devices_menu[this_device]->bcntohalt_flag = 0;															//0x00
+				}
+				else
+				{
+					(pp_devices_menu[main_flags.current_device]->bcntohalt_flag == 0)?
+					(pp_devices_menu[main_flags.current_device]->bcntohalt_flag = 1):
+					(pp_devices_menu[main_flags.current_device]->bcntohalt_flag = 0);
+				}
+			}
 			break;
+
+		case M_ACTIONS_I_BEEPER:	//toggle_trigger();
+			if(!pp_devices_menu[this_device]->antitheft_flag &&	!pp_devices_menu[this_device]->bcntohalt_flag)
+			{
+				if(p_settings_menu->spreading_factor == 12)
+				{
+					if(pp_devices_menu[this_device]->beeper_flag == 0) pp_devices_menu[this_device]->beeper_flag = 2;		//0x10
+					else if(pp_devices_menu[this_device]->beeper_flag == 2) pp_devices_menu[this_device]->beeper_flag = 1;	//0x01
+					else pp_devices_menu[this_device]->beeper_flag = 0;														//0x00
+				}
+				else
+				{
+					(pp_devices_menu[this_device]->beeper_flag == 0)?
+					(pp_devices_menu[this_device]->beeper_flag = 1):
+					(pp_devices_menu[this_device]->beeper_flag = 0);
+				}
+			}
+			break;
+
 		case M_ACTIONS_I_ERASE_POINTS:
 			current_menu = M_ERASE_POINTS;
 //			erase_point_groups();
@@ -2186,23 +2262,11 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 ////				lost_device_load(i);
 ////			}
 			break;
+
 		case M_ACTIONS_I_SET_DEFAULTS:
 			current_menu = M_CONFIRM_RESTORING;
 			break;
-		case M_ACTIONS_I_BEEPER:	//toggle_trigger();
-			if(p_settings_menu->spreading_factor == 12)
-			{
-				if(pp_devices_menu[this_device]->beeper_flag == 0) pp_devices_menu[this_device]->beeper_flag = 2;		//0x10
-				else if(pp_devices_menu[this_device]->beeper_flag == 2) pp_devices_menu[this_device]->beeper_flag = 1;	//0x01
-				else pp_devices_menu[this_device]->beeper_flag = 0;														//0x00
-			}
-			else
-			{
-				(pp_devices_menu[this_device]->beeper_flag == 0)?
-						(pp_devices_menu[this_device]->beeper_flag = 1):
-						(pp_devices_menu[this_device]->beeper_flag = 0);
-			}
-			break;
+
 		case M_ACTIONS_I_FLWTREK:	//initial set in init_gnss() of gnss.c
 			(pp_devices_menu[this_device]->flwtrek_flag == 0)?
 					(pp_devices_menu[this_device]->flwtrek_flag = 1):

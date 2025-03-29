@@ -65,8 +65,8 @@ all: main-build
 main-build: E5-tBeacon.elf secondary-outputs
 
 # Tool invocations
-E5-tBeacon.elf E5-tBeacon.map: $(OBJS) $(USER_OBJS) C:\Users\user\STM32CubeIDE\NewModule\E5-tBeacon\STM32WLE5JCIX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "E5-tBeacon.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\user\STM32CubeIDE\NewModule\E5-tBeacon\STM32WLE5JCIX_FLASH.ld" --specs=nosys.specs -Wl,-Map="E5-tBeacon.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+E5-tBeacon.elf E5-tBeacon.map: $(OBJS) $(USER_OBJS) /home/z/STM32Cube/NewModule/E5-tBeacon/STM32WLE5JCIX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "E5-tBeacon.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/z/STM32Cube/NewModule/E5-tBeacon/STM32WLE5JCIX_FLASH.ld" --specs=nosys.specs -Wl,-Map="E5-tBeacon.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

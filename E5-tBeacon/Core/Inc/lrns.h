@@ -32,24 +32,24 @@ void getADC_sensors(void);
 struct devices_struct
 {
 	//COMMON
-    uint8_t device_num;  				//a device id, single ASCII symbol
+    uint8_t device_received;  				//a device id, single ASCII symbol
 	uint8_t exist_flag;             //does a device exist?
-	int8_t beacon_traced;
 	uint8_t beacon_lost;
 	uint8_t beacon_flag;
 
+	int8_t beacon_traced;
 	int8_t index_in_flash;
-
-	uint8_t emergency_flag;
-	uint8_t alarm_flag;				//is alarm reported by a device?
-	uint8_t gather_flag;
-	uint8_t beeper_flag;
 	uint8_t flwtrek_flag;
 	uint8_t fence_flag;				//is a predefined fence distance reached?
 
+	uint8_t emergency_flag;
+	uint8_t antitheft_flag;
+	uint8_t bcntohalt_flag;
+	uint8_t beeper_flag;
+
     //TIME
-    uint32_t timeout;					//timeout in seconds since last activity (RX of coordinates)
-    uint8_t timeout_flag;				//set when predefined timeout occurs
+//    uint32_t timeout;				//timeout in seconds since last activity (RX of coordinates)
+    uint8_t timeout_flag;			//set when predefined timeout occurs
 
     uint8_t fix_type_opt;
     uint8_t valid_fix_flag;

@@ -65,7 +65,7 @@ void EXTI0_IRQHandler(void)		//(PPS_Pin)
 			led_blue_on();
 			getADC_sensors();	//lrns.c
 			//ones per period for this device(1 or 2) only before uart handling
-			clear_fix_data(p_settings->device_number);
+			clear_fix_data(p_settings->device_number);		//for this device
 //			if(main_flags.fix_valid == 3) manage_uart();	//manage ADC and UART only ones per period
 		}
 //		main_flags.pattern_started = 1;
