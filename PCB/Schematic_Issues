@@ -1,3 +1,3 @@
 When tBeacon is on charge mode, there's schematic issue has been found. 
-I propose to add D2 (any schottky diode) or do not use auto-on when charge
+I propose to add D2 (any schottky diode) as pictured tBeacon_D2_mount.jpg, or do not use auto-on when charge
 by removing VT32, R33 and R34.
