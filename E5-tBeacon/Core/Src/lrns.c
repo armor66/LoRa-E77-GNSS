@@ -116,20 +116,27 @@ void ublox_to_this_device(uint8_t device_number)
 }
 void rx_to_devices(uint8_t device_number)
 {
-//	uint8_t *buffer = bufNode[device_number];
 	uint8_t *buffer = bufferRx;
 
 	devices[device_number].beacon_flag = buffer[0] >> 7;
-	if(((buffer[0] & 0x70) >> 4) == 5) devices[device_number].emergency_flag = 1;
-	else if(((buffer[0] & 0x70) >> 4) == 2) devices[device_number].emergency_flag = 0;
-//	devices[device_number].emergency_flag = (buffer[0] & 0x40) >> 6;
-//	devices[device_number].alarm_flag = (buffer[0] & 0x20) >> 5;
-//	devices[device_number].gather_flag = (buffer[0] & 0x10) >> 4;
+//	flags_to_transmit((buffer[0] & 0x70) >> 4) == 3 and beeper_flag((buffer[0] & 0x8) >> 3) == 0
+//	anti theft flag received (no beacon + antitheft_flag + no beep flag)
+	if(((buffer[0] & 0xF8) >> 3) == 0x0C)
+	{
+		main_flags.antitheft_flag_received = 1;
+		main_flags.short_beeps = 1;
+	}
+//	beacon to halt flag received (no beacon + bcntohalt_flag + no beep flag)
+	if(((buffer[0] & 0xF8) >> 3) == 0x0A)
+	{
+		main_flags.bcntohalt_flag_received = 1;
+		to_halt();
+	}
+
 	devices[device_number].beeper_flag = (buffer[0] & 0x8) >> 3;
 //	main_flags.beeper_flag_received = (buffer[0] & 0x8) >> 3;
-	devices[device_number].device_num = buffer[0] & 0x07;
+	devices[device_number].device_received = buffer[0] & 0x07;
 
-//	devices[device_number].is_moving =
 	devices[device_number].fix_type_opt = (buffer[1] & 0x60) >> 5;			//only 2 bits used to transmit
 	devices[device_number].valid_fix_flag = ((buffer[1] & 0x10) >> 4);		//bit0 only
 	devices[device_number].batt_voltage = (buffer[1] & 0x0F)+27;			//in decimal volts
@@ -308,7 +315,7 @@ uint8_t check_any_alarm_fence_timeout(void)
 	{
 		if (devices[dev].exist_flag)
 		{
-			if ((devices[dev].alarm_flag) || (devices[dev].fence_flag) || (devices[dev].timeout_flag))
+			if ((devices[dev].fence_flag) || (devices[dev].timeout_flag))
 			{
 				return 1;
 			}

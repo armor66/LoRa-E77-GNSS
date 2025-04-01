@@ -99,7 +99,7 @@ void EXTI0_IRQHandler(void)		//(PPS_Pin)
 		lcd_off();
 		main_flags.display_status = 0;
 //for TPS7330 Vthresold=2.64V, for TPS7333 Vthresold=2.87V(287-270=17), 0==270(2.70V) (actually ~2.95V)
-		if(pp_devices[p_settings->device_number]->batt_voltage < 30)
+		if(pp_devices[p_settings->device_number]->batt_voltage < 5)
 		{
 			led_w_on();		//long beep to prevent silent "RESET"
 			HAL_Delay(750);

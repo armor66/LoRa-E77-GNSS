@@ -116,7 +116,6 @@ void ublox_to_this_device(uint8_t device_number)
 }
 void rx_to_devices(uint8_t device_number)
 {
-//	uint8_t *buffer = bufNode[device_number];
 	uint8_t *buffer = bufferRx;
 
 	devices[device_number].beacon_flag = buffer[0] >> 7;

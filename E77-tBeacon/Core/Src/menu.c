@@ -1506,4 +1506,3 @@ void to_halt(void)
 	shortBeeps(2);
 	main_flags.display_status = 1;
 }
-

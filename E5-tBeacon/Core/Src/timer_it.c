@@ -93,7 +93,13 @@ void TIM1_UP_IRQHandler(void)
 			}
 			if(p_settings_tim->spreading_factor != 12) main_flags.time_slot++;
 //clear what should be received or not in this slot after draw menu has finished
-			if(p_settings_tim->device_number != main_flags.time_slot) clear_fix_data(main_flags.time_slot);
+			if(p_settings_tim->device_number != main_flags.time_slot)
+			{
+				clear_fix_data(main_flags.time_slot);
+
+				if(!main_flags.antitheft_flag_confurmed) main_flags.antitheft_flag_received = 0;
+				if(!main_flags.bcntohalt_flag_confurmed) main_flags.bcntohalt_flag_received = 0;
+			}
 			if(p_settings_tim->spreading_factor == 12)
 			{	//set TX iq_inversion = 0 so that module №3 can receive data
 				if(p_settings_tim->device_number == main_flags.time_slot)	//transmit LORA_IQ_NORMAL
@@ -212,8 +218,6 @@ void TIM1_UP_IRQHandler(void)
 
 
 /***********************************************************/
-
-
 			main_flags.short_beeps? led_w_on(): (main_flags.update_screen = 1);
 			main_flags.permit_actions = 1;		//process buttons here after
 			break;

@@ -204,7 +204,7 @@ int main(void)
 		if (main_flags.update_screen)	//buttons processed or on case 3 or if no PPS signal
 		{
 			HAL_IWDG_Refresh(&hiwdg);
-//			draw_current_menu();
+			draw_current_menu();
 			main_flags.update_screen = 0;
 		}
 		__NOP();

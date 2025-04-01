@@ -205,11 +205,9 @@ void led_w_off(void){
 
 void lcd_on(void){
 	LCD_GPIO_Port->BSRR = (LCD_Pin << 16);
-//	GPIOB->BSRR = GPIO_BSRR_BR10;
 }
 void lcd_off(void){
 	LCD_GPIO_Port->BSRR = LCD_Pin;
-//	GPIOB->BSRR = GPIO_BSRR_BS10;
 }
 
 void gps_enable(void){

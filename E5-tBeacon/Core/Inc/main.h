@@ -146,6 +146,12 @@ struct main_flags_struct
     uint8_t uartIdx;
     uint8_t settings_index;
 
+    uint8_t emergency_flag;
+	uint8_t antitheft_flag_received;
+	uint8_t antitheft_flag_confurmed;
+	uint8_t bcntohalt_flag_received;
+	uint8_t bcntohalt_flag_confurmed;
+
     uint16_t endRX_2_TX;
     uint32_t settings_address;
 };

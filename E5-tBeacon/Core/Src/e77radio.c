@@ -104,13 +104,8 @@ static void OnTxDone(void)
 
 void set_transmit_data(void)
 {
-	int8_t emergency_to_transmit;
-	int8_t beeper_flag_to_transmit;
-
-
-
-	(pp_devices_rf[p_settings_rf->device_number]->emergency_flag)? (emergency_to_transmit = 5): (emergency_to_transmit = 2);
-	(pp_devices_rf[p_settings_rf->device_number]->beeper_flag)? (beeper_flag_to_transmit = 1): (beeper_flag_to_transmit = 0);
+	int8_t flags_to_transmit;
+	int8_t beeper_flag_to_transmit = 0;
 
 
 
@@ -118,15 +113,31 @@ void set_transmit_data(void)
 
 
 
+	if(main_flags.antitheft_flag_received)		//main_flags.antitheft_flag_confurmed
+	{
+		flags_to_transmit = 6;
+	}
+	else if(main_flags.emergency_flag)
+	{
+		flags_to_transmit = 3;
+	}
+	else flags_to_transmit = 0;
 
 
 
 
 
-   	  bufferTx[0] =	(IS_BEACON << 7) + (emergency_to_transmit << 4) +
-//    		  (pp_devices_rf[p_settings_rf->device_number]->emergency_flag << 6) +
-//			  (pp_devices_rf[p_settings_rf->device_number]->alarm_flag << 5) +
-//			  (pp_devices_rf[p_settings_rf->device_number]->gather_flag << 4) +
+
+
+
+
+
+
+
+
+
+
+   	  bufferTx[0] =	(IS_BEACON << 7) + (flags_to_transmit << 4) +
 			  (beeper_flag_to_transmit << 3) + p_settings_rf->device_number;
 
    	  (pp_devices_rf[p_settings_rf->device_number]->gps_speed > GPS_SPEED_THRS)? (bufferTx[1] |= 1 << 7): (bufferTx[1] &= ~(1 << 7));	//if device is moving

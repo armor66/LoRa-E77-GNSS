@@ -115,6 +115,7 @@ void TIM1_UP_IRQHandler(void)
 					LORA_FIX_LENGTH_PAYLOAD_ON,	3, true, 0, 0, LORA_IQ_INVERTED, false);			//CRC, Hop, HopPer, IQ, single mode
 				}
 			}//end of spreading_factor == 12
+
 			led_blue_off();				//led_blue_on on case 6 or PPS IRQ
 			led_red_off();				//after new pattern started
 			break;
@@ -217,9 +218,7 @@ void TIM1_UP_IRQHandler(void)
 
 
 /***********************************************************/
-//			main_flags.short_beeps? led_w_on(): (main_flags.update_screen = 1);
-			main_flags.update_screen = 1;
-			draw_current_menu();
+			main_flags.short_beeps? led_w_on(): (main_flags.update_screen = 1);
 			main_flags.permit_actions = 1;		//process buttons here after
 			break;
 

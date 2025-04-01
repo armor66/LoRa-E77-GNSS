@@ -42,9 +42,9 @@ struct devices_struct
 	uint8_t flwtrek_flag;
 	uint8_t fence_flag;				//is a predefined fence distance reached?
 
-	uint8_t emergency_flag;
-	uint8_t antitheft_flag;
-	uint8_t bcntohalt_flag;
+//	uint8_t emergency_flag;
+//	uint8_t antitheft_flag;
+//	uint8_t bcntohalt_flag;
 	uint8_t beeper_flag;
 
     //TIME
