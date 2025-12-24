@@ -1,12 +1,16 @@
 E77-128x160 contains st7735 1.8" and nv3023 2.08" lcd screen options, 
 so you can uncomment #define ST7735 or #define NV3023 in the main.h respectively.
-#define ST7735 implement bno055 "blue" board and PA5 as MUTE pin, whereas
-#define NV3023 implement bno055 "pink" board and PA9 as MUTE pin.
-PCB/Schematic_nv3023_PogoPins.pdf presents new pogo pins design.
-PCB and CASE folders also contain corresponding st7735 and nv3023 files.
+
+#define ST7735 implements bno055 "blue" board and PA5 as MUTE pin, whereas
+#define NV3023 implements bno055 "pink" board and PA9 as MUTE pin.
+
+PCB/Schematic_nv3023_PogoPins.pdf provides new pogo pins design.
+PCB and CASE folders contain corresponding st7735 and nv3023 files.
+
 E77-Beacon is for 52x36mm pcb design.
-E77-tBeacon is new tiny 36x26mm pcb design. Digital accelerometer ADXL345 on separate expansion board added wia I2C pins PB6&PB7.
+E77-tBeacon is new tiny 36x26mm pcb design with accelerometer ADXL345 on separate expansion board added wia I2C pins PB6&PB7.
 Which implements Double Tap and Activity detection.
+
 For the very first time use CubeProgrammer with "Hardware reset" mode. Hold Reset button, press Connect, release Reset button. 
 After that Browse for E77-128x160.bin or E77-tBeacon.bin and Start Programming.
 
