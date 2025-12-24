@@ -66,8 +66,8 @@ void Error_Handler(void);
 #define LED_B_GPIO_Port GPIOB
 #define LED_W_Pin GPIO_PIN_5
 #define LED_W_GPIO_Port GPIOB
-#define GPS_EN_Pin GPIO_PIN_8
-#define GPS_EN_GPIO_Port GPIOB
+#define CHARGE_Pin GPIO_PIN_8
+#define CHARGE_GPIO_Port GPIOB
 #define BTN_1_Pin GPIO_PIN_0
 #define BTN_1_GPIO_Port GPIOA
 #define BTN_2_Pin GPIO_PIN_1
@@ -150,6 +150,14 @@ struct main_flags_struct
 	uint8_t bcntohalt_flag_received;
 	uint8_t bcntohalt_flag_confurmed;
 
+	uint8_t adxl_status;
+	uint8_t adxl_doubletap_flag;
+	uint8_t adxl_activity_flag;
+	uint8_t adxl_device_id;
+	uint8_t adxl_activity;
+	uint8_t adxl_fault;
+
+	int8_t current_device;
     uint16_t endRX_2_TX;
     uint32_t settings_address;
 };

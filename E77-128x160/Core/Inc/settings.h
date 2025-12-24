@@ -67,6 +67,8 @@ struct settings_struct
     uint8_t devices_on_air;				//total number of devices on air, 1...DEVICES_IN_GROUP
     uint8_t spreading_factor;			//SPREADING_FACTOR   /* [SF7..SF12] */
     uint8_t coding_rate_opt;   			//CODINGRATE    /* [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8] */
+    uint8_t preamble;
+    uint8_t	crc_on;
     uint8_t freq_channel;               //frequency tx/rx channel, LPD #1-69
     uint8_t tx_power_opt;               //tx power option, not an actual value
     uint8_t timeout_threshold;        	//timeout treshold in seconds, unsigned. if it == 0, then timeout alarm not trigger (but, anyway, timeout is counting). See TIMEOUT_ALARM_DISABLED

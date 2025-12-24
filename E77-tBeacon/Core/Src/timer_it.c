@@ -9,11 +9,11 @@
 #include "lrns.h"
 #include "e77radio.h"
 #include "radio.h"
-//#include "gnss.h"		//for trek points
-//#include "compass.h"
+#include "adxl345.h"
 
 int8_t pattern_index = 0;
 int8_t long_beep_ones = 0;
+int8_t do_halt = 0;
 
 uint8_t *p_tx_power_values_tim;
 
@@ -31,7 +31,7 @@ void timer_it_init(void)
 */
 	TIM1->CR1 |= TIM_CR1_URS;
 	TIM2->CR1 |= TIM_CR1_URS;
-//	TIM16->CR1 |= TIM_CR1_URS;
+	TIM16->CR1 |= TIM_CR1_URS;
 //	TIM17->CR1 |= TIM_CR1_URS;
 
 	p_tx_power_values_tim = get_tx_power_values();
@@ -39,6 +39,7 @@ void timer_it_init(void)
 	pp_devices_tim = get_devices();
 }
 const uint8_t timeslot_pattern[2][103] =
+//PLmax=13(11+CRC), SF11, CR3(4/7), preamble=12, CRC_OFF, Air-Time = 627(+16?):357mS measured RxDone2Tx(should be 373mS)
 //	| PVT|Slot1 OnRxDone time <642mS		+358mS|Slot2 OnTxDone time <627mS		  | PVT|Slot3					   | draw menu|
 //	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
 //	0 50 100mS	                             1000 1100mS							  2000 2100								 3000
@@ -47,7 +48,8 @@ const uint8_t timeslot_pattern[2][103] =
 //	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
 //	2000 2100mS								 3000 3100mS							  4000 4100mS							   5000mS
 	4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1 },
-//	SF = 12, CR3(4/7), Packet duration in air = 1122.3
+
+//PLmax=13(CRC), SF12, CR3(4/7), preamble=8, CRC_ON, Air-Time = 1122(+33?):345mS measured RxDone2Tx (1150-1155=-5 !exceed!)
 // PPS	 |Slot1 		AIR time 1122mS		PPS 		| draw menu|  |Slot2 		 PPS   		AIR time 1122mS      | draw menu|
 //	|----|-----------------------------------|----|-----|-------------|---------------|----|-------------------------|---------|
 //	0 50 100mS	                             1000		1250mS						  2000				    	  	2750	   3000
@@ -96,23 +98,34 @@ void TIM1_UP_IRQHandler(void)
 			if(p_settings_tim->device_number != main_flags.time_slot)
 			{
 				clear_fix_data(main_flags.time_slot);
-
-				if(!main_flags.antitheft_flag_confurmed) main_flags.antitheft_flag_received = 0;
-				if(!main_flags.bcntohalt_flag_confurmed) main_flags.bcntohalt_flag_received = 0;
+				//if(!main_flags.antitheft_flag_confurmed)
+					main_flags.antitheft_flag_received = 0;
+				//if(!main_flags.bcntohalt_flag_confurmed)
+					main_flags.bcntohalt_flag_received = 0;
 			}
 			if(p_settings_tim->spreading_factor == 12)
-			{	//set TX iq_inversion = 0 so that module №3 can receive data
-				if(p_settings_tim->device_number == main_flags.time_slot)	//transmit LORA_IQ_NORMAL
-				{
-					Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_tim[p_settings_tim->tx_power_opt], 0,
-					LORA_BANDWIDTH,	p_settings_tim->spreading_factor, p_settings_tim->coding_rate_opt,
-					LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);
-				}//set RX iq_inversion = 1 to not receive from other beacon but receive from module №3
-				if(p_settings_tim->device_number != main_flags.time_slot)	//receive LORA_IQ_INVERTED, BUFFER_AIR_SIZE = 3
-				{
-					Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_tim->spreading_factor,
-					p_settings_tim->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH, LORA_SYMBOL_TIMEOUT,
-					LORA_FIX_LENGTH_PAYLOAD_ON,	3, true, 0, 0, LORA_IQ_INVERTED, false);			//CRC, Hop, HopPer, IQ, single mode
+			{
+				if(main_flags.fix_valid)
+				{	//set TX iq_inversion = 0 so that module №3 can receive data
+					if(p_settings_tim->device_number == main_flags.time_slot)
+					{	//transmit LORA_IQ_NORMAL
+						Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_tim[p_settings_tim->tx_power_opt], 0,
+							LORA_BANDWIDTH,	p_settings_tim->spreading_factor, p_settings_tim->coding_rate_opt,
+							p_settings_tim->preamble, LORA_FIX_LENGTH_PAYLOAD_ON, CRC_ON, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);
+					}
+					//set RX iq_inversion = 1 to not receive from other beacon but receive from module №3
+					else	//receive LORA_IQ_INVERTED, BUFFER_AIR_SIZE = 3
+					{		// RX single mode in other slot
+						(Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_tim->spreading_factor,
+							p_settings_tim->coding_rate_opt, 0, p_settings_tim->preamble, LORA_SYMBOL_TIMEOUT,
+							LORA_FIX_LENGTH_PAYLOAD_ON,	3, CRC_ON, 0, 0, LORA_IQ_INVERTED, false));
+					}
+				}
+				else	// no fix_valid
+				{		// RX continuous mode in both slots
+					(Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_tim->spreading_factor,
+							p_settings_tim->coding_rate_opt, 0, p_settings_tim->preamble, LORA_SYMBOL_TIMEOUT,
+							LORA_FIX_LENGTH_PAYLOAD_ON,	3, CRC_ON, 0, 0, LORA_IQ_INVERTED, true));
 				}
 			}//end of spreading_factor == 12
 
@@ -121,48 +134,34 @@ void TIM1_UP_IRQHandler(void)
 			break;
 
 		case 2:			//100mS
+			main_flags.rx_crc_error = 0;
 //			led_green_off();
-//			if(main_flags.long_beeps)
-//			{
-//				main_flags.long_beeps_flag = 1;
-//				led_w_on();
-//			}
+			if(main_flags.display_status)
+			{
+				main_flags.endRX_2_TX = (uint16_t)TIM17->CNT;		//save interval from RX-end to TX-start
+				timer17_stop();		//stop and reload/clear
+			}
 
 			if(main_flags.time_slot == p_settings_tim->device_number)	//this device:
 			{	//if this device doesn't get gnss fix via uart 100mS after PPS, delay for full pattern time
 				if(!pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag)	main_flags.fix_valid--;
 				if(main_flags.fix_valid > 0)	//do not transmit if no GNSS FIX
 				{
-					if(main_flags.display_status)
-					{
-						main_flags.endRX_2_TX = (uint16_t)TIM17->CNT;		//save interval from RX-end to TX-start
-						timer17_stop();
-					}
 					main_flags.permit_actions = 0;
 					led_red_on();					//start transmitting, end by OnTxDone
 					set_transmit_data();			//State = TX_START;
-				}else main_flags.fix_valid = 0;		//just to avoid negative values
+				}else
+				{
+					main_flags.fix_valid = 0;		//just to avoid negative values
+/* if no fix_valid start to receive in continuous mode */
+					if(p_settings_tim->spreading_factor == 12) Radio.RxBoosted(0);
+				}
 			}
 			else//if(time_slot != p_settings_tim->device_number)	other devices:
 			{
+				Radio.RxBoosted(0);					//start to receive either SF=12 or not
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-				Radio.RxBoosted(700);			//start to receive SF=12 or not
-
-//manage (pp_devices_phy[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
+/*manage (pp_devices_phy[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)*/
 				if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
 				{
 					led_w_on();
@@ -174,24 +173,60 @@ void TIM1_UP_IRQHandler(void)
 
 		case 3:				//check if remote devices on the air, draw menu items
 			led_red_off();	//650ms after OnRxDone
+//			adxl_device_id();
+			uint8_t reg_status = 0;
+			adxl_readData(0x30, (uint8_t*)&reg_status, 1);	//bits, and the corresponding interrupts, are cleared by reading
 
+			if(main_flags.adxl_fault)
+			{
+				I2C1->CR1 |= I2C_CR1_PE;	//enable i2c1
+				main_flags.adxl_fault = 0;
+				main_flags.adxl_device_id = 0xEE;
+				shortBeeps(1);
+			}
+			else if(reg_status & (1 << D5))//(main_flags.adxl_doubletap_flag)
+			{
+//				main_flags.adxl_doubletap_flag = 0;			//if EXTI9_5_IRQHandler
+				main_flags.adxl_device_id = 0xDD;			//show on the main screen
+				if(main_flags.bcntohalt_flag_received)		//and no charge connected
+				{
+					main_flags.button_code = BTN_OK;
+					main_flags.buttons_scanned = 1;			//to force change_menu and release power
+				}else shortBeeps(2);
+			}
+			else if((reg_status & (1 << D4)) && main_flags.antitheft_flag_received)	//(main_flags.adxl_activity_flag)
+			{
+//				main_flags.adxl_activity_flag = 0;	//if EXTI9_5_IRQHandler
+				main_flags.adxl_device_id = 0xAA;	//show on the main screen
+				main_flags.emergency_flag = 1;
+				shortBeeps(3);
+			}
+			else		//if reg_status == 0
+			{	/*DEVID register holds a fixed device ID code of 0xE5*/
+				adxl_readData(0x00, (uint8_t*)&main_flags.adxl_device_id, 1);
+				/*emergency flag ones set remains active while antitheft_flag has received*/
+				if(!main_flags.antitheft_flag_received) main_flags.emergency_flag = 0;
+			}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//			switch (main_flags.adxl_status)
+//			{
+//				case ADXL_FAULT:
+//					I2C1->CR1 |= I2C_CR1_PE;	//enable i2c1
+//					main_flags.adxl_status = 0xEE;
+//					shortBeeps(1);
+//					break;
+//				case ADXL_DBL_TAP:
+//					main_flags.adxl_status = 0xDD;
+//					shortBeeps(2);
+//					break;
+//				case ADXL_ACTIVE:
+//					main_flags.adxl_status = 0xAA;
+//					shortBeeps(3);
+//					break;
+//				default:	//DEVID register holds a fixed device ID code of 0xE5
+//					adxl_readData(0x00, (uint8_t*)&main_flags.adxl_status, 1);
+//					break;
+//			}
 
 /*******************IF THERE IS ANY OF BEEP FLAGS****************************************/
 //			(p_settings_tim->timeout_threshold || p_settings_tim->fence_threshold)? mute_off(): mute_on();
@@ -218,7 +253,8 @@ void TIM1_UP_IRQHandler(void)
 
 
 /***********************************************************/
-			main_flags.short_beeps? led_w_on(): (main_flags.update_screen = 1);
+//			main_flags.short_beeps? led_w_on(): (
+			main_flags.update_screen = 1;
 			main_flags.permit_actions = 1;		//process buttons here after
 			break;
 
@@ -240,11 +276,14 @@ void TIM1_UP_IRQHandler(void)
 		case 6:	//for SF=12 on the alien slot only (device 3 choose in witch slot to transmit)
 			if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
 			{
-				led_w_on();		//500mS to case 3
+				led_w_on();		//450mS to case 3
 				pp_devices_tim[main_flags.time_slot]->beeper_flag = 0;
 				long_beep_ones = 1;
+
+				main_flags.adxl_device_id = 0;
 			}
 			break;
+
 		default:
 			break;
 		}
@@ -266,11 +305,12 @@ void TIM2_IRQHandler(void)					//Scan buttons interval	void TIM3_IRQHandler(void
 	}
 }
 
-//void TIM16_IRQHandler(void)
-//{
-//	TIM16->SR &= ~TIM_SR_UIF;                    //clear interrupt
-//	timer16_stop();
-//	main_flags.current_point_group = 0;
-//}
+void TIM16_IRQHandler(void)
+{
+	TIM16->SR &= ~TIM_SR_UIF;                    //clear interrupt
+	timer16_stop();
+	restartPattern();
+	//	main_flags.current_point_group = 0;
+}
 
 

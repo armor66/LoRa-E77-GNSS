@@ -110,7 +110,7 @@ void ublox_to_this_device(uint8_t device_number)
 //					serialPrint(set_three_seconds, sizeof(set_three_seconds));
 //				}
 				main_flags.first_time_locked = 1;
-				main_flags.short_beeps = 3;		//glad tidings
+				shortBeeps(3);					//glad tidings
 			}
 		}else  if(devices[device_number].valid_fix_flag) main_flags.fix_valid++;
 }
@@ -173,13 +173,21 @@ void rx_to_devices(uint8_t device_number)
 		pp_points_lrns[group_start_index + 1]->latitude.as_integer = devices[device_number].latitude.as_integer;
 		pp_points_lrns[group_start_index + 1]->longitude.as_integer = devices[device_number].longitude.as_integer;
 
-		//zero if "timeout_threshold=0"
-		devices[device_number].beacon_traced = p_settings_lrns->timeout_threshold / p_settings_lrns->devices_on_air;		//!validFixFlag[time_slot] delay
-		//beacon always traced, except this device does not transmit "bcntohalt_flag"
-		//if(devices[device_number].beacon_flag)
-		if(!pp_devices[p_settings_lrns->device_number]->bcntohalt_flag && devices[device_number].beacon_flag)
+		if(devices[device_number].beacon_flag)
 		{
-			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
+			//beacon always traced, except this device does not transmit "bcntohalt_flag"
+			if(pp_devices[p_settings_lrns->device_number]->bcntohalt_flag)
+			{
+				devices[device_number].beacon_traced = 0;
+			}
+			else	//always 30 seconds before save it
+			{
+				devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;
+			}
+		}
+		else		//zero if "timeout_threshold = 0"
+		{
+			devices[device_number].beacon_traced = p_settings_lrns->timeout_threshold / p_settings_lrns->devices_on_air;
 		}
 
 		devices[device_number].beacon_lost = 0;

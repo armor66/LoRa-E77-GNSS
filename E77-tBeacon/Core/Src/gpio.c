@@ -54,17 +54,14 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, LED_R_Pin|LED_B_Pin|LED_W_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPS_EN_GPIO_Port, GPS_EN_Pin, GPIO_PIN_SET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, RF_CTRL1_Pin|RF_CTRL2_Pin|LCD_Pin|DC_Pin
                           |RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(HOLD_GPIO_Port, HOLD_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PBPin PBPin PBPin */
-  GPIO_InitStruct.Pin = LED_R_Pin|LED_B_Pin|GPS_EN_Pin;
+  /*Configure GPIO pins : PBPin PBPin */
+  GPIO_InitStruct.Pin = LED_R_Pin|LED_B_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -76,6 +73,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_W_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = CHARGE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(CHARGE_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PAPin PAPin PAPin */
   GPIO_InitStruct.Pin = BTN_1_Pin|BTN_2_Pin|BTN_3_Pin;
@@ -209,13 +212,6 @@ void lcd_on(void){
 }
 void lcd_off(void){
 	LCD_GPIO_Port->BSRR = LCD_Pin;
-}
-
-void gps_enable(void){
-//	GPIOB->BSRR = GPIO_BSRR_BS8;
-}
-void gps_disable(void){
-//	GPIOB->BSRR = GPIO_BSRR_BR8;
 }
 
 void hold_power(void) {

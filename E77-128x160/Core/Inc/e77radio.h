@@ -4,9 +4,11 @@
 //#define LORA_SPREADING_FACTOR    	11         /* [SF7..SF12] */
 //#define LORA_CODINGRATE          	2         /* [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8] */
 #define LORA_BANDWIDTH             	0         /* [0: 125 kHz, 1: 250 kHz, 2: 500 kHz, 3: Reserved] */
-#define LORA_PREAMBLE_LENGTH       	8         /* Same for Tx and Rx */
+//#define LORA_PREAMBLE_LENGTH       	8         /* Same for Tx and Rx */
 #define LORA_SYMBOL_TIMEOUT       	5         /* Symbols */
 #define LORA_FIX_LENGTH_PAYLOAD_ON	true
+#define CRC_ON						true
+#define CRC_OFF						false
 #define LORA_IQ_NORMAL				0
 #define LORA_IQ_INVERTED			1
 #define TX_TIMEOUT_VALUE            700		//700 for SF12, 650 for SF11 payload

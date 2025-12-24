@@ -112,13 +112,13 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC_Init();
-  MX_USART1_UART_Init();
+  MX_SUBGHZ_Init();
   MX_SPI2_Init();
   MX_TIM1_Init();
-  MX_TIM2_Init();
   MX_TIM16_Init();
   MX_TIM17_Init();
-  MX_SUBGHZ_Init();
+  MX_TIM2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 //  disable_buttons_interrupts();
 //  EXTI->IMR1 &= ~EXTI_IMR1_IM8;			//interrupt disabled on PPS front

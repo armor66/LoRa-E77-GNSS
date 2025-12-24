@@ -44,8 +44,8 @@ void navto_points_esc(void);
 // DEVICES MENU
 void draw_devices(void);
 void draw_this_device(void);
-void draw_device_submenu(void);
-void draw_set_points(void);
+//void draw_device_submenu(void);
+//void draw_set_points(void);
 //SUB DEVICES MENU
 void scroll_devices_up(void);
 void scroll_devices_down(void);
@@ -1454,6 +1454,7 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 
 		case M_ACTIONS_I_SET_DEFAULTS:
 			current_menu = M_CONFIRM_RESTORING;
+			break;
 
 		default:
 			break;

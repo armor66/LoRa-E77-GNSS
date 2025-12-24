@@ -28,7 +28,7 @@ static void scanChannels(void);
 static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraSnr_FskCfo);
 static void OnTxDone(void);
 static void OnRxError(void);
-//static void OnRxTimeout(void);
+static void OnRxTimeout(void);
 
 struct settings_struct *p_settings_rf;
 struct devices_struct **pp_devices_rf;
@@ -42,20 +42,20 @@ void radio_init(void)
 	RadioEvents.RxDone = OnRxDone;
 	RadioEvents.TxDone = OnTxDone;
 	RadioEvents.RxError = OnRxError;
-//	RadioEvents.RxTimeout = OnRxTimeout;
+	RadioEvents.RxTimeout = OnRxTimeout;
 
 	Radio.Init(&RadioEvents);		//Initializes driver callback functions: *TxDone *TxTimeout *RxDone *RxTimeout *FhssChangeChannel
 	srand(Radio.Random());			//sets the radio in LoRa modem mode and disables all interrupts
 
     Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_rf[p_settings_rf->tx_power_opt], 0, LORA_BANDWIDTH,
     		  p_settings_rf->spreading_factor, p_settings_rf->coding_rate_opt,
-                        LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
-                        true, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);			//CRC, Hop, HopPer, IQ, timeout
+			  p_settings_rf->preamble, LORA_FIX_LENGTH_PAYLOAD_ON,
+			  p_settings_rf->crc_on, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);			//CRC, Hop, HopPer, IQ, timeout
 
     Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_rf->spreading_factor,
-    		  p_settings_rf->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH,
+    		  p_settings_rf->coding_rate_opt, 0, p_settings_rf->preamble,
                         LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
-						BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, false);	//CRC, Hop, HopPer, IQ, single mode
+						BUFFER_AIR_SIZE, p_settings_rf->crc_on, 0, 0, LORA_IQ_NORMAL, false);	//CRC, Hop, HopPer, IQ, single mode
 
     Radio.SetMaxPayloadLength(MODEM_LORA, BUFFER_AIR_SIZE);
 
@@ -91,10 +91,25 @@ static void OnRxError(void)
 	main_flags.rx_crc_error = 1;	//reset on case 2:100mS
 }
 
-//static void OnRxTimeout(void)
-//{
-//	State = RX_TO;
-//}
+static void OnRxTimeout(void)		//receive starts only if fix_valid > 0
+{
+/* this restriction (when either flag set) leads to lost synchronization*/
+/*!(pp_devices_rf[3]->antitheft_flag || pp_devices_rf[3]->bcntohalt_flag || pp_devices_rf[3]->beeper_flag))*/
+	if(p_settings_rf->spreading_factor == 12)
+	{
+		timer17_start();
+		led_red_on();								//and prepare to transmit
+		main_flags.transmit_iq_inverted_flag = 1;	//set transmit LORA_IQ_INVERTED
+		Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_rf[p_settings_rf->tx_power_opt], 0,
+			LORA_BANDWIDTH,	p_settings_rf->spreading_factor, p_settings_rf->coding_rate_opt,
+			p_settings_rf->preamble, LORA_FIX_LENGTH_PAYLOAD_ON, CRC_ON, 0, 0, LORA_IQ_INVERTED, TX_TIMEOUT_VALUE);
+		bufferTx[0] = main_flags.time_slot;
+		bufferTx[2] = bufferTx[1] = 0;
+		Radio.Send(bufferTx, 3);
+/* 663mS(AirTime + 33mS(SymbTime) = 696mS(RxDone) + 54mS(TimeOut) = 750mS(on slot) */
+/* restart beacon pattern when OnRxDone if beacon1 + 1650mS and + 650mS if beacon2 */
+	}
+}
 
 static void OnTxDone(void)
 {
@@ -109,17 +124,17 @@ void set_transmit_data(void)
 	int8_t device_number;
 	int8_t buffer_to_transmit;
 
-	if(pp_devices_rf[p_settings_rf->device_number]->antitheft_flag)
+	if(pp_devices_rf[p_settings_rf->device_number]->emergency_flag)
 	{
-		flags_to_transmit = 6;
+		flags_to_transmit = 3;
 	}
 	else if(pp_devices_rf[p_settings_rf->device_number]->bcntohalt_flag)
 	{
 		flags_to_transmit = 5;
 	}
-	else if(pp_devices_rf[p_settings_rf->device_number]->emergency_flag)
+	else if(pp_devices_rf[p_settings_rf->device_number]->antitheft_flag)
 	{
-		flags_to_transmit = 3;
+		flags_to_transmit = 6;
 	}
 	else flags_to_transmit = 0;
 

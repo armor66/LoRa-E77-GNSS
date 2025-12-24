@@ -11,14 +11,14 @@ const double rad_to_deg = 57.29577951308232;        //rad to deg multiplyer
 const double deg_to_rad = 0.0174532925199433;       //deg to rad multiplyer
 
 //Air packet structure and fields position
-#define PACKET_NUM_ID_POS           (0)			//byte pos in a packet
-#define BYTE_NUM_POS           		(5)			//bits pos in a byte
-#define PACKET_NUM_MASK           	(0xE0)
-#define PACKET_ID_MASK           	(0x1F)
-#define PACKET_FLAGS_POS            (1)
-#define PACKET_LATITUDE_POS         (2)
-#define PACKET_LONGITUDE_POS        (6)
-#define PACKET_ALTITUDE_POS        	(10)
+//#define PACKET_NUM_ID_POS           (0)			//byte pos in a packet
+//#define BYTE_NUM_POS           		(5)			//bits pos in a byte
+//#define PACKET_NUM_MASK           	(0xE0)
+//#define PACKET_ID_MASK           	(0x1F)
+//#define PACKET_FLAGS_POS            (1)
+//#define PACKET_LATITUDE_POS         (2)
+//#define PACKET_LONGITUDE_POS        (6)
+//#define PACKET_ALTITUDE_POS        	(10)
 
 #define AIR_PACKET_LEN   (0x0D)	//payload len only, no syncword/crc included   (FSK_PP7_PLOAD_LEN_12_BYTE)
 
@@ -36,17 +36,17 @@ struct devices_struct **get_devices(void)
 	return &p_devices[0];
 }
 
-struct point_groups_struct point_groups[MEMORY_POINT_GROUPS];
-struct point_groups_struct *p_point_groups[MEMORY_POINT_GROUPS];
-
-struct point_groups_struct **get_point_groups(void)
-{
-	for (uint8_t grp = 0; grp < MEMORY_POINT_GROUPS; grp++)
-	{
-		p_point_groups[grp] = &point_groups[grp];
-	}
-	return &p_point_groups[0];
-}
+//struct point_groups_struct point_groups[MEMORY_POINT_GROUPS];
+//struct point_groups_struct *p_point_groups[MEMORY_POINT_GROUPS];
+//
+//struct point_groups_struct **get_point_groups(void)
+//{
+//	for (uint8_t grp = 0; grp < MEMORY_POINT_GROUPS; grp++)
+//	{
+//		p_point_groups[grp] = &point_groups[grp];
+//	}
+//	return &p_point_groups[0];
+//}
 
 double distance[DEVICES_ON_AIR_MAX + 1];
 double arc_length[DEVICES_ON_AIR_MAX + 1];
@@ -55,8 +55,8 @@ int16_t azimuth_deg_unsigned[DEVICES_ON_AIR_MAX + 1];
 double azimuth_rad[DEVICES_ON_AIR_MAX + 1];
 
 struct devices_struct **pp_devices;
-struct point_groups_struct **pp_point_groups;
-struct points_struct **pp_points_lrns;
+//struct point_groups_struct **pp_point_groups;
+//struct points_struct **pp_points_lrns;
 
 void init_lrns(void)
 {
@@ -66,7 +66,7 @@ void init_lrns(void)
 //	pp_lost_device_lrns = get_lost_device();
 //	pp_trekpoints_lrns = get_tekpoints();
 	pp_devices = get_devices();
-	pp_point_groups = get_point_groups();
+//	pp_point_groups = get_point_groups();
 	//Clear mem
     for (uint8_t dev = 1; dev <= p_settings_lrns->devices_on_air; dev++)		//DEVICES_ON_AIR_MAX
     {
@@ -110,7 +110,7 @@ void ublox_to_this_device(uint8_t device_number)
 //					serialPrint(set_three_seconds, sizeof(set_three_seconds));
 //				}
 				main_flags.first_time_locked = 1;
-				main_flags.short_beeps = 3;		//glad tidings
+				shortBeeps(3);					//glad tidings
 			}
 		}else  if(devices[device_number].valid_fix_flag) main_flags.fix_valid++;
 }
@@ -120,16 +120,14 @@ void rx_to_devices(uint8_t device_number)
 
 	devices[device_number].beacon_flag = buffer[0] >> 7;
 //	flags_to_transmit((buffer[0] & 0x70) >> 4) == 3 and beeper_flag((buffer[0] & 0x8) >> 3) == 0
-//	anti theft flag received (no beacon + antitheft_flag + no beep flag)
-	if(((buffer[0] & 0xF8) >> 3) == 0x0C)
-	{
-		main_flags.antitheft_flag_received = 1;
-		main_flags.short_beeps = 1;
-	}
-//	beacon to halt flag received (no beacon + bcntohalt_flag + no beep flag)
+	/*anti theft flag received (no beacon + antitheft_flag + no beep flag)*/
+	if(((buffer[0] & 0xF8) >> 3) == 0x0C) main_flags.antitheft_flag_received = 1;
+
+	/*beacon to halt flag received (no beacon + bcntohalt_flag + no beep flag)*/
 	if(((buffer[0] & 0xF8) >> 3) == 0x0A)
 	{
 		main_flags.bcntohalt_flag_received = 1;
+		shortBeeps(2);
 		to_halt();
 	}
 

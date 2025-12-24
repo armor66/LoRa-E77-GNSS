@@ -55,10 +55,12 @@ void init_compass(void)
 	bno055_setup();
 	bno055_enableExternalCrystal();
 // in Operation Mode Config:
-	bno055_writeData(BNO055_AXIS_MAP_CONFIG, 0x21);
-	bno055_writeData(BNO055_AXIS_MAP_SIGN, 0x07);		//P6: up side down -90° page 25 of "BST_BNO055_DS000_14.pdf"
-//	bno055_writeData(BNO055_AXIS_MAP_SIGN, 0x01);		//P5: up side down +90° page 25 of "BST_BNO055_DS000_14.pdf"
-
+	bno055_writeData(BNO055_AXIS_MAP_CONFIG, 0x21);		//page 25 BST_BNO055_DS000_14.pdf
+#ifdef COMPASS_BLUE
+	bno055_writeData(BNO055_AXIS_MAP_SIGN, 0x07);		//P6: up side down -90° "blue" board
+#else	//COMPASS_PINK
+	bno055_writeData(BNO055_AXIS_MAP_SIGN, 0x01);		//P5: up side down +90° "pink" board
+#endif
 	bno055_setOperationModeNDOF();
 //to start calibration immediately
 //	if(main_flags.calibrateCompassFlag) calibrate_compass();

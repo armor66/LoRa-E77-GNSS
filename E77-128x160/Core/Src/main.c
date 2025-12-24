@@ -166,7 +166,7 @@ int main(void)
 
 #ifdef ST7735
 	st7735_init(0);
-#else
+#else	//NV3023
   	nv3023_init();
 #endif
 

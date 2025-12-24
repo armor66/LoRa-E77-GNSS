@@ -488,7 +488,7 @@ double azimuth_relative_rad_old[10];
 
 int8_t row;
 int8_t this_device;								//device number of this device, see init_menu()
-//int8_t main_flags.current_device;
+//int8_t current_device;
 
 int8_t current_menu;
 uint8_t return_from_power_menu; 							//Menu to return to after exit from power menu. Power menu can be accessed from different menus, therefore we have to store menu to return.
@@ -890,10 +890,9 @@ void draw_main(void)
 
 	if(pp_devices_menu[this_device]->batt_voltage < 50)		// U < 3.2volt (!pp_devices_menu[this_device]->batt_voltage)
 	{
-		sprintf(&string_buffer[row][0], "DevID:%02d  ADC %3d", this_device, main_flags.adc_calibration_factor);
-//		sprintf(&string_buffer[row][0], "DevID:%02d Batt low!", this_device);
-	}else sprintf(&string_buffer[row][0], "DevID:%02d  %d.%02dVolt", this_device, (pp_devices_menu[this_device]->batt_voltage+270)/100,
-    															  (pp_devices_menu[this_device]->batt_voltage+270)%100);
+		sprintf(&string_buffer[row][0], "DevID:%02d Batt low!", this_device);
+	}else sprintf(&string_buffer[row][0], "DevID:%02d  %d.%02dVolt", this_device,
+			(pp_devices_menu[this_device]->batt_voltage+270)/100, (pp_devices_menu[this_device]->batt_voltage+270)%100);
 	row+=1;	//1
 	sprintf(&string_buffer[row][0], "%02d/%02d/%02d  %02d:%02d:%02d", day, month, year, hour, PVTbuffer[15], PVTbuffer[16]);
 	for (uint8_t k = 0; k < row+1; k++)
@@ -1324,29 +1323,33 @@ void draw_this_device(void)
  	  	  	  	  	  	  	  	   	   	   	   	    (pp_devices_menu[this_device]->batt_voltage+270)%100);
 		sprintf(&string_buffer[6][0], "0x%lX Flag%02X%02d",
 						main_flags.settings_address, p_settings_menu->settings_init_flag, main_flags.settings_index);
-		for (uint8_t k = 2; k < 7; k++)
+		sprintf(&string_buffer[7][0], "ADC calibration%3d", main_flags.adc_calibration_factor);
+
+		for (uint8_t k = 2; k < 8; k++)
 		{
-			draw_str_by_rows(0, k*11, &string_buffer[k][0], &Font_7x9, YELLOW,BLACK);
+			draw_str_by_rows(0, k*11-3, &string_buffer[k][0], &Font_7x9, YELLOW,BLACK);
 		}
 
-		sprintf(&string_buffer[7][0], " %5s pDop:%2d.%02d ", fixType[pp_devices_menu[main_flags.current_device]->fix_type_opt],
+		sprintf(&string_buffer[8][0], " %5s pDop:%2d.%02d ", fixType[pp_devices_menu[main_flags.current_device]->fix_type_opt],
 				pp_devices_menu[main_flags.current_device]->p_dop/100, pp_devices_menu[main_flags.current_device]->p_dop%100);
 
-		sprintf(&string_buffer[8][0], "%02d/%02d/%02d  %02d:%02d:%02d", day, month, year, hour, PVTbuffer[15], PVTbuffer[16]);
+		sprintf(&string_buffer[9][0], "%02d/%02d/%02d  %02d:%02d:%02d", day, month, year, hour, PVTbuffer[15], PVTbuffer[16]);
+//show first byte		sprintf(&string_buffer[9][0], "0x%X : %ld", pp_devices_menu[this_device]->latitude.as_array[3], pp_devices_menu[this_device]->latitude.as_integer);
+		sprintf(&string_buffer[10][0], "Latit : %ld", pp_devices_menu[this_device]->latitude.as_integer);	//((int32_t)(PVTbuffer[37]<<24)+(PVTbuffer[36]<<16)+(PVTbuffer[35]<<8)+PVTbuffer[34]));
+//show first byte		sprintf(&string_buffer[10][0], "0x%X : %ld", pp_devices_menu[this_device]->longitude.as_array[3], pp_devices_menu[this_device]->longitude.as_integer);
+		sprintf(&string_buffer[11][0], "Longit: %ld", pp_devices_menu[this_device]->longitude.as_integer);	//((int32_t)(PVTbuffer[33]<<24)+(PVTbuffer[32]<<16)+(PVTbuffer[31]<<8)+PVTbuffer[30]));
+		sprintf(&string_buffer[12][0], "HeightMSL:  %4dm", ((PVTbuffer[39+6]<<24)+(PVTbuffer[38+6]<<16)+(PVTbuffer[37+6]<<8)+PVTbuffer[36+6])/1000);
+		sprintf(&string_buffer[13][0], "GNSSspeed:%3dkm/h", pp_devices_menu[this_device]->gps_speed);
 
-		sprintf(&string_buffer[9][0], "Latit : %ld", pp_devices_menu[this_device]->latitude.as_integer);	//((int32_t)(PVTbuffer[37]<<24)+(PVTbuffer[36]<<16)+(PVTbuffer[35]<<8)+PVTbuffer[34]));
-		sprintf(&string_buffer[10][0], "Longit: %ld", pp_devices_menu[this_device]->longitude.as_integer);	//((int32_t)(PVTbuffer[33]<<24)+(PVTbuffer[32]<<16)+(PVTbuffer[31]<<8)+PVTbuffer[30]));
-		sprintf(&string_buffer[11][0], "HeightMSL:  %4dm", ((PVTbuffer[39+6]<<24)+(PVTbuffer[38+6]<<16)+(PVTbuffer[37+6]<<8)+PVTbuffer[36+6])/1000);
-		sprintf(&string_buffer[12][0], "GNSSspeed:%3dkm/h", pp_devices_menu[this_device]->gps_speed);
+		(pp_devices_menu[this_device]->gps_speed > GPS_SPEED_THRS)?
+				sprintf(&string_buffer[14][0], "HeadingGNSS: %4d%%", pp_devices_menu[this_device]->gps_heading):
+				sprintf(&string_buffer[14][0], "HeadingMagn: %4d%%", heading_deg);
 
-		if(pp_devices_menu[this_device]->gps_speed > GPS_SPEED_THRS) {
-				sprintf(&string_buffer[13][0], "HeadingGNSS: %4d%%", pp_devices_menu[this_device]->gps_heading);
-		}else 	sprintf(&string_buffer[13][0], "HeadingMagn: %4d%%", heading_deg);
-
-		for (uint8_t k = 7; k < 14; k++)
+		for (uint8_t k = 8; k < 15; k++)
 		{
-			if(pp_devices_menu[main_flags.current_device]->valid_fix_flag) draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, GREEN,BLACK);	//(PVTbuffer[21+6] & 0x01)
-			else draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, MAGENTA,BLACK);
+			(pp_devices_menu[main_flags.current_device]->valid_fix_flag)?
+					draw_str_by_rows(0, k*11-3, &string_buffer[k][0], &Font_7x9, GREEN,BLACK):
+					draw_str_by_rows(0, k*11-3, &string_buffer[k][0], &Font_7x9, MAGENTA,BLACK);
 		}
 }
 
@@ -1397,7 +1400,8 @@ void draw_devices(void)
 		sprintf(&string_buffer[9][0], "RSSI: %ddBm", pp_devices_menu[main_flags.current_device]->rssi);
 		sprintf(&string_buffer[10][0], " SNR: %02ddB", pp_devices_menu[main_flags.current_device]->snr);
 
-		(p_settings_menu->spreading_factor == 12)? sprintf(&string_buffer[11][0], "                  "):
+		(p_settings_menu->spreading_factor == 12)? sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS",
+pp_devices_menu[main_flags.current_device]->device_received,(this_device - pp_devices_menu[main_flags.current_device]->device_received), main_flags.endRX_2_TX):
 		sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS", pp_devices_menu[main_flags.current_device]->device_received, this_device, main_flags.endRX_2_TX);
 
 		sprintf(&string_buffer[12][0], "Latit : %ld", pp_devices_menu[main_flags.current_device]->latitude.as_integer);
@@ -1405,8 +1409,9 @@ void draw_devices(void)
 
 		for (uint8_t k = 2; k < 14; k++)
 		{
-			if(pp_devices_menu[main_flags.current_device]->valid_fix_flag) draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, GREEN,BLACK);
-			else draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, MAGENTA,BLACK);
+			(pp_devices_menu[main_flags.current_device]->valid_fix_flag)?
+					(draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, GREEN,BLACK)):
+					(draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, MAGENTA,BLACK));
 		}
 	}// end of else (main_flags.current_device != this_device)
 }
@@ -2183,6 +2188,7 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 			release_power();
 
 			break;
+
 		case M_ACTIONS_I_EMERGENCY:
 			(pp_devices_menu[this_device]->emergency_flag == 0)?
 					(pp_devices_menu[this_device]->emergency_flag = 1):

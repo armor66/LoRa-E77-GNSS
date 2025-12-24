@@ -143,7 +143,7 @@ void setST7735rotation(uint8_t rotation)
 
 void st7735_init(uint8_t rotation)
 {
-	CS_GPIO_Port->BSRR = ( CS_Pin << 16 );
+//	CS_GPIO_Port->BSRR = ( CS_Pin << 16 );
 
 	RST_GPIO_Port->BSRR = (RST_Pin << 16);
 	HAL_Delay(50);	//20
@@ -174,7 +174,7 @@ void nv3023_init(void)
 		// If disabled, I enable it
 		SET_BIT(LCD_SPI->CR1, SPI_CR1_SPE);	// NV3023_SPI_CMSIS->CR1 |= SPI_CR1_SPE;
 	}
-	CS_GPIO_Port->BSRR = ( CS_Pin << 16 );	//select();
+//	CS_GPIO_Port->BSRR = ( CS_Pin << 16 );	//select();
 
 	RST_GPIO_Port->BSRR = RST_Pin;			//HAL_GPIO_WritePin(RST_GPIO_Port, RST_Pin, GPIO_PIN_SET);
 	HAL_Delay(20);

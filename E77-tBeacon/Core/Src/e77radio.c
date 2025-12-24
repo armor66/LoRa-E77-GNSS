@@ -47,13 +47,13 @@ void radio_init(void)
 
     Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_rf[p_settings_rf->tx_power_opt], 0, LORA_BANDWIDTH,
     		  p_settings_rf->spreading_factor, p_settings_rf->coding_rate_opt,
-                        LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
-                        true, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);	 		//CRC, Hop, HopPer, IQ, timeout
+			  p_settings_rf->preamble, LORA_FIX_LENGTH_PAYLOAD_ON,
+			  p_settings_rf->crc_on, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);	 		//CRC, Hop, HopPer, IQ, timeout
 
     Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_rf->spreading_factor,
-    		  p_settings_rf->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH,
+    		  p_settings_rf->coding_rate_opt, 0, p_settings_rf->preamble,
                         LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
-						BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, false);	//CRC, Hop, HopPer, IQ, single mode
+						BUFFER_AIR_SIZE, p_settings_rf->crc_on, 0, 0, LORA_IQ_NORMAL, false);	//CRC, Hop, HopPer, IQ, single mode
 
     Radio.SetMaxPayloadLength(MODEM_LORA, BUFFER_AIR_SIZE);
 
@@ -68,10 +68,19 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 {
 	led_red_on();
 	if(main_flags.display_status) timer17_start();
+			//&& (main_flags.time_slot == main_flags.current_device)) timer17_start();
 
 	memcpy(bufferRx, payload, BUFFER_AIR_SIZE);		//BufferAirSize
 	bufferRx[BUFFER_AIR_SIZE] = (int8_t)rssi;		//BufferAirSize + 1
 	bufferRx[BUFFER_AIR_SIZE + 1] = LoraSnr_FskCfo;	//BufferAirSize + 2
+/* if it was a Time Out transmit*/
+	if(!main_flags.fix_valid && !bufferRx[1] && !bufferRx[2])
+	{
+/* received in continuous mode call restartPattern() to synchronize with HandHeld module PPS timing */
+/* Case2:100mS + TimeOut:133mS + AirTime:663mS +SymbolTime:33mS + ThisDelay:571mS = 1500mS */
+		if(bufferRx[0] == 1) timer16_start(2070);			//+1500mS
+		else if(bufferRx[0] == 2) timer16_start(570);
+	}
 	//if received time slot == device number and it fix is valid
 	if(((bufferRx[0] & 0x07) == main_flags.time_slot) && ((bufferRx[1] & 0x10) >> 4))
 	{
@@ -82,8 +91,6 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 //	if(pp_devices_rf[p_settings_rf->device_number]->valid_fix_flag)	calc_relative_position(main_flags.time_slot);
 
 	memset(bufferRx, 0, BUFFER_RX);
-
-//	State = RX_DONE;
 }
 
 static void OnRxError(void)
@@ -113,16 +120,15 @@ void set_transmit_data(void)
 
 
 
-	if(main_flags.antitheft_flag_received)		//main_flags.antitheft_flag_confurmed
-	{
-		flags_to_transmit = 6;
-	}
-	else if(main_flags.emergency_flag)
+	if(main_flags.emergency_flag)	//send it and ignore antitheft_flag
 	{
 		flags_to_transmit = 3;
 	}
+	else if(main_flags.antitheft_flag_received)	//if emergency not set
+	{
+		flags_to_transmit = 6;
+	}
 	else flags_to_transmit = 0;
-
 
 
 

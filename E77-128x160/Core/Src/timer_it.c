@@ -39,7 +39,8 @@ void timer_it_init(void)
 	pp_devices_tim = get_devices();
 }
 const uint8_t timeslot_pattern[2][103] =
-//	| PVT|Slot1 OnRxDone time <642mS		+358mS|Slot2 OnTxDone time <627mS		  | PVT|Slot3					   | draw menu|
+//PLmax=13(11+CRC), SF11, CR3(4/7), preamble=12, CRC_OFF, Air-Time = 627(+16?):357mS measured RxDone2Tx(should be 373mS)
+//	| PVT|Slot1 OnRxDone time <650mS		+357mS|Slot2 OnTxDone time <650mS		  | PVT|Slot3					   | draw menu|
 //	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
 //	0 50 100mS	                             1000 1100mS							  2000 2100								 3000
   {{0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,//4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,6 };
@@ -47,14 +48,15 @@ const uint8_t timeslot_pattern[2][103] =
 //	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
 //	2000 2100mS								 3000 3100mS							  4000 4100mS							   5000mS
 	4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1 },
-//	SF = 12, CR3(4/7), Packet duration in air = 1122.3
+
+//PLmax=13(CRC), SF12, CR3(4/7), preamble=8, CRC_ON, Air-Time = 1122(+33?):345mS measured RxDone2Tx (1150-1155=-5 !exceed!)
 // PPS	 |Slot1 		AIR time 1122mS		PPS 		| draw menu|  |Slot2 		 PPS   		AIR time 1122mS      | draw menu|
 //	|----|-----------------------------------|----|-----|-------------|---------------|----|-------------------------|---------|
 //	0 50 100mS	                             1000		1250mS						  2000				    	  	2750	   3000
    {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,0, 0,0,0,3,4,5,4,5,4,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,6,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1 }};
 //	|----|---------------------------|------------------|-------------|----------------------------|-----------------|---------|
 //	0 50 100mS	                    +700     		   +1150mS	     1600				  	      +700				+1150	   3000
-
+//PLmax=3(CRC), SF12, CR3(4/7), preamble=8, CRC_ON, Air-Time = 663(+33?)=696(gap does not make sense here)
 static void restartPattern(void)
 {
 	getADC_sensors();
@@ -108,8 +110,8 @@ void TIM1_UP_IRQHandler(void)
 				main_flags.transmit_iq_inverted_flag = 0;
 
 				Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_tim->spreading_factor,
-				p_settings_tim->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH, LORA_SYMBOL_TIMEOUT,
-				LORA_FIX_LENGTH_PAYLOAD_ON,	BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, false);	//CRC, Hop, HopPer, IQ, single mode
+				p_settings_tim->coding_rate_opt, 0, p_settings_tim->preamble, LORA_SYMBOL_TIMEOUT,
+				LORA_FIX_LENGTH_PAYLOAD_ON,	BUFFER_AIR_SIZE, CRC_ON, 0, 0, LORA_IQ_NORMAL, false);	//CRC, Hop, HopPer, IQ, single mode
 			}
 
 
@@ -126,19 +128,24 @@ void TIM1_UP_IRQHandler(void)
 				main_flags.long_beeps_flag = 1;
 				led_w_on();
 			}
+			if(main_flags.display_status)	//moved here to show when SF12 also
+			{
+				timer17_stop();
+				main_flags.endRX_2_TX = (uint16_t)TIM17->CNT;		//save interval from RX-end to TX-start
+			}
 
 			if(main_flags.time_slot == p_settings_tim->device_number)	//this device, never met in case SF12(slots 1 and 2 only)
 			{	//if this device doesn't get gnss fix via uart 100mS after PPS, delay for full pattern time
 				if(!pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag) main_flags.fix_valid--;
 				if(main_flags.fix_valid > 0)	//do not transmit if no GNSS FIX
 				{
-					if(main_flags.display_status)
-					{
-						main_flags.endRX_2_TX = (uint16_t)TIM17->CNT;		//save interval from RX-end to TX-start
-						timer17_stop();
-					}
+//					if(main_flags.display_status)	//moved up
+//					{
+//						main_flags.endRX_2_TX = (uint16_t)TIM17->CNT;		//save interval from RX-end to TX-start
+//						timer17_stop();
+//					}
 					main_flags.permit_actions = 0;
-					led_red_on();					//start transmitting, end by OnTxDone
+					led_red_on();					//start transmitting, end by case 3 (OnTxDone)
 					set_transmit_data();			//State = TX_START;
 				}else main_flags.fix_valid = 0;		//just to avoid negative values
 			}
@@ -147,10 +154,10 @@ void TIM1_UP_IRQHandler(void)
 				if(p_settings_tim->spreading_factor == 12)	//for device3 only
 				{
 					if(!pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag) main_flags.fix_valid--;
-//					(main_flags.fix_valid > 0)? (main_flags.fix_valid--): (main_flags.fix_valid = 0);
+
 					if(main_flags.fix_valid > 0)	//do not transmit if no GNSS FIX
 					{
-						//transmit on demand if beeper_flag has set(choose witch beacon to send) with LORA_IQ_INVERTED
+/* transmit on demand if flag has set(choose to which beacon send) with LORA_IQ_INVERTED */
 						if((pp_devices_tim[3]->antitheft_flag == main_flags.time_slot) ||
 								(pp_devices_tim[3]->bcntohalt_flag == main_flags.time_slot) ||
 								(pp_devices_tim[3]->beeper_flag == main_flags.time_slot))	//1 for beacon2 or 2 for beacon1
@@ -159,15 +166,16 @@ void TIM1_UP_IRQHandler(void)
 							main_flags.transmit_iq_inverted_flag = 1;	//set transmit LORA_IQ_INVERTED
 							Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_tim[p_settings_tim->tx_power_opt], 0,
 								LORA_BANDWIDTH,	p_settings_tim->spreading_factor, p_settings_tim->coding_rate_opt,
-								LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON, true, 0, 0, LORA_IQ_INVERTED, TX_TIMEOUT_VALUE);
-							led_red_on();
+								p_settings_tim->preamble, LORA_FIX_LENGTH_PAYLOAD_ON, CRC_ON, 0, 0, LORA_IQ_INVERTED, TX_TIMEOUT_VALUE);
+							led_red_on();			//start transmitting(SF12), end by case 3
 							set_transmit_data();	//transmit flags and time only with buffer_to_transmit = 3
-						}else Radio.RxBoosted(1150);		//start to receive SF12 on slot 1 or 2
+						}
+						else Radio.RxBoosted(0);	//start to receive SF12 on slot 1 or 2
 					}else main_flags.fix_valid = 0;
 				}
-				else Radio.RxBoosted(650);			//start to receive if SF != 12
+				else Radio.RxBoosted(0);			//start to receive if SF != 12
 
-//manage (pp_devices_tim[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
+/*manage (pp_devices_tim[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)*/
 				if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
 				{
 					led_w_on();
@@ -184,15 +192,14 @@ void TIM1_UP_IRQHandler(void)
 				if(pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag &&		//host gnss data is valid (implemented in rx_to_devices())
 						pp_devices_tim[main_flags.time_slot]->beacon_traced &&			//timeout_threshold is set & valid data has received once
 						!pp_devices_tim[main_flags.time_slot]->valid_fix_flag)			//not valid data received now
-				{	//do decrement beacon_traced in lrns.c, except when beep flag sent to one of two beacon in beacon mode (SF12)
-//					if(!((p_settings_tim->spreading_factor == 12) && (pp_devices_tim[3]->beeper_flag == main_flags.time_slot)))
-					if(!((p_settings_tim->spreading_factor == 12) && ((pp_devices_tim[3]->antitheft_flag == main_flags.time_slot) ||
-																   (pp_devices_tim[3]->bcntohalt_flag == main_flags.time_slot) ||
-																	(pp_devices_tim[3]->beeper_flag == main_flags.time_slot))))
+				{	//do decrement beacon_traced in lrns.c, except when beep flag sent to one of two beacons in beacon mode (SF12)
+					if(!((p_settings_tim->spreading_factor == 12) &&
+							((pp_devices_tim[3]->antitheft_flag == main_flags.time_slot) ||
+							(pp_devices_tim[3]->bcntohalt_flag == main_flags.time_slot) ||
+							(pp_devices_tim[3]->beeper_flag == main_flags.time_slot))))
 					{
 						check_traced(main_flags.time_slot);
 					}
-
 					//do beeps if beacon was traced and lost gnss fix
 					if(pp_devices_tim[main_flags.time_slot]->beacon_traced * (p_settings_tim->devices_on_air - 1) < 14) shortBeeps(1);
 					if(pp_devices_tim[main_flags.time_slot]->beacon_lost)						//if beacon_traced became zero
@@ -261,6 +268,11 @@ void TIM1_UP_IRQHandler(void)
 				main_flags.long_beeps--;
 				led_w_off();
 			}
+//			if(main_flags.display_status)	// to calculate Rx timeout
+//			{
+//				timer17_stop();
+//				main_flags.endRX_2_TX = (uint16_t)TIM17->CNT;		//save interval from RX-end to TX-start
+//			}
 			break;
 
 		default:

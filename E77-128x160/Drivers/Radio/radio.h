@@ -43,7 +43,7 @@ typedef enum radio_status_e
 
 typedef enum
 {
-//    MODEM_FSK = 0,
+    MODEM_FSK = 0,
     MODEM_LORA,
 }RadioModems_t;
 
@@ -51,7 +51,7 @@ typedef enum
 
 typedef enum
 {
-//    GENERIC_FSK = 0,
+    GENERIC_FSK = 0,
     GENERIC_LORA,
 }GenericModems_t;
 

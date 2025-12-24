@@ -39,6 +39,7 @@
 #include "gnss.h"
 #include "e77radio.h"
 #include "iwdg.h"
+#include "adxl345.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -122,6 +123,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 //  disable_buttons_interrupts();
 //  EXTI->IMR1 &= ~EXTI_IMR1_IM8;			//interrupt disabled on PPS front
+  i2c_init();
 
   hold_power();
   led_w_off();
@@ -129,15 +131,16 @@ int main(void)
 //  led_green_off();
   led_blue_off();
 
+  /*independent watchdog reset occurs*/
   if(RCC->CSR & RCC_CSR_IWDGRSTF)
   {
 	  RCC->CSR |= RCC_CSR_RMVF;		//clear reset flag IWDGRSTF by writing bit to the RMVF
 	  NVIC_SystemReset();
   }
-
-  if(!(RCC->CSR & RCC_CSR_SFTRSTF))	// || !(RCC->CSR & RCC_CSR_IWDGRSTF))	//if the reset is not caused by software (save & restart after settings changed)
-  {																		//or not independent watchdog reset occurs
-	  release_power();					//initially set off position
+  /*if the reset is not caused by software (save & restart after settings changed)*/
+  if(!(RCC->CSR & RCC_CSR_SFTRSTF))	// || !(RCC->CSR & RCC_CSR_IWDGRSTF))
+  {									//or not independent watchdog reset occurs
+	  release_power();				//initially set off position
 	  HAL_Delay(1000); 				//startup delay ~2sec
 	  NVIC_SystemReset();
   }else								//if Software reset or Independent watchdog reset occurred
@@ -182,8 +185,9 @@ int main(void)
   		init_gnss();
   		radio_init();
   		timer1_start();
+  		adxl_init();		//DOUBLE TAP & ACTIVITY
   		main_flags.update_screen = 1;
-  	  MX_IWDG_Init();
+  		MX_IWDG_Init();
   	}
   /* USER CODE END 2 */
 

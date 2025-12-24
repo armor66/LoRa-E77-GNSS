@@ -74,14 +74,12 @@ void Error_Handler(void);
 #define BTN_2_GPIO_Port GPIOA
 #define BTN_1_Pin GPIO_PIN_4
 #define BTN_1_GPIO_Port GPIOA
-#define MUTE_Pin GPIO_PIN_5
-#define MUTE_GPIO_Port GPIOA
 #define RF_CTRL1_Pin GPIO_PIN_6
 #define RF_CTRL1_GPIO_Port GPIOA
 #define RF_CTRL2_Pin GPIO_PIN_7
 #define RF_CTRL2_GPIO_Port GPIOA
-#define CS_Pin GPIO_PIN_9
-#define CS_GPIO_Port GPIOA
+#define MUTE_Pin GPIO_PIN_9
+#define MUTE_GPIO_Port GPIOA
 #define LED_W_Pin GPIO_PIN_12
 #define LED_W_GPIO_Port GPIOB
 #define DC_Pin GPIO_PIN_11
@@ -94,12 +92,16 @@ void Error_Handler(void);
 #define BATT_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-//#define NV3023
-//#define ST7735
+//#define ST7735		//else #define NV3023
 //#define ST7735_IS_160X128_BLUE
 //#define ST7735_IS_160X128_RED
+//#define COMPASS_BLUE	//else #define COMPASS_PINK
+#ifdef COMPASS_BLUE
+#define MUTE_Pin GPIO_PIN_5
+#endif
+//#define COMPASS_085
 #define BUFFER_AIR_SIZE            	13  	/* Define the payload size here */
-#define BUFFER_RX                  	15		//BUFFER_SIZE + 2 rssi and snr
+#define BUFFER_RX                  	15		//BUFFER_AIR + 2 (rssi and snr)
 
 struct main_flags_struct
 {

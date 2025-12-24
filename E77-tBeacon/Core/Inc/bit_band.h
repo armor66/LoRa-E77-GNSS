@@ -1,6 +1,8 @@
 #ifndef BIT_BAND_HEADER
 #define BIT_BAND_HEADER
 
+#include "stm32wle5xx.h"
+
 #define PORTА ((uint32_t *)((0x42000000  + ((0x40010800+0x0C)-0x40000000)*32)))
 #define PORTB ((uint32_t *)((0x42000000  + ((0x40010C00+0x0C)-0x40000000)*32)))
 #define PORTC ((uint32_t *)((0x42000000  + ((0x40011000+0x0C)-0x40000000)*32)))

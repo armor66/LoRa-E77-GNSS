@@ -5,7 +5,7 @@
 #include "tim.h"
 #include "lrns.h"
 #include "settings.h"
-
+#include "adxl345.h"
 
 __inline static void manage_uart(void)
 {
@@ -19,10 +19,14 @@ __inline static void manage_uart(void)
 void EXTI9_5_IRQHandler(void)	//(BTN_3_Pin)
 {
 	EXTI->PR1 = EXTI_PR1_PIF5;		//clear interrupt
-	disable_buttons_interrupts();
-	main_flags.pps_counter = 0;//    	pp_devices_phy[p_settings_phy->device_number]->lcd_timeout = 0;
-	main_flags.processing_button = BUTTON_DOWN_ESC;
-	timer2_start();
+
+	if(!(GPIOA->IDR & BTN_3_Pin))
+	{
+		disable_buttons_interrupts();
+		main_flags.pps_counter = 0;//    	pp_devices_phy[p_settings_phy->device_number]->lcd_timeout = 0;
+		main_flags.processing_button = BUTTON_DOWN_ESC;
+		timer2_start();
+	}
 }
 
 void EXTI1_IRQHandler(void)		//(BTN_2_Pin)
@@ -103,7 +107,6 @@ void EXTI4_IRQHandler(void)		//(PPS_Pin)
 		{
 			led_w_on();		//long beep to prevent silent shutdown
 			HAL_Delay(750);
-//			led_w_off();
 			release_power();
 		}
 	}

@@ -39,7 +39,8 @@ void timer_it_init(void)
 	pp_devices_tim = get_devices();
 }
 const uint8_t timeslot_pattern[2][103] =
-//	| PVT|Slot1 OnRxDone time <642mS		+358mS|Slot2 OnTxDone time <627mS		  | PVT|Slot3					   | draw menu|
+//SF = 11, CR3(4/6), Packet duration in air = 528 + 16 = 544
+//	| PVT|Slot1 OnRxDone time <650mS		+358mS|Slot2 OnTxDone time <650mS		  | PVT|Slot3					   | draw menu|
 //	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
 //	0 50 100mS	                             1000 1100mS							  2000 2100								 3000
   {{0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,//4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,7,4,6 };
@@ -47,14 +48,15 @@ const uint8_t timeslot_pattern[2][103] =
 //	|----|-------------------------|---------|----|-------------------------|---------|----|-------------------------|---------|--
 //	2000 2100mS								 3000 3100mS							  4000 4100mS							   5000mS
 	4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1 },
-//	SF = 12, CR3(4/7), Packet duration in air = 1122.3
+//todo: PLmax=13(11+CRC), preamble=10, SF11, BW125, CR4/7 Air-Time = 594 + 16 = 610(gap=40)
+//SF = 12, CR3(4/6), Packet duration in air = 1057 + 33 = 1090
 // PPS	 |Slot1 		AIR time 1122mS		PPS 		| draw menu|  |Slot2 		 PPS   		AIR time 1122mS      | draw menu|
 //	|----|-----------------------------------|----|-----|-------------|---------------|----|-------------------------|---------|
 //	0 50 100mS	                             1000		1250mS						  2000				    	  	2750	   3000
    {0,1, 2,0,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0,0, 0,0,0,3,4,5,4,5,4,1,2,0,0,0,0,0,0,0,0,0, 0,0,0,0,6,0,0,0,0,0,0,0,0,3,4,5,4,5,4,1 }};
 //	|----|---------------------------|------------------|-------------|----------------------------|-----------------|---------|
 //	0 50 100mS	                    +700     		   +1150mS	     1600				  	      +700				+1150	   3000
-
+//todo +1200ms (+50ms): PL=13(<16), preamble=8, SF12, BW125, CR4/7 Air-Time = 1122 + 33 = 1155(gap=45)
 static void restartPattern(void)
 {
 	getADC_sensors();
@@ -160,7 +162,7 @@ void TIM1_UP_IRQHandler(void)
 
 
 
-				Radio.RxBoosted(700);			//start to receive SF=12 or not
+				Radio.RxBoosted(20);			//start to receive SF=12 or not
 
 //manage (pp_devices_phy[time_slot]->beeper_flag) on it own slot only, if beeper_flag received previously in this slot)
 				if(pp_devices_tim[main_flags.time_slot]->beeper_flag)
@@ -218,7 +220,8 @@ void TIM1_UP_IRQHandler(void)
 
 
 /***********************************************************/
-			main_flags.short_beeps? led_w_on(): (main_flags.update_screen = 1);
+//			main_flags.short_beeps? led_w_on(): (
+			main_flags.update_screen = 1;
 			main_flags.permit_actions = 1;		//process buttons here after
 			break;
 

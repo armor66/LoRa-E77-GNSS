@@ -57,9 +57,6 @@ void led_w_off(void);
 void lcd_on(void);
 void lcd_off(void);
 
-void gps_enable(void);
-void gps_disable(void);
-
 void hold_power(void);
 void release_power(void);
 

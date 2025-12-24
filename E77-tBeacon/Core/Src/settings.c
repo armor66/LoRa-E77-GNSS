@@ -62,7 +62,7 @@
 #define SETTINGS_DEVICE_NUMBER_DEFAULT  	(3)
 #define SETTINGS_DEVICES_ON_AIR_DEFAULT		(3)		//DEVICE_NUMBER_LAST)
 #define SETTINGS_SPREADING_FACTOR_DEFAULT	(11)
-#define SETTINGS_CODING_RATE_DEFAULT		(CODING_RATE_2_SETTING)		// 2
+#define SETTINGS_CODING_RATE_DEFAULT		(CODING_RATE_3_SETTING)		// 4/7
 #define SETTINGS_FREQ_CHANNEL_DEFAULT   	(FREQ_CHANNEL_FIRST)        //base freq is 433.050 and freq step is 25kHz, so CH0 - 433.050 (not valid, not used); CH1 - 433.075 (first LPD channel)
 #define SETTINGS_TX_POWER_DEFAULT       	(TX_POWER_10MILLIW_SETTING)	// 2
 #define SETTINGS_TIMEOUT_THRESHOLD_DEFAULT  (0)
@@ -288,9 +288,15 @@ void settings_load(void)
     {
     	//device number should be beacon1 or beacon2
     	settings.devices_on_air = 3;
-    	settings.coding_rate_opt = 2;
+    	settings.coding_rate_opt = 3;
+    	settings.preamble = 8;		//(the hardware adds 4 more symbols) actually not!
+    	settings.crc_on = 1;
     }
-    else if(settings.spreading_factor == 11) settings.coding_rate_opt = 2;
+    else if(settings.spreading_factor == 11)
+   	{
+    	settings.preamble = 12;	//settings.coding_rate_opt = 3
+    	settings.crc_on = 0;
+    }
 }
 
 void settings_save_default(struct settings_struct *p_settings)		//page 63 == 1F800

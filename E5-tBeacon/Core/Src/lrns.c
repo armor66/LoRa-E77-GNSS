@@ -110,7 +110,7 @@ void ublox_to_this_device(uint8_t device_number)
 //					serialPrint(set_three_seconds, sizeof(set_three_seconds));
 //				}
 				main_flags.first_time_locked = 1;
-				main_flags.short_beeps = 3;		//glad tidings
+				shortBeeps(3);					//glad tidings
 			}
 		}else  if(devices[device_number].valid_fix_flag) main_flags.fix_valid++;
 }
@@ -124,7 +124,7 @@ void rx_to_devices(uint8_t device_number)
 	if(((buffer[0] & 0xF8) >> 3) == 0x0C)
 	{
 		main_flags.antitheft_flag_received = 1;
-		main_flags.short_beeps = 1;
+		shortBeeps(1);
 	}
 //	beacon to halt flag received (no beacon + bcntohalt_flag + no beep flag)
 	if(((buffer[0] & 0xF8) >> 3) == 0x0A)

@@ -54,7 +54,7 @@ void timer1_start(void);
 void timer1_stop(void);
 void timer2_start(void);
 void timer2_stop(void);
-void timer16_start(void);
+void timer16_start(uint16_t period);
 void timer16_stop(void);
 void timer17_start(void);
 void timer17_stop(void);

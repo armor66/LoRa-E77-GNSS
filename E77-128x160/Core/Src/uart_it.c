@@ -54,12 +54,12 @@ void USART2_IRQHandler(void)
 	   		else if((main_flags.uartIdx == UBX_HW_VER_SIZE) && GNSSbuffer[2] == 0x0A && GNSSbuffer[3] == 0x04)
 	   		{
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
-	   			(GNSSbuffer[UBX_HW_VER_SIZE-1] == 0x41)?
+	   			(GNSSbuffer[UBX_HW_VER_SIZE-1] > 0x40)?	//convert ASCII char to decimal value 0x41=A(10)
 	   					(main_flags.ubx_hwVersion = (GNSSbuffer[UBX_HW_VER_SIZE-1] - 0x37)):
 						(main_flags.ubx_hwVersion = (GNSSbuffer[UBX_HW_VER_SIZE-1] - 0x30));
 	   			memset(GNSSbuffer, 0, UBX_HW_VER_SIZE);
 	   		}
-	   		else main_flags.uartIdx++;	//do not increment index in case 1 or 2
+	   		else main_flags.uartIdx++;	//do not increment index on case 1 or 2
 		}
     	else		//normal operation if(!GPSconfigureFlag && !GPScheckFlag)
 	    {
@@ -74,7 +74,7 @@ void USART2_IRQHandler(void)
 	   			USART2->CR1 &= ~USART_CR1_RXNEIE_RXFNEIE;	//0: Interrupt inhibited
 	   			ublox_to_this_device(p_settings->device_number);
 	   			led_green_off();			//led_green_on on PPS IRQ
-	   		} else main_flags.uartIdx++;	//do not increment index in case 1 or 2
+	   		} else main_flags.uartIdx++;	//do not increment index on case 1 or 2
 		}
 	}
 }
