@@ -8,8 +8,8 @@ PCB/Schematic_nv3023_PogoPins.pdf provides new pogo pins design.
 PCB and CASE folders contain corresponding st7735 and nv3023 files.
 
 E77-Beacon is for 52x36mm pcb design.
-E77-tBeacon is new tiny 36x26mm pcb design with accelerometer ADXL345 on separate expansion board added wia I2C pins PB6&PB7.
-Which implements Double Tap and Activity detection.
+E77-tBeacon is new tiny 36x26mm pcb design with accelerometer ADXL345 on separate expansion board added via I2C pins PB6&PB7.
+Which implements axis 'X' Double Tap and Activity detection.
 
 For the very first time use CubeProgrammer with "Hardware reset" mode. Hold Reset button, press Connect, release Reset button. 
 After that Browse for E77-128x160.bin or E77-tBeacon.bin and Start Programming.
