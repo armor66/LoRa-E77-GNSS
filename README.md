@@ -28,7 +28,9 @@ or find a more suitable 18x18mm one that has PPS connector
 
 3.7V Li-ion battery 103450 for handheld unit and 802535 or some similar for tBeacon.
 
-##### How it looks inside![module photo](Photos/inner.jpg)
+##### How it looks inside
+![module photo](Photos/inner.jpg)
+![module photo](Photos/inner2.jpg)
 
 ##### Some photos
 st7735 1.8" and nv3023 2.08" modules
