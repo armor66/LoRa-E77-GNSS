@@ -49,3 +49,4 @@ dkms.conf
 #Toolchain
 *.mk
 *.cyclo
+*.list
