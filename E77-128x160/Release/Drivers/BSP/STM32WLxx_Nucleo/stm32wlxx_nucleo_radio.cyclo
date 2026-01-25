@@ -1,7 +1,0 @@
-stm32wlxx_nucleo_radio.c:9:9:BSP_RADIO_Init	1
-stm32wlxx_nucleo_radio.c:45:9:BSP_RADIO_DeInit	1
-stm32wlxx_nucleo_radio.c:69:9:BSP_RADIO_ConfigRFSwitch	4
-stm32wlxx_nucleo_radio.c:115:9:BSP_RADIO_GetTxConfig	1
-stm32wlxx_nucleo_radio.c:127:9:BSP_RADIO_IsTCXO	1
-stm32wlxx_nucleo_radio.c:139:9:BSP_RADIO_IsDCDC	1
-stm32wlxx_nucleo_radio.c:150:9:BSP_RADIO_GetRFOMaxPowerConfig	1

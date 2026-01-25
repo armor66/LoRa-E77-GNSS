@@ -1,7 +1,0 @@
-e77radio.c:89:13:OnRxError	1
-e77radio.c:114:13:OnTxDone	1
-e77radio.c:69:13:OnRxDone	8
-e77radio.c:94:13:OnRxTimeout	2
-e77radio.c:36:6:radio_init	9
-e77radio.c:120:6:set_transmit_data	6
-e77radio.c:192:6:timer1_scanRadio_handle	2

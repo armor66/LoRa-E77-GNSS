@@ -1,4 +1,0 @@
-timer_it.c:23:6:timer_it_init	1
-timer_it.c:78:6:TIM1_UP_IRQHandler	53
-timer_it.c:296:6:TIM2_IRQHandler	3
-timer_it.c:310:6:TIM16_IRQHandler	1
