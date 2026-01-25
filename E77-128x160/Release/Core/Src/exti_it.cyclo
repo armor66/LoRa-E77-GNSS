@@ -1,0 +1,4 @@
+exti_it.c:19:6:EXTI0_IRQHandler	1
+exti_it.c:28:6:EXTI1_IRQHandler	1
+exti_it.c:36:6:EXTI4_IRQHandler	1
+exti_it.c:44:6:EXTI9_5_IRQHandler	8

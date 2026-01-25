@@ -1,0 +1,6 @@
+core_cm4.h:1933:34:__NVIC_SystemReset	1
+main.c:78:6:shortBeeps	1
+main.c:83:6:longBeeps	1
+main.c:261:6:SystemClock_Config	3
+main.c:101:5:main	11
+main.c:324:6:Error_Handler	1

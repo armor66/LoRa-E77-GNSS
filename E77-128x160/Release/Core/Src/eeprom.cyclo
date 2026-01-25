@@ -1,0 +1,5 @@
+eeprom.c:57:6:flash_lock	1
+eeprom.c:61:9:flash_unlock	2
+eeprom.c:77:6:flash_erase_page	3
+eeprom.c:98:6:flash_write_array	7
+eeprom.c:159:6:read_page	2
