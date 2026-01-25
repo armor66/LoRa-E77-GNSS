@@ -148,6 +148,8 @@ struct main_flags_struct
     uint8_t uartIdx;
     uint8_t settings_index;
 
+   	int8_t rtc_enabled;
+   	int8_t time_saved;
     int8_t current_device;
     uint16_t endRX_2_TX;
     uint32_t settings_address;

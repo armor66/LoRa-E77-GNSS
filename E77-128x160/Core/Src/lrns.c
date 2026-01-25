@@ -5,7 +5,7 @@
 //#include "radio.h"
 #include "menu.h"
 #include "gpio.h"
-//#include "gnss.h"
+#include "ds3231.h"
 
 const double rad_to_deg = 57.29577951308232;        //rad to deg multiplyer
 const double deg_to_rad = 0.0174532925199433;       //deg to rad multiplyer
@@ -23,6 +23,7 @@ const double deg_to_rad = 0.0174532925199433;       //deg to rad multiplyer
 #define AIR_PACKET_LEN   (0x0D)	//payload len only, no syncword/crc included   (FSK_PP7_PLOAD_LEN_12_BYTE)
 
 struct settings_struct *p_settings_lrns;
+ds3231_time_t *p_timeStore;
 
 struct devices_struct devices[DEVICES_ON_AIR_MAX + 1];        //structures array for devices from 1 to DEVICES_IN_GROUP. Index 0 is invalid and always empty.
 struct devices_struct *p_devices[DEVICES_ON_AIR_MAX + 1];		//structure pointers array
@@ -62,6 +63,7 @@ void init_lrns(void)
 {
 	//Get external things
 	p_settings_lrns = get_settings();
+	p_timeStore = get_timeData();
 	pp_points_lrns = get_points();
 
 //	pp_trekpoints_lrns = get_tekpoints();
@@ -78,41 +80,62 @@ void init_lrns(void)
 //    }
 }
 
+void get_ds3231time(void)	//on restartPattern() if no PPS
+{
+	(main_flags.rtc_enabled)? ds3231_get_time(p_timeStore): (p_timeStore->year = 2000);
+}
+
 void ublox_to_this_device(uint8_t device_number)
 {
 	devices[device_number].fix_type_opt = PVTbuffer[20+6];				//all 6 types
 	devices[device_number].valid_fix_flag = (PVTbuffer[21+6] & 0x01);	//bit0 only
 	devices[device_number].valid_date_flag = (PVTbuffer[11+6] & 0x01);	//valid UTC Date
 
-		devices[device_number].longitude.as_array[0] = PVTbuffer[30];
-		devices[device_number].longitude.as_array[1] = PVTbuffer[31];
-		devices[device_number].longitude.as_array[2] = PVTbuffer[32];
-		devices[device_number].longitude.as_array[3] = PVTbuffer[33];
+	devices[device_number].longitude.as_array[0] = PVTbuffer[30];
+	devices[device_number].longitude.as_array[1] = PVTbuffer[31];
+	devices[device_number].longitude.as_array[2] = PVTbuffer[32];
+	devices[device_number].longitude.as_array[3] = PVTbuffer[33];
 
-		devices[device_number].latitude.as_array[0] = PVTbuffer[34];
-		devices[device_number].latitude.as_array[1] = PVTbuffer[35];
-		devices[device_number].latitude.as_array[2] = PVTbuffer[36];
-		devices[device_number].latitude.as_array[3] = PVTbuffer[37];
+	devices[device_number].latitude.as_array[0] = PVTbuffer[34];
+	devices[device_number].latitude.as_array[1] = PVTbuffer[35];
+	devices[device_number].latitude.as_array[2] = PVTbuffer[36];
+	devices[device_number].latitude.as_array[3] = PVTbuffer[37];
 
-		devices[device_number].gps_speed = ((PVTbuffer[63+6]<<24)+(PVTbuffer[62+6]<<16)+(PVTbuffer[61+6]<<8)+PVTbuffer[60+6])/278 & 0xFF;		// 0 - 255 km/h
-		devices[device_number].gps_heading = ((PVTbuffer[67+6]<<24)+(PVTbuffer[66+6]<<16)+(PVTbuffer[65+6]<<8)+PVTbuffer[64+6])/100000 & 0x1FF;	// 0 - 511 degrees
-		devices[device_number].p_dop = (PVTbuffer[77+6]<<8)+PVTbuffer[76+6];
+	devices[device_number].gps_speed = ((PVTbuffer[63+6]<<24)+(PVTbuffer[62+6]<<16)+(PVTbuffer[61+6]<<8)+PVTbuffer[60+6])/278 & 0xFF;		// 0 - 255 km/h
+	devices[device_number].gps_heading = ((PVTbuffer[67+6]<<24)+(PVTbuffer[66+6]<<16)+(PVTbuffer[65+6]<<8)+PVTbuffer[64+6])/100000 & 0x1FF;	// 0 - 511 degrees
+	devices[device_number].p_dop = (PVTbuffer[77+6]<<8)+PVTbuffer[76+6];
 
-		if(main_flags.fix_valid >= p_settings_lrns->devices_on_air)		//at least 3 fix valid occurred
+	if(main_flags.fix_valid >= p_settings_lrns->devices_on_air)		//at least 3 fix valid occurred
+	{
+		main_flags.fix_valid = p_settings_lrns->devices_on_air;
+
+		p_timeStore->year = (PVTbuffer[11]<<8) + PVTbuffer[10];
+		p_timeStore->month = PVTbuffer[12];
+		p_timeStore->date = PVTbuffer[13];
+		p_timeStore->hour = PVTbuffer[14];
+		p_timeStore->minute = PVTbuffer[15];
+		p_timeStore->second = PVTbuffer[16];
+
+		if(!main_flags.first_time_locked)	//if not locked yet
 		{
-			main_flags.fix_valid = p_settings_lrns->devices_on_air;
-			if(!main_flags.first_time_locked)	//if not locked yet
-			{
-				//set CFG-TP-PERIOD_LOCK_TP1=3.000.000 to manage ADC and UART only ones on period
+			if(main_flags.rtc_enabled) ds3231_set_time(p_timeStore);
+			//set CFG-TP-PERIOD_LOCK_TP1=3.000.000 to manage ADC and UART only ones on period
 //				if(p_settings_lrns->spreading_factor == 12)
 //				{
 //					USART2->CR1 |= USART_CR1_TE | USART_CR1_UE;
 //					serialPrint(set_three_seconds, sizeof(set_three_seconds));
 //				}
-				main_flags.first_time_locked = 1;
-				shortBeeps(3);					//glad tidings
-			}
-		}else  if(devices[device_number].valid_fix_flag) main_flags.fix_valid++;
+			main_flags.first_time_locked = 1;
+/* save first fix_valid locked position to Start Positions group */
+			save_start_pos();
+			shortBeeps(3);					//glad tidings
+		}
+	}
+	else
+	{
+		(main_flags.rtc_enabled)? ds3231_get_time(p_timeStore): (p_timeStore->year = 2000);
+		if(devices[device_number].valid_fix_flag) main_flags.fix_valid++;
+	}
 }
 void rx_to_devices(uint8_t device_number)
 {

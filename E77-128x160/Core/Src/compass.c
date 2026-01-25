@@ -263,7 +263,8 @@ uint8_t read_north(void)		//case 3 when TIM1 IRQ
 {
 	pp_devices_compass = get_devices();
 	p_settings = get_settings();
-	if(pp_devices_compass[p_settings->device_number]->gps_speed > GPS_SPEED_THRS)		//use GPS course when moving
+	if(main_flags.fix_valid &&
+			(pp_devices_compass[p_settings->device_number]->gps_speed > GPS_SPEED_THRS))	//use GPS course when moving
 	{
 		heading_deg = pp_devices_compass[p_settings->device_number]->gps_heading;
 		if(heading_deg > 180) heading_deg = heading_deg - 360;

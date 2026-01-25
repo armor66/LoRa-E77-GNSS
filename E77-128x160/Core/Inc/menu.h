@@ -10,4 +10,6 @@ void show_settings(void);
 void draw_menu(int8_t menu);
 void set_brightness(void);
 
+void save_start_pos(void);
+
 #endif /*MENU_HEADER*/

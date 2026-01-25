@@ -149,7 +149,7 @@
 #define MEM_POINT_3_NAME  	("Group_3")
 #define MEM_POINT_4_NAME   	("Group_4")
 #define MEM_POINT_5_NAME   	("Group_5")
-#define MEM_POINT_6_NAME   	("BcnManu")
+#define MEM_POINT_6_NAME   	("StrtPos")
 #define MEM_POINT_7_NAME  	("Device1")
 #define MEM_POINT_8_NAME  	("Device2")
 #define MEM_POINT_9_NAME  	("Device3")
@@ -176,7 +176,7 @@
 #define MEM_POINT_3_SHORT  		("Grp3")
 #define MEM_POINT_4_SHORT   	("Grp4")
 #define MEM_POINT_5_SHORT   	("Grp5")
-#define MEM_POINT_6_SHORT   	("BcnM")
+#define MEM_POINT_6_SHORT   	("Strt")
 
 #define MEM_POINTS_GROUPS_ARRAY_SHORT 	{ 	{MEM_POINT_0_SHORT}, 	\
 										{MEM_POINT_1_SHORT}, 		\
@@ -457,7 +457,6 @@ void save_one_point(int8_t point_absolute_index)
 	points[point_absolute_index].exist_flag = 1;
 	points[point_absolute_index].latitude.as_integer = pp_devices[p_settings->device_number]->latitude.as_integer;
 	points[point_absolute_index].longitude.as_integer = pp_devices[p_settings->device_number]->longitude.as_integer;
-//	memory_points_save();		//save to flash
 }
 
 char *get_points_group_name(uint8_t group_number)		//point_number from MEMORY_POINT_FIRST to MEMORY_POINT_LAST

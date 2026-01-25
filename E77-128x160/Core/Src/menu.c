@@ -10,9 +10,11 @@
 #include "compass.h"
 #include "gnss.h"
 #include "lrns.h"
-//#include "nv3023.h"
+#include "ds3231.h"
 
 #include "lcd_display.h"
+
+#define START_POS_GROUP		6
 
 uint8_t get_current_item(void);
 uint8_t get_last_item(void);
@@ -471,7 +473,7 @@ char *fixType[] = {"NoFix", "DReck", "2DFix", "3DFix", "DReck", "Time"}; 	//only
 
 //int8_t main_flags.current_point_group = 0;		//Current number of memory point to save
 uint8_t current_mem_subpoint = 0;
-uint8_t points_group_ind = 0;
+uint8_t points_group_ind = 0;						//NavTo Points begins from Start Positions group
 uint8_t memory_subpoint = 0;
 uint8_t memory_subpoint_ind[MEMORY_POINT_GROUPS];
 uint8_t flag_group_has_changed[MEMORY_POINT_GROUPS];
@@ -509,6 +511,8 @@ struct points_struct **pp_points_menu;
 struct settings_struct *p_settings_menu;
 struct settings_struct settings_copy_menu;
 
+ds3231_time_t *p_timeData;
+
 void init_menu(void)
 {
 	//Load all devices
@@ -523,27 +527,31 @@ void init_menu(void)
 	p_coding_rate_values = get_coding_rate_values();
 	p_tx_power_values = get_tx_power_values();
 
+	p_timeData = get_timeData();
+
 	current_menu = M_MAIN;
 //	return_from_power_menu = M_MAIN;
 	set_current_item(M_MAIN_I_NAVIGATION);
 
 	main_flags.display_status = 1;
 	main_flags.update_screen = 1;
-	main_flags.brightness = 11;
+	main_flags.brightness = 16;
 	lptim1_start(16, main_flags.brightness);
+/* first position to save when first_time_locked(fix_valid*devices_on_air) after power on */
+	memory_subpoint_ind[START_POS_GROUP] = 1;
 }
 
 void set_brightness(void)
 {
-	if(main_flags.brightness == 11)
+	if(main_flags.brightness == 16)
 	{
-		main_flags.brightness = 16;
-	}else if(main_flags.brightness == 16)
+		main_flags.brightness = 11;
+	}else if(main_flags.brightness == 11)
 	{
 		main_flags.brightness = 0;
 	}else
 	{
-		main_flags.brightness = 11;
+		main_flags.brightness = 16;
 	}
 	lptim1_start(16, main_flags.brightness);
 }
@@ -586,9 +594,9 @@ void change_menu(uint8_t button_code)
 				break;
 
 			case BTN_PWR:
-				lptim1_stop();					//lcd off
-				main_flags.display_status = 0;
-				main_flags.current_point_group = 0;		//to start save points from group 1
+				lptim1_stop();							//lcd_off
+				main_flags.display_status = 0;			//do not draw or change menu
+				main_flags.current_point_group = 0;		//to start save or erase points from group 1
 				break;
 
 			default:
@@ -873,32 +881,57 @@ void draw_current_menu(void)
 }
 //------------------------------------------------------------------
 //---------------------------MAIN MENU------------------------------
+
 void draw_main(void)
 {
-	uint8_t day = PVTbuffer[7+6];
-	uint8_t month = PVTbuffer[6+6];
-	uint16_t year = (PVTbuffer[5+6]<<8) + PVTbuffer[4+6];
-	uint8_t hour = PVTbuffer[14];
+	uint8_t day;	// = PVTbuffer[7+6];
+//	uint8_t month = PVTbuffer[6+6];
+	uint8_t year;	// = (PVTbuffer[5+6]<<8) + PVTbuffer[4+6];
+	uint8_t hour;	// = PVTbuffer[14];
 	row = 0;
 
-	if(pp_devices_menu[this_device]->valid_date_flag)	//bit 5: information about UTC Date and Time of Day validity conﬁrmation is available
+	if(main_flags.rtc_enabled || main_flags.fix_valid)
+//(pp_devices_menu[this_device]->valid_date_flag)	//bit 5: information about UTC Date and Time of Day validity conﬁrmation is available
 	{
-		year = year - 2000;
-		hour = hour + p_settings_menu->time_zone_hour;
-		if(hour > 23) hour = hour - 24;
-	}else day = month = year = hour = 0;
+		year = (uint8_t)(p_timeData->year - 2000);
+		hour = p_timeData->hour + p_settings_menu->time_zone_hour;
+		if(hour > 23)
+		{
+			hour = hour - 24;
+			day = 1 + p_timeData->date;
+		}
+		else day = p_timeData->date;
+	}
+	else day = year = hour = 0;
 
 	if(pp_devices_menu[this_device]->batt_voltage < 50)		// U < 3.2volt (!pp_devices_menu[this_device]->batt_voltage)
 	{
 		sprintf(&string_buffer[row][0], "DevID:%02d Batt low!", this_device);
-	}else sprintf(&string_buffer[row][0], "DevID:%02d  %d.%02dVolt", this_device,
-			(pp_devices_menu[this_device]->batt_voltage+270)/100, (pp_devices_menu[this_device]->batt_voltage+270)%100);
-	row+=1;	//1
-	sprintf(&string_buffer[row][0], "%02d/%02d/%02d  %02d:%02d:%02d", day, month, year, hour, PVTbuffer[15], PVTbuffer[16]);
-	for (uint8_t k = 0; k < row+1; k++)
+		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, ORANGE,BLACK);
+	}else
 	{
-		draw_str_by_rows(0, 1+k*11, &string_buffer[k][0], &Font_7x9, WHITE,BLACK);
+		sprintf(&string_buffer[row][0], "DevID:%d/%d %d.%02dVolt", this_device, p_settings_menu->devices_on_air,
+			(pp_devices_menu[this_device]->batt_voltage+270)/100,
+			(pp_devices_menu[this_device]->batt_voltage+270)%100);
+		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, WHITE,BLACK);
 	}
+	row+=1;	//1
+	if(main_flags.rtc_enabled || main_flags.fix_valid)
+	{
+		(sprintf(&string_buffer[row][0], "%02d/%02d/%02d  %02d:%02d:%02d",
+			day, p_timeData->month, year, hour, p_timeData->minute, p_timeData->second));
+		(main_flags.fix_valid)?
+				draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, WHITE,BLACK):
+				draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, CYAN,BLACK);
+	}else
+	{
+		(sprintf(&string_buffer[row][0], "RTC IS NOT APPLIED"));
+		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, ORANGE,BLACK);
+	}
+//	for (uint8_t k = 0; k < row+1; k++)
+//	{
+//		draw_str_by_rows(0, 1+k*11, &string_buffer[k][0], &Font_7x9, WHITE,BLACK);
+//	}
 	row+=1;	//2
 	if(main_flags.nav_pvt_ram_flag)
 	{
@@ -1520,8 +1553,10 @@ void set_subpoint_ok(void) {
     if (memory_subpoint_ind[main_flags.current_point_group]) {    //if (!= 0) copy current device/point to selected mem point
 
    	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->exist_flag = 1;
-   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->latitude.as_integer = pp_devices_menu[main_flags.current_device]->latitude.as_integer;
-   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->longitude.as_integer = pp_devices_menu[main_flags.current_device]->longitude.as_integer;
+   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->latitude.as_integer =
+   			pp_devices_menu[main_flags.current_device]->latitude.as_integer;
+   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->longitude.as_integer =
+   			pp_devices_menu[main_flags.current_device]->longitude.as_integer;
 
    	flag_group_has_changed[main_flags.current_point_group] = 1;
    	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;			//clear subpoint 0
@@ -1532,7 +1567,34 @@ void set_subpoint_ok(void) {
     current_menu = M_DEVICE_SUBMENU;
 	}else current_menu = M_SET_POINTS;
 }
+void save_start_pos(void) {
+	main_flags.current_point_group = START_POS_GROUP;
+	points_group_ind = START_POS_GROUP;					//almost deprecated
+	/*if sub-point already exist*/
+	if(pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->exist_flag == 1)
+	{
+		if(memory_subpoint_ind[main_flags.current_point_group] == MEMORY_SUBPOINTS - 1)	//if (memory_subpoint == MEMORY_SUBPOINTS)
+	    {
+			memory_subpoint_ind[main_flags.current_point_group] = 1;
+	    }else {
+	    	memory_subpoint_ind[main_flags.current_point_group]++;
+	    }
+	}
 
+   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->exist_flag = 1;
+   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->latitude.as_integer =
+   			pp_devices_menu[main_flags.current_device]->latitude.as_integer;
+   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->longitude.as_integer =
+   			pp_devices_menu[main_flags.current_device]->longitude.as_integer;
+/* do not save on manual power off */
+//  flag_group_has_changed[main_flags.current_point_group] = 1;			//postpone save to flash
+/* save manually via DEVICE_SUBMENU->SET_POINTS only */
+//  points_group_save(main_flags.current_point_group);					//save to flash
+   	fill_screen(BLACK);
+/* set the same current item for menu Points */
+	item_table[2].cur_item = points_group_ind;
+    current_menu = M_NAVTO_POINTS;
+}
 void set_subpoint_esc(void) {
 	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;			//clear subpoint 0
 	memory_subpoint_ind[main_flags.current_point_group] = 0;   //exit no save, reset value
@@ -1651,6 +1713,8 @@ void draw_navto_points(void)
 void navto_points_ok(void) {		//other points on loop
 	if (points_group_ind == (MEMORY_POINT_GROUPS - 1)) points_group_ind = 0;
     else points_group_ind++;
+/* set the same current item for menu Points */
+	item_table[2].cur_item = points_group_ind;
 }
 void navto_points_esc(void)
 {

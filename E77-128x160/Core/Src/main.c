@@ -43,6 +43,7 @@
 #include "gnss.h"
 #include "e77radio.h"
 #include "iwdg.h"
+#include "ds3231.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -194,6 +195,7 @@ int main(void)
   	{
   		main_flags.adc_calibration_factor = getADC_calibration();
   		init_compass();
+  		init_ds3231();
   		init_menu();
 
   		timer_it_init();

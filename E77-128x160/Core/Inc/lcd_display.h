@@ -30,7 +30,7 @@
 #define OLIVE       	0x7BE0
 #define LIGHTGREY   	0xC618
 #define DARKGREY    	0x7BEF
-#define ORANGE      	0xFD20
+#define ORANGE      	0xFB80		//0xFD20
 #define PINK        	0xF81F
 //------------------------------------------------
 

@@ -96,8 +96,9 @@ void EXTI9_5_IRQHandler(void)		//(PPS_Pin)
 	if(main_flags.pps_counter++ > 60)	//if 60sec no buttons activity
 	{
 		main_flags.pps_counter = 60;
-		lptim1_stop();					//lcd_off();
-		main_flags.display_status = 0;	//do not draw or change menu
+		lptim1_stop();							//lcd_off();
+		main_flags.display_status = 0;			//do not draw or change menu
+		main_flags.current_point_group = 0;		//to start save or erase points from group 1
 //for TPS7330 Vthresold=2.64V, for TPS7333 Vthresold=2.87V(287-270=17), 0==270(2.70V) (actually ~2.95V)
 		if(pp_devices[p_settings->device_number]->batt_voltage < 30)	//270 + 30 (<3.00V)
 		{

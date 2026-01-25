@@ -8,6 +8,7 @@
 extern const double deg_to_rad;       //deg to rad multiplyer
 
 void init_lrns(void);
+void get_ds3231time(void);
 void fill_air_packet(uint32_t current_uptime);
 void parse_air_packet(uint32_t current_uptime);
 void process_all_devices(void);

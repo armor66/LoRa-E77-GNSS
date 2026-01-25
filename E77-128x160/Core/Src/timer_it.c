@@ -72,6 +72,7 @@ static void restartPattern(void)
 	{
 		shortBeeps(2);
 	}
+	get_ds3231time();
 }
 
 void TIM1_UP_IRQHandler(void)
@@ -130,8 +131,8 @@ void TIM1_UP_IRQHandler(void)
 			}
 			if(main_flags.display_status)	//moved here to show when SF12 also
 			{
-				timer17_stop();
 				main_flags.endRX_2_TX = (uint16_t)TIM17->CNT;		//save interval from RX-end to TX-start
+				timer17_stop();		//stop here to reload/clear
 			}
 
 			if(main_flags.time_slot == p_settings_tim->device_number)	//this device, never met in case SF12(slots 1 and 2 only)
@@ -147,7 +148,12 @@ void TIM1_UP_IRQHandler(void)
 					main_flags.permit_actions = 0;
 					led_red_on();					//start transmitting, end by case 3 (OnTxDone)
 					set_transmit_data();			//State = TX_START;
-				}else main_flags.fix_valid = 0;		//just to avoid negative values
+				}
+				else	//for SF11
+				{
+					main_flags.first_time_locked = 0;	//save time to ds3231 next time fix valid occurs
+					main_flags.fix_valid = 0;			//just to avoid negative values
+				}
 			}
 			else//if(time_slot != p_settings_tim->device_number)	other devices:
 			{
@@ -171,7 +177,12 @@ void TIM1_UP_IRQHandler(void)
 							set_transmit_data();	//transmit flags and time only with buffer_to_transmit = 3
 						}
 						else Radio.RxBoosted(0);	//start to receive SF12 on slot 1 or 2
-					}else main_flags.fix_valid = 0;
+					}
+					else	//for SF12
+					{
+						main_flags.first_time_locked = 0;	//save time to ds3231 next time fix valid occurs
+						main_flags.fix_valid = 0;			//just to avoid negative values
+					}
 				}
 				else Radio.RxBoosted(0);			//start to receive if SF != 12
 
@@ -284,12 +295,12 @@ void TIM1_UP_IRQHandler(void)
 
 void TIM2_IRQHandler(void)					//Scan buttons interval	void TIM3_IRQHandler(void)
 {
-	TIM2->SR &= ~TIM_SR_UIF;                    //clear interrupt
+	TIM2->SR &= ~TIM_SR_UIF;                //clear interrupt
 //	led_red_on();
 	if (main_flags.buttons_scanned == 0)	//if not scanned yet
 	{
 		main_flags.button_code = scan_button(main_flags.processing_button);
-		if (main_flags.button_code)	//perhaps get rid off the buttons_scanned and clear button_code in main.c/while (1)
+		if (main_flags.button_code)			//perhaps get rid off the buttons_scanned and clear button_code in main.c/while (1)
 		{
 			main_flags.buttons_scanned = 1;
 		}
@@ -298,7 +309,7 @@ void TIM2_IRQHandler(void)					//Scan buttons interval	void TIM3_IRQHandler(void
 
 void TIM16_IRQHandler(void)
 {
-	TIM16->SR &= ~TIM_SR_UIF;                    //clear interrupt
+	TIM16->SR &= ~TIM_SR_UIF;               //clear interrupt
 	timer16_stop();
 	main_flags.current_point_group = 0;
 }

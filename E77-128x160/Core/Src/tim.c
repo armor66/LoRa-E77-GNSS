@@ -320,6 +320,6 @@ void timer17_start(void)
 void timer17_stop(void)
 {
     TIM17->CR1 &= ~TIM_CR1_CEN;             	//disable counter
-//	TIM17->EGR = TIM_EGR_UG;
+	TIM17->EGR = TIM_EGR_UG;					//clear for main_flags.endRX_2_TX
 }
 /* USER CODE END 1 */
