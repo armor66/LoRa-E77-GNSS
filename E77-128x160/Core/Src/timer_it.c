@@ -151,7 +151,7 @@ void TIM1_UP_IRQHandler(void)
 				}
 				else	//for SF11
 				{
-					main_flags.first_time_locked = 0;	//save time to ds3231 next time fix valid occurs
+					main_flags.locked = 0;	//save time to ds3231 next time fix valid occurs
 					main_flags.fix_valid = 0;			//just to avoid negative values
 				}
 			}
@@ -180,7 +180,7 @@ void TIM1_UP_IRQHandler(void)
 					}
 					else	//for SF12
 					{
-						main_flags.first_time_locked = 0;	//save time to ds3231 next time fix valid occurs
+						main_flags.locked = 0;	//save time to ds3231 next time fix valid occurs
 						main_flags.fix_valid = 0;			//just to avoid negative values
 					}
 				}

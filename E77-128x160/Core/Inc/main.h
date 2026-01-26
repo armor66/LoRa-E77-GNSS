@@ -136,6 +136,7 @@ struct main_flags_struct
    	int8_t compass_fault;
 
     int8_t fix_valid;
+    int8_t locked;
     int8_t first_time_locked;
     int8_t pps_counter;
     int8_t pps_synced;

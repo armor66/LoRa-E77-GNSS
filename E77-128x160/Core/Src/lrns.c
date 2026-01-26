@@ -116,7 +116,7 @@ void ublox_to_this_device(uint8_t device_number)
 		p_timeStore->minute = PVTbuffer[15];
 		p_timeStore->second = PVTbuffer[16];
 
-		if(!main_flags.first_time_locked)	//if not locked yet
+		if(!main_flags.locked)	//if not locked yet or reseted after lost
 		{
 			if(main_flags.rtc_enabled) ds3231_set_time(p_timeStore);
 			//set CFG-TP-PERIOD_LOCK_TP1=3.000.000 to manage ADC and UART only ones on period
@@ -125,9 +125,14 @@ void ublox_to_this_device(uint8_t device_number)
 //					USART2->CR1 |= USART_CR1_TE | USART_CR1_UE;
 //					serialPrint(set_three_seconds, sizeof(set_three_seconds));
 //				}
-			main_flags.first_time_locked = 1;
+			main_flags.locked = 1;
 /* save first fix_valid locked position to Start Positions group */
-			save_start_pos();
+			if(!main_flags.first_time_locked)
+			{
+				main_flags.first_time_locked = 1;
+				save_start_pos();
+			}
+
 			shortBeeps(3);					//glad tidings
 		}
 	}

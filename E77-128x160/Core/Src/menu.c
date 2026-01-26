@@ -58,6 +58,9 @@ void points_esc(void);
 void draw_show_points(void);
 void draw_clear_group(void);
 void confirm_clear_group(void);
+void draw_save_group(void);
+void confirm_save_group(void);
+void decline_save_group(void);
 //SUB POINTS MENU
 void set_subpoint_up(void);
 void set_subpoint_down(void);
@@ -138,6 +141,7 @@ enum    //menu number starts from 1, because 0 is used as "end marker" in menu s
 	M_POINTS,
 	M_POINTS_SUBMENU,
 	M_CONFIRM_CLEARGROUP,
+	M_CONFIRM_SAVEGROUP,
 
 	M_SETTINGS,
 	M_CONFIRM_SETTINGS,
@@ -313,6 +317,10 @@ const struct
 	{M_POINTS,					BTN_ESC,				points_esc},
 	{M_POINTS_SUBMENU,			BTN_OK,					draw_clear_group},
 	{M_CONFIRM_CLEARGROUP,		BTN_OK,					confirm_clear_group},
+	{M_CONFIRM_SAVEGROUP,		BTN_UP,					set_subpoint_up},
+	{M_CONFIRM_SAVEGROUP,		BTN_DOWN,				set_subpoint_down},
+	{M_CONFIRM_SAVEGROUP,		BTN_OK,					confirm_save_group},
+	{M_CONFIRM_SAVEGROUP,		BTN_ESC,				decline_save_group},
 	{M_ACTIONS,					BTN_PWR_LONG,			power_long},
 	{M_ACTIONS,					BTN_OK,					actions_ok},
 	{M_ACTIONS,					BTN_ESC,				actions_esc},
@@ -390,6 +398,7 @@ const struct
 	{M_POINTS,	                M_MAIN},
 	{M_POINTS_SUBMENU,			M_POINTS},
 	{M_CONFIRM_CLEARGROUP,		M_POINTS_SUBMENU},
+	{M_CONFIRM_SAVEGROUP,		M_NAVTO_POINTS},
 //	{M_POINTS_SUBMENU_DEVICES,	M_POINTS},
 
     {M_SETTINGS,                M_CONFIRM_SETTINGS},	//M_MAIN},
@@ -447,7 +456,7 @@ const struct
 
 	{M_POINTS,                  draw_points},
 	{M_POINTS_SUBMENU,			draw_show_points},
-//	{M_CONFIRM_CLEARGROUP,		draw_clear_group},
+	{M_CONFIRM_SAVEGROUP,		draw_save_group},
 
     {M_SETTINGS,                draw_settings},
     {M_SET_DEVICE_NUMBER,		draw_set_settings},
@@ -537,7 +546,7 @@ void init_menu(void)
 	main_flags.update_screen = 1;
 	main_flags.brightness = 16;
 	lptim1_start(16, main_flags.brightness);
-/* first position to save when first_time_locked(fix_valid*devices_on_air) after power on */
+/* first position to save when first_time_locked after power on */
 	memory_subpoint_ind[START_POS_GROUP] = 1;
 }
 
@@ -1557,43 +1566,94 @@ void set_subpoint_ok(void) {
    			pp_devices_menu[main_flags.current_device]->latitude.as_integer;
    	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->longitude.as_integer =
    			pp_devices_menu[main_flags.current_device]->longitude.as_integer;
-
+/* postpone save to flash when manual power off */
    	flag_group_has_changed[main_flags.current_point_group] = 1;
-   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;			//clear subpoint 0
+   	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;	//clear subpoint 0
    	memory_subpoint_ind[main_flags.current_point_group] = 0;
-//   	points_group_save(main_flags.current_point_group);
-//    memory_points_save();		//save to flash
+//  points_group_save(main_flags.current_point_group);				//save to flash now
 
     current_menu = M_DEVICE_SUBMENU;
 	}else current_menu = M_SET_POINTS;
 }
+
+int8_t firstFreeStartPoint;
 void save_start_pos(void) {
-	main_flags.current_point_group = START_POS_GROUP;
-	points_group_ind = START_POS_GROUP;					//almost deprecated
-	/*if sub-point already exist*/
-	if(pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->exist_flag == 1)
+ 	fill_screen(BLACK);
+
+	memory_subpoint_ind[START_POS_GROUP] = 1;
+/* check if saved memory points already exist and return first free position */
+	for(int8_t i = 1; i < MEMORY_SUBPOINTS; i++)
 	{
-		if(memory_subpoint_ind[main_flags.current_point_group] == MEMORY_SUBPOINTS - 1)	//if (memory_subpoint == MEMORY_SUBPOINTS)
-	    {
-			memory_subpoint_ind[main_flags.current_point_group] = 1;
-	    }else {
-	    	memory_subpoint_ind[main_flags.current_point_group]++;
-	    }
+		if(pp_points_menu[START_POS_GROUP * MEMORY_SUBPOINTS + memory_subpoint_ind[START_POS_GROUP]]->exist_flag == 1)
+		{
+			if(memory_subpoint_ind[START_POS_GROUP] == MEMORY_SUBPOINTS - 1)
+		    {
+//				memory_subpoint_ind[main_flags.current_point_group] = 1;
+				break;
+		    }else {
+		    	memory_subpoint_ind[START_POS_GROUP]++;
+		    }
+		}
+		else break;
 	}
 
+	firstFreeStartPoint = memory_subpoint_ind[START_POS_GROUP];
+/* set the same current item for menu Points */
+	item_table[2].cur_item = START_POS_GROUP;
+/* set group for Nav2Points menu*/
+	points_group_ind = START_POS_GROUP;
+
+	current_menu = M_CONFIRM_SAVEGROUP;
+}
+void draw_save_group(void)
+{
+	main_flags.current_point_group = START_POS_GROUP;	//restore if lcd_off
+
+	draw_str_by_rows(8, 7, "SAVE START", &Font_11x18, CYAN,BLACK);
+
+	sprintf(&string_buffer[0][0], "AS POINT<%d>", memory_subpoint_ind[START_POS_GROUP]);
+	if(pp_points_menu[START_POS_GROUP * MEMORY_SUBPOINTS + memory_subpoint_ind[START_POS_GROUP]]->exist_flag == 1)
+	{
+		draw_str_by_rows(3, 1*19+7, &string_buffer[0][0], &Font_11x18, ORANGE,BLACK);		//if sub-point already exist
+	}
+	else draw_str_by_rows(3, 1*19+7, &string_buffer[0][0], &Font_11x18, YELLOW,BLACK);		//active points group
+
+	draw_str_by_rows(14, 2*19+7, "TO FLASH?", &Font_11x18, CYAN,BLACK);
+	draw_str_by_rows(5, 3*19+7, "    OK", &Font_11x18, YELLOW,BLACK);
+	draw_str_by_rows(5, 4*19+7, "    or", &Font_11x18, CYAN,BLACK);
+	sprintf(&string_buffer[1][0], "LEFT AS %d", firstFreeStartPoint);
+	draw_str_by_rows(14, 5*19+7, &string_buffer[1][0], &Font_11x18, GREEN,BLACK);
+	draw_str_by_rows(8, 6*19+7, "IN THE RAM", &Font_11x18, CYAN,BLACK);
+	draw_str_by_rows(0, 7*19+7, "    ESC", &Font_11x18, GREEN,BLACK);
+}
+void confirm_save_group(void)
+{
    	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->exist_flag = 1;
    	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->latitude.as_integer =
    			pp_devices_menu[main_flags.current_device]->latitude.as_integer;
    	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->longitude.as_integer =
    			pp_devices_menu[main_flags.current_device]->longitude.as_integer;
-/* do not save on manual power off */
-//  flag_group_has_changed[main_flags.current_point_group] = 1;			//postpone save to flash
-/* save manually via DEVICE_SUBMENU->SET_POINTS only */
-//  points_group_save(main_flags.current_point_group);					//save to flash
-   	fill_screen(BLACK);
-/* set the same current item for menu Points */
-	item_table[2].cur_item = points_group_ind;
-    current_menu = M_NAVTO_POINTS;
+/* erase points higher-numbered memory_subpoint_ind[main_flags.current_point_group] */
+	for(int8_t i = 1+memory_subpoint_ind[main_flags.current_point_group]; i < MEMORY_SUBPOINTS; i++)
+	{
+		pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + i]->exist_flag = 0;
+	}
+/* save to flash now */
+   	points_group_save(main_flags.current_point_group);
+//  saved_group_load(main_flags.current_point_group);
+	current_menu = M_NAVTO_POINTS;
+}
+void decline_save_group(void)
+{
+	memory_subpoint_ind[main_flags.current_point_group] = firstFreeStartPoint;
+
+	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->exist_flag = 1;
+	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->latitude.as_integer =
+			pp_devices_menu[main_flags.current_device]->latitude.as_integer;
+	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->longitude.as_integer =
+			pp_devices_menu[main_flags.current_device]->longitude.as_integer;
+
+	current_menu = M_NAVTO_POINTS;
 }
 void set_subpoint_esc(void) {
 	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;			//clear subpoint 0
@@ -1605,11 +1665,11 @@ void set_subpoint_esc(void) {
 //---------------------------------DEVICES MENU END---------------------------------
 //----------------------------------------------------------------------
 //--------------------------------NAV TO POINTS MENU--------------------------------
-
+int8_t ind = 0;		//out of the function to roll up points in group menu
 void draw_navto_points(void)
 {
 	row = 0;
-	int8_t ind = 0;
+//	int8_t ind = 0;		//out of the function to roll up points in group menu
 	uint8_t sub_point_ind = 0;
 	uint8_t sub_point[] = {0, 0, 0, 0, 0, 0, 0};		//1...7
 	uint8_t points_group_start = points_group_ind * MEMORY_SUBPOINTS;
