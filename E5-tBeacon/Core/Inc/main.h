@@ -96,7 +96,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 #define BEACON
 #define ST7735
-//#define ST7735_IS_160X128_BLUE
+#define ST7735_IS_160X128_BLUE
 //#define ST7735_IS_160X128_RED
 #define BUFFER_AIR_SIZE            	13  	/* Define the payload size here */
 #define BUFFER_RX                  	15		//BUFFER_SIZE + 2 rssi and snr
@@ -139,6 +139,7 @@ struct main_flags_struct
     int8_t pps_synced;
     int8_t current_point_group;
     int8_t rx_crc_error;
+    int8_t battery_low;
 //    int8_t pattern_started;
 
     int8_t adc_calibration_factor;

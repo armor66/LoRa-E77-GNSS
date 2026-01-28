@@ -513,6 +513,9 @@ uint16_t range = 30;
 uint8_t range_ind = 0;
 uint8_t range_scale[] = {1, 2, 4, 8, 16, 32, 64};
 
+int8_t firstFreeStartPoint;	//for save_start_pos()
+int8_t ind = 0;				//out of the function draw_navto_points() to roll up if points > 3
+
 struct devices_struct **pp_devices_menu;
 struct point_groups_struct **pp_point_groups_menu;
 struct points_struct **pp_points_menu;
@@ -1576,7 +1579,6 @@ void set_subpoint_ok(void) {
 	}else current_menu = M_SET_POINTS;
 }
 
-int8_t firstFreeStartPoint;
 void save_start_pos(void) {
  	fill_screen(BLACK);
 
@@ -1665,7 +1667,6 @@ void set_subpoint_esc(void) {
 //---------------------------------DEVICES MENU END---------------------------------
 //----------------------------------------------------------------------
 //--------------------------------NAV TO POINTS MENU--------------------------------
-int8_t ind = 0;		//out of the function to roll up points in group menu
 void draw_navto_points(void)
 {
 	row = 0;

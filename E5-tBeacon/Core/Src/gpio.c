@@ -214,10 +214,10 @@ void led_w_off(void){
 }
 //PB10
 void lcd_on(void){
-	LCD_BL_GPIO_Port->BSRR = (LCD_BL_Pin << 16);
+	LCD_BL_GPIO_Port->BSRR = LCD_BL_Pin;
 }
 void lcd_off(void){
-	LCD_BL_GPIO_Port->BSRR = LCD_BL_Pin;
+	LCD_BL_GPIO_Port->BSRR = (LCD_BL_Pin << 16);
 }
 //PB15
 void hold_power(void) {

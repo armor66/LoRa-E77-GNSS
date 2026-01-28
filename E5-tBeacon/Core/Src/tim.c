@@ -300,8 +300,9 @@ void timer2_stop(void)
 	TIM2->EGR = TIM_EGR_UG;
 }
 
-void timer16_start(void)
+void timer16_start(uint16_t period)
 {
+	TIM16->ARR = period;
 	TIM16->EGR = TIM_EGR_UG;					//to reload every start
     TIM16->CR1 |= TIM_CR1_CEN;               	//enable counter
 }
@@ -319,7 +320,7 @@ void timer17_start(void)
 
 void timer17_stop(void)
 {
-    TIM17->CR1 &= ~TIM_CR1_CEN;             		//disable counter
-//	TIM17->EGR = TIM_EGR_UG;
+    TIM17->CR1 &= ~TIM_CR1_CEN;             	//disable counter
+	TIM17->EGR = TIM_EGR_UG;					//clear for main_flags.endRX_2_TX
 }
 /* USER CODE END 1 */

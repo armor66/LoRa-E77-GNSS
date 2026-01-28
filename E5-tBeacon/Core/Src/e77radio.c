@@ -47,13 +47,13 @@ void radio_init(void)
 
     Radio.SetTxConfig(MODEM_LORA, p_tx_power_values_rf[p_settings_rf->tx_power_opt], 0, LORA_BANDWIDTH,
     		  p_settings_rf->spreading_factor, p_settings_rf->coding_rate_opt,
-                        LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
-                        true, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);			//CRC, Hop, HopPer, IQ, timeout
+			  p_settings_rf->preamble, LORA_FIX_LENGTH_PAYLOAD_ON,
+			  p_settings_rf->crc_on, 0, 0, LORA_IQ_NORMAL, TX_TIMEOUT_VALUE);			//CRC, Hop, HopPer, IQ, timeout
 
     Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, p_settings_rf->spreading_factor,
-    		  p_settings_rf->coding_rate_opt, 0, LORA_PREAMBLE_LENGTH,
+    		  p_settings_rf->coding_rate_opt, 0, p_settings_rf->preamble,
                         LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
-						BUFFER_AIR_SIZE, true, 0, 0, LORA_IQ_NORMAL, false);	//CRC, Hop, HopPer, IQ, single mode
+						BUFFER_AIR_SIZE, p_settings_rf->crc_on, 0, 0, LORA_IQ_NORMAL, false);	//CRC, Hop, HopPer, IQ, single mode
 
     Radio.SetMaxPayloadLength(MODEM_LORA, BUFFER_AIR_SIZE);
 
@@ -72,6 +72,18 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 	memcpy(bufferRx, payload, BUFFER_AIR_SIZE);		//BufferAirSize
 	bufferRx[BUFFER_AIR_SIZE] = (int8_t)rssi;		//BufferAirSize + 1
 	bufferRx[BUFFER_AIR_SIZE + 1] = LoraSnr_FskCfo;	//BufferAirSize + 2
+/* if it was a Time Out transmit (no bufferRx[1] and bufferRx[2] data*/
+	if(!main_flags.fix_valid && !main_flags.pps_synced && !bufferRx[1] && !bufferRx[2])
+	{
+/* received in continuous mode call restartPattern() to synchronize with HandHeld module PPS timing */
+/* Case2:100mS + TimeOut:133mS + AirTime:663mS +SymbolTime:33mS + ThisDelay:571mS = 1500mS */
+		if(bufferRx[0] == 1) timer16_start(2070);			//+1500mS
+		else if(bufferRx[0] == 2)
+		{
+			timer16_start(570);
+//			timer1_stop();
+		}
+	}
 	//if received time slot == device number and it fix is valid
 	if(((bufferRx[0] & 0x07) == main_flags.time_slot) && ((bufferRx[1] & 0x10) >> 4))
 	{
@@ -82,8 +94,6 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 //	if(pp_devices_rf[p_settings_rf->device_number]->valid_fix_flag)	calc_relative_position(main_flags.time_slot);
 
 	memset(bufferRx, 0, BUFFER_RX);
-
-//	State = RX_DONE;
 }
 
 static void OnRxError(void)
@@ -113,16 +123,15 @@ void set_transmit_data(void)
 
 
 
-	if(main_flags.antitheft_flag_received)		//main_flags.antitheft_flag_confurmed
-	{
-		flags_to_transmit = 6;
-	}
-	else if(main_flags.emergency_flag)
+	if(main_flags.emergency_flag)	//send it and ignore antitheft_flag
 	{
 		flags_to_transmit = 3;
 	}
+	else if(main_flags.antitheft_flag_received)	//if emergency not set
+	{
+		flags_to_transmit = 6;
+	}
 	else flags_to_transmit = 0;
-
 
 
 
@@ -140,10 +149,11 @@ void set_transmit_data(void)
    	  bufferTx[0] =	(IS_BEACON << 7) + (flags_to_transmit << 4) +
 			  (beeper_flag_to_transmit << 3) + p_settings_rf->device_number;
 
-   	  (pp_devices_rf[p_settings_rf->device_number]->gps_speed > GPS_SPEED_THRS)? (bufferTx[1] |= 1 << 7): (bufferTx[1] &= ~(1 << 7));	//if device is moving
+   	  (pp_devices_rf[p_settings_rf->device_number]->gps_speed > GPS_SPEED_THRS)?
+   			  (bufferTx[1] |= 1 << 7): (bufferTx[1] &= ~(1 << 7));	//if device is moving
    	  bufferTx[1] = ((PVTbuffer[20+6] & 0x03) << 5) +				//fix type, 2 bits only to transmit	//mask 0b0000 0011
    			  	  	 ((PVTbuffer[21+6] & 0x01) << 4) +				//fix valid, bit0 only				//mask 0b0000 0001
-   					 (pp_devices_rf[p_settings_rf->device_number]->batt_voltage/10 & 0x0F);			//mask 0b0000 1111 (0-:150 -> 0-:-15)s
+   					 (pp_devices_rf[p_settings_rf->device_number]->batt_voltage/10 & 0x0F);			//mask 0b0000 1111 (0...150 -> 0...15)
    	  bufferTx[2] = (pp_devices_rf[p_settings_rf->device_number]->p_dop/10 & 0xFF);					//pDop/10 (0...25.5)
 
 	  bufferTx[3] = PVTbuffer[30];	//(uint8_t) ((UBLOX_Handle.lon >> 24) & 0xFF);		//*** longitude
@@ -166,9 +176,9 @@ void set_transmit_data(void)
 
 	if(pp_devices_rf[p_settings_rf->device_number]->gps_speed > GPS_SPEED_THRS)
 	{
-		bufferTx[11] = ((pp_devices_rf[p_settings_rf->device_number]->gps_speed & 0x7F) << 1) +	// 0 - 128 km/h
-					((pp_devices_rf[p_settings_rf->device_number]->gps_heading & 0x1FF) >> 8);	//mask 0b0000 0001 1111 1111
-	  	bufferTx[12] = (pp_devices_rf[p_settings_rf->device_number]->gps_heading & 0xFF);			//mask 0b0000 0000 1111 1111
+//		bufferTx[11] = ((pp_devices_rf[p_settings_rf->device_number]->gps_speed & 0x7F) << 1) +	// 0 - 128 km/h
+//					((pp_devices_rf[p_settings_rf->device_number]->gps_heading & 0x1FF) >> 8);	//mask 0b0000 0001 1111 1111
+//	  	bufferTx[12] = (pp_devices_rf[p_settings_rf->device_number]->gps_heading & 0xFF);			//mask 0b0000 0000 1111 1111
 	}
 	else bufferTx[12] = bufferTx[11] = 0;
 
@@ -189,7 +199,7 @@ void timer1_scanRadio_handle(void)
 void scanChannels(void)
 {
 	fill_screen(BLACK);
-//	lcd_on
+	lcd_on();
 	while (1)//(GPIOA->IDR & BTN_2_Pin)		//wait for OK click to start cal
 	{
 		draw_str_by_rows(3, 33, "     TO SCAN", &Font_7x9, YELLOW,BLACK);

@@ -11,6 +11,11 @@
     b = t;					\
 }
 
+uint8_t _colstart;   ///< Some displays need this changed to offset
+uint8_t _rowstart;       ///< Some displays need this changed to offset
+uint8_t _xstart;
+uint8_t _ystart;
+
 //__inline:
 static void sendCmd(uint8_t Cmd);
 static void sendData(uint8_t Data );
@@ -124,15 +129,23 @@ void setST7735rotation(uint8_t rotation)
 	  {
 	  case 0:
 	      madctl = MADCTL_MX | MADCTL_MY | MADCTL_RGB;
+	      _xstart = _colstart;
+	      _ystart = _rowstart;
 	      break;
 	  case 1:
 	      madctl = MADCTL_MY | MADCTL_MV | MADCTL_RGB;
+	      _ystart = _colstart;
+	      _xstart = _rowstart;
 	      break;
 	  case 2:
 	      madctl = MADCTL_RGB;
+	      _xstart = _colstart;
+	      _ystart = _rowstart;
 	      break;
 	  case 3:
 	      madctl = MADCTL_MX | MADCTL_MV | MADCTL_RGB;
+	      _ystart = _colstart;
+	      _xstart = _rowstart;
 	      break;
 	  }
 
@@ -153,13 +166,13 @@ void st7735_init(uint8_t rotation)
     displayInit(init_cmds2);
     displayInit(init_cmds3);
 
-//#if ST7735_IS_160X128_BLUE
-//    _colstart = 2;
-//    _rowstart = 1;
-//#else ST7735_IS_160X128_RED
-//    _colstart = 0;
-//    _rowstart = 0;
-//#endif
+#ifdef ST7735_IS_160X128_BLUE
+    _colstart = 2;
+    _rowstart = 1;
+#else
+    _colstart = 0;
+    _rowstart = 0;
+#endif
    setST7735rotation (rotation);
 }
 
@@ -610,12 +623,12 @@ __inline static void setWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
     // column address set
 	sendCmd(CASET);
-	uint8_t data[] = {0x00, x0, 0x00, x1};
+	uint8_t data[] = {0x00, x0 + _xstart, 0x00, x1 + _xstart};
 	sendDataMass(data, sizeof(data));
 	// row address set
 	sendCmd(RASET);
-    data[1] = y0;
-    data[3] = y1;
+    data[1] = y0 + _ystart;
+    data[3] = y1 + _ystart;
     sendDataMass(data, sizeof(data));
     // write to RAM
     sendCmd(RAMWR);

@@ -66,6 +66,7 @@ static void restartPattern(void)
 	main_flags.time_slot = 0;			// from TIM1_IRQ case: 2
 	main_flags.time_slot_timer_ovf = 0;
 	main_flags.pps_synced = 0;
+
 	led_blue_on();			//led_blue_off on case 1 (50ms)
 	led_red_on();			//as pattern_started on PPS
 	if(((p_settings_tim->spreading_factor == 12) && (p_settings_tim->device_number > 2)) || !main_flags.nav_pvt_ram_flag)
@@ -128,7 +129,7 @@ void TIM1_UP_IRQHandler(void)
 							LORA_FIX_LENGTH_PAYLOAD_ON,	3, CRC_ON, 0, 0, LORA_IQ_INVERTED, true));
 				}
 			}//end of spreading_factor == 12
-
+//			if(main_flags.pps_synced) led_green_on();	//to shorten it, instead of PPS start
 			led_blue_off();				//led_blue_on on case 6 or PPS IRQ
 			led_red_off();				//after new pattern started
 			break;
@@ -139,7 +140,7 @@ void TIM1_UP_IRQHandler(void)
 			if(main_flags.display_status)
 			{
 				main_flags.endRX_2_TX = (uint16_t)TIM17->CNT;		//save interval from RX-end to TX-start
-				timer17_stop();		//stop and reload/clear
+				timer17_stop();		//stop here to reload/clear
 			}
 
 			if(main_flags.time_slot == p_settings_tim->device_number)	//this device:
@@ -293,12 +294,12 @@ void TIM1_UP_IRQHandler(void)
 
 void TIM2_IRQHandler(void)					//Scan buttons interval	void TIM3_IRQHandler(void)
 {
-	TIM2->SR &= ~TIM_SR_UIF;                    //clear interrupt
+	TIM2->SR &= ~TIM_SR_UIF;                //clear interrupt
 //	led_red_on();
 	if (main_flags.buttons_scanned == 0)	//if not scanned yet
 	{
 		main_flags.button_code = scan_button(main_flags.processing_button);
-		if (main_flags.button_code)	//perhaps get rid off the buttons_scanned and clear button_code in main.c/while (1)
+		if (main_flags.button_code)			//perhaps get rid off the buttons_scanned and clear button_code in main.c/while (1)
 		{
 			main_flags.buttons_scanned = 1;
 		}
@@ -307,7 +308,7 @@ void TIM2_IRQHandler(void)					//Scan buttons interval	void TIM3_IRQHandler(void
 
 void TIM16_IRQHandler(void)
 {
-	TIM16->SR &= ~TIM_SR_UIF;                    //clear interrupt
+	TIM16->SR &= ~TIM_SR_UIF;               //clear interrupt
 	timer16_stop();
 	restartPattern();
 	//	main_flags.current_point_group = 0;

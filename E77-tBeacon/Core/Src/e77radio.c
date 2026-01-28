@@ -69,17 +69,20 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 	led_red_on();
 	if(main_flags.display_status) timer17_start();
 			//&& (main_flags.time_slot == main_flags.current_device)) timer17_start();
-
 	memcpy(bufferRx, payload, BUFFER_AIR_SIZE);		//BufferAirSize
 	bufferRx[BUFFER_AIR_SIZE] = (int8_t)rssi;		//BufferAirSize + 1
 	bufferRx[BUFFER_AIR_SIZE + 1] = LoraSnr_FskCfo;	//BufferAirSize + 2
 /* if it was a Time Out transmit*/
-	if(!main_flags.fix_valid && !bufferRx[1] && !bufferRx[2])
+	if(!main_flags.fix_valid && !main_flags.pps_synced && !bufferRx[1] && !bufferRx[2])
 	{
 /* received in continuous mode call restartPattern() to synchronize with HandHeld module PPS timing */
 /* Case2:100mS + TimeOut:133mS + AirTime:663mS +SymbolTime:33mS + ThisDelay:571mS = 1500mS */
 		if(bufferRx[0] == 1) timer16_start(2070);			//+1500mS
-		else if(bufferRx[0] == 2) timer16_start(570);
+		else if(bufferRx[0] == 2)
+		{
+			timer16_start(570);
+//			timer1_stop();
+		}
 	}
 	//if received time slot == device number and it fix is valid
 	if(((bufferRx[0] & 0x07) == main_flags.time_slot) && ((bufferRx[1] & 0x10) >> 4))
@@ -146,7 +149,8 @@ void set_transmit_data(void)
    	  bufferTx[0] =	(IS_BEACON << 7) + (flags_to_transmit << 4) +
 			  (beeper_flag_to_transmit << 3) + p_settings_rf->device_number;
 
-   	  (pp_devices_rf[p_settings_rf->device_number]->gps_speed > GPS_SPEED_THRS)? (bufferTx[1] |= 1 << 7): (bufferTx[1] &= ~(1 << 7));	//if device is moving
+   	  (pp_devices_rf[p_settings_rf->device_number]->gps_speed > GPS_SPEED_THRS)?
+   			  (bufferTx[1] |= 1 << 7): (bufferTx[1] &= ~(1 << 7));	//if device is moving
    	  bufferTx[1] = ((PVTbuffer[20+6] & 0x03) << 5) +				//fix type, 2 bits only to transmit	//mask 0b0000 0011
    			  	  	 ((PVTbuffer[21+6] & 0x01) << 4) +				//fix valid, bit0 only				//mask 0b0000 0001
    					 (pp_devices_rf[p_settings_rf->device_number]->batt_voltage/10 & 0x0F);			//mask 0b0000 1111 (0-:150 -> 0-:-15)s

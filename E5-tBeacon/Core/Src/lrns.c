@@ -130,6 +130,7 @@ void rx_to_devices(uint8_t device_number)
 	if(((buffer[0] & 0xF8) >> 3) == 0x0A)
 	{
 		main_flags.bcntohalt_flag_received = 1;
+		shortBeeps(2);
 		to_halt();
 	}
 
@@ -139,7 +140,7 @@ void rx_to_devices(uint8_t device_number)
 
 	devices[device_number].fix_type_opt = (buffer[1] & 0x60) >> 5;			//only 2 bits used to transmit
 	devices[device_number].valid_fix_flag = ((buffer[1] & 0x10) >> 4);		//bit0 only
-	devices[device_number].batt_voltage = (buffer[1] & 0x0F)+27;			//in decimal volts
+	devices[device_number].batt_voltage = (buffer[1] & 0x0F)+27;			//in decimal volts 0...15 -> 27...42
 	devices[device_number].p_dop = buffer[2];								//0...25.5
 
 	devices[device_number].longitude.as_array[0] = buffer[3];

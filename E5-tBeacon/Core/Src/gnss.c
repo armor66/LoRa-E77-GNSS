@@ -206,9 +206,8 @@ void configure_gps(void)
 volatile int8_t row;
 uint16_t baudRate[BAUDRATE_MAX_IND +2] = {96, 192, 384, 576, 1152, 2304, 0};
 
-led_blue_off();			//just to off after start
-
-//lptim1_start(16, main_flags.brightness);	//HAL_LPTIM_PWM_Start(&hlptim1, 16, main_flags.brightness);
+led_blue_off();		//just to off after start
+lcd_on();			//lptim1_start(16, main_flags.brightness);	//HAL_LPTIM_PWM_Start(&hlptim1, 16, main_flags.brightness);
 
 restart_configuration:
 

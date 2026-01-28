@@ -542,18 +542,21 @@ void change_menu(uint8_t button_code)
 			case BTN_PWR_LONG:
 				lcd_on();
 				main_flags.display_status = 1;
+
 				break;
 
 			case BTN_UP:		//if short pressed
 				break;
 
 			case BTN_OK:
+
 				break;			//leave case BTN_OK
 
 			case BTN_DOWN:				//if short pressed
 				break;
 
 			case BTN_ESC:
+
 				break;		//leave case BTN_ESC
 
 			default:
@@ -702,11 +705,18 @@ void draw_main(void)
 	if((p_settings_menu->spreading_factor == 12) && (this_device > 2))
 	{
 		sprintf(&string_buffer[row][0], "!set device 1 or 2");
+		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, ORANGE,BLACK);
 	}else if(pp_devices_menu[this_device]->batt_voltage < 30)		// U < 3.0volt (!pp_devices_menu[this_device]->batt_voltage)
 	{
-		sprintf(&string_buffer[row][0], "DevID:%02d Batt low!", this_device);
-	}else sprintf(&string_buffer[row][0], "DevID:%02d  %d.%02dVolt", this_device,
-			(pp_devices_menu[this_device]->batt_voltage+270)/100, (pp_devices_menu[this_device]->batt_voltage+270)%100);
+		sprintf(&string_buffer[row][0], "DevID:%d  Batt low!", this_device);
+		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, ORANGE,BLACK);
+	}else
+	{
+		sprintf(&string_buffer[row][0], "DevID:%d/%d %d.%02dVolt", this_device, p_settings_menu->devices_on_air,
+				(pp_devices_menu[this_device]->batt_voltage+270)/100,
+				(pp_devices_menu[this_device]->batt_voltage+270)%100);
+		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, WHITE,BLACK);
+	}
 	row+=1;	//1
 	sprintf(&string_buffer[row][0], "%02d/%02d/%02d  %02d:%02d:%02d", day, month, year, hour, PVTbuffer[15], PVTbuffer[16]);
 	for (uint8_t k = 0; k < row+1; k++)
@@ -985,7 +995,7 @@ void draw_devices(void)	//int8_t menu)
 //	sprintf(&string_buffer[7][0], "Azimuth_u : %03d%%", azimuth_deg_unsigned[current_device]);
 		sprintf(&string_buffer[7][0], "                  ");
 
-		if(pp_devices_menu[main_flags.current_device]->batt_voltage < 32)
+		if(pp_devices_menu[main_flags.current_device]->batt_voltage < 30)		//27...42 from rx_to_devices()
 		{
 			sprintf(&string_buffer[8][0], "Battery :  low    ");		//<=3.2 volt
 		} else sprintf(&string_buffer[8][0], "Battery: %d.%d Volt ", pp_devices_menu[main_flags.current_device]->batt_voltage/10, pp_devices_menu[main_flags.current_device]->batt_voltage%10);
@@ -993,8 +1003,10 @@ void draw_devices(void)	//int8_t menu)
 		sprintf(&string_buffer[9][0], "RSSI: %ddBm", pp_devices_menu[main_flags.current_device]->rssi);
 		sprintf(&string_buffer[10][0], " SNR: %02ddB", pp_devices_menu[main_flags.current_device]->snr);
 
-		(p_settings_menu->spreading_factor == 12)? sprintf(&string_buffer[11][0], "RX3 to TX%d: %4dmS",	main_flags.time_slot, main_flags.endRX_2_TX):
-		sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS", pp_devices_menu[main_flags.current_device]->device_received, this_device, main_flags.endRX_2_TX);
+		(p_settings_menu->spreading_factor == 12)?
+				sprintf(&string_buffer[11][0], "RX3 to TX%d: %4dmS",	main_flags.time_slot, main_flags.endRX_2_TX):
+				sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS",
+						pp_devices_menu[main_flags.current_device]->device_received, this_device, main_flags.endRX_2_TX);
 
 		sprintf(&string_buffer[12][0], "Latit : %ld", pp_devices_menu[main_flags.current_device]->latitude.as_integer);
 		sprintf(&string_buffer[13][0], "Longit: %ld", pp_devices_menu[main_flags.current_device]->longitude.as_integer);
@@ -1002,8 +1014,8 @@ void draw_devices(void)	//int8_t menu)
 		for (uint8_t k = 2; k < 14; k++)
 		{
 			(pp_devices_menu[main_flags.current_device]->valid_fix_flag)?
-						(draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, GREEN,BLACK)):
-						(draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, MAGENTA,BLACK));
+					(draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, GREEN,BLACK)):
+					(draw_str_by_rows(0, 4+k*11, &string_buffer[k][0], &Font_7x9, MAGENTA,BLACK));
 		}
 	}// end of else (main_flags.current_device != this_device)
 }
@@ -1444,12 +1456,12 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 	switch (get_current_item())
 	{
 		case M_ACTIONS_I_POWER_OFF:
-			if(!(CHARGE_GPIO_Port->IDR & CHARGE_Pin))		//and no charge connected
-			{
+//			if(!(CHARGE_GPIO_Port->IDR & CHARGE_Pin))		//and no charge connected
+//			{
 				led_w_on();
 				HAL_Delay(100);
 				release_power();
-			}
+//			}
 			break;
 
 		case M_ACTIONS_I_EMERGENCY:

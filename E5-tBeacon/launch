@@ -1,0 +1,1 @@
+st-flash --reset write ./Release/E5-tBeacon.bin 0x8000000

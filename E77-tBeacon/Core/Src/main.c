@@ -123,7 +123,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
 //  disable_buttons_interrupts();
 //  EXTI->IMR1 &= ~EXTI_IMR1_IM8;			//interrupt disabled on PPS front
-  i2c_init();
 
   hold_power();
   led_w_off();
@@ -151,6 +150,7 @@ int main(void)
   HAL_Delay(10);
   led_w_off();
 
+    i2c_init();						//just after all inits leads to fail
 	settings_load();
 #ifdef ST7735
 	st7735_init(2);

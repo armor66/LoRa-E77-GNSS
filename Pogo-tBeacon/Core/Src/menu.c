@@ -705,6 +705,7 @@ void draw_main(void)
 	if((p_settings_menu->spreading_factor == 12) && (this_device > 2))
 	{
 		sprintf(&string_buffer[row][0], "!set device 1 or 2");
+		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, ORANGE,BLACK);
 	}else if(pp_devices_menu[this_device]->batt_voltage < 30)		// U < 3.0volt (!pp_devices_menu[this_device]->batt_voltage)
 	{
 		sprintf(&string_buffer[row][0], "DevID:%d  Batt low!", this_device);
