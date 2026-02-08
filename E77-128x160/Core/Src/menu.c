@@ -42,6 +42,11 @@ void beacons_esc(void);
 void draw_navto_points(void);
 void navto_points_ok(void);
 void navto_points_esc(void);
+
+// LAPS MENU
+void draw_laps(void);
+void new_laps(void);
+void continue_laps(void);
 // DEVICES MENU
 void draw_devices(void);
 void draw_this_device(void);
@@ -132,6 +137,7 @@ enum    //menu number starts from 1, because 0 is used as "end marker" in menu s
     M_NAVIGATION,
 	M_BEACONS,
 
+	M_LAPS,
 	M_DEVICES,
 	M_DEVICE_SUBMENU,
 	M_SET_POINTS,
@@ -251,6 +257,11 @@ const struct
 	{M_BEACONS,					BTN_OK,					beacons_ok},
 	{M_BEACONS,					BTN_ESC,				beacons_esc},
 
+	{M_LAPS,					BTN_UP,					new_laps},
+	{M_LAPS,					BTN_DOWN,				continue_laps},
+	{M_LAPS,					BTN_OK,					draw_devices},
+//	{M_LAPS,					BTN_ESC,				to M_MAIN},			//default action
+
 	{M_DEVICES,					BTN_UP,					scroll_devices_up},
 	{M_DEVICES,					BTN_DOWN,				scroll_devices_down},
 	{M_DEVICES,					BTN_OK,					devices_ok},
@@ -340,7 +351,8 @@ const struct
 {
 //  Current Menu                Current Item                		Next Menu
 	{M_MAIN,  				M_MAIN_I_NAVIGATION,		M_NAVIGATION},
-	{M_MAIN,    			M_MAIN_I_DEVICES,			M_DEVICES},
+	{M_MAIN,    			M_MAIN_I_DEVICES,			M_LAPS},
+//	{M_MAIN,    			M_MAIN_I_DEVICES,			M_DEVICES},
 	{M_MAIN,    			M_MAIN_I_NAVTO_POINTS,		M_NAVTO_POINTS},
 	{M_MAIN,    			M_MAIN_I_POINTS,			M_POINTS},
 	{M_MAIN,    			M_MAIN_I_SETTINGS,			M_SETTINGS},
@@ -389,6 +401,7 @@ const struct
     {M_NAVIGATION,              M_MAIN},
 	{M_BEACONS,					M_NAVIGATION},
 
+	{M_LAPS,					M_MAIN},
 	{M_DEVICES,                 M_MAIN},
 	{M_DEVICE_SUBMENU,			M_DEVICES},
 	{M_SET_POINTS,				M_DEVICE_SUBMENU},
@@ -448,7 +461,8 @@ const struct
 	{M_NAVIGATION,				draw_navigation},
 	{M_BEACONS,					draw_beacons},
 
-	{M_DEVICES,                 draw_devices},
+	{M_LAPS,                 	draw_laps},
+	{M_DEVICES,                 draw_devices},			//can be commented
 	{M_DEVICE_SUBMENU,     		draw_device_submenu},
 	{M_SET_POINTS,				draw_set_points},
 
@@ -515,6 +529,14 @@ uint8_t range_scale[] = {1, 2, 4, 8, 16, 32, 64};
 
 int8_t firstFreeStartPoint;	//for save_start_pos()
 int8_t ind = 0;				//out of the function draw_navto_points() to roll up if points > 3
+int8_t startHour;
+int8_t startMinute;
+int8_t startSecond;
+int8_t lapsSaved;
+int8_t lapsPaused;
+int8_t lapsCounter;
+uint16_t lapsTimeSaved;
+uint16_t lapsDistSaved;
 
 struct devices_struct **pp_devices_menu;
 struct point_groups_struct **pp_point_groups_menu;
@@ -571,6 +593,12 @@ void set_brightness(void)
 //Check for buttons and change menu if needed
 void change_menu(uint8_t button_code)
 {
+	if((current_menu == M_LAPS) && (lapsCounter) && (button_code > 2))	//should respond any except BTN_PWR
+	{
+		lptim1_start(16, main_flags.brightness);
+		main_flags.display_status = 1;
+	}
+
 	int8_t point_absolute_index = 0;
 	if(main_flags.display_status)	//if lcd is on
 	{	//search for exclusive operation(function) for this case
@@ -871,8 +899,8 @@ void draw_current_menu(void)
 			}
 		}
 	}
-	else if(!IS_BEACON)	//if display has not lit, if IS_BEACON do nothing
-	{
+//	else if(!IS_BEACON)	//if display has not lit, if IS_BEACON do nothing
+//	{
 		for(int8_t i = 1; i < 1 + p_settings_menu->devices_on_air; i++)
 		{
 			if(i != this_device)
@@ -889,7 +917,7 @@ void draw_current_menu(void)
 				}
 			}
 		}
-	}
+//	}
 }
 //------------------------------------------------------------------
 //---------------------------MAIN MENU------------------------------
@@ -899,7 +927,7 @@ void draw_main(void)
 	uint8_t day;	// = PVTbuffer[7+6];
 //	uint8_t month = PVTbuffer[6+6];
 	uint8_t year;	// = (PVTbuffer[5+6]<<8) + PVTbuffer[4+6];
-	uint8_t hour;	// = PVTbuffer[14];
+	int8_t hour;	// = PVTbuffer[14];
 	row = 0;
 
 	if(main_flags.rtc_enabled || main_flags.fix_valid)
@@ -1337,6 +1365,139 @@ void beacons_esc(void)
 }
 //--------------------------------NAVIGATION MENU END--------------------------------
 //-----------------------------------------------------------------------------------
+//--------------------------------LAPS MENU----------------------------
+void draw_laps(void)
+{
+//	row = get_current_item();
+//	draw_char(3, 10+line*19, *">", &Font_11x18, YELLOW,BLACK);
+	int8_t line = 0;
+	int8_t hour;
+	hour = p_timeData->hour + p_settings_menu->time_zone_hour;
+	if(hour > 23) hour = hour - 24;
+	int8_t elapsedHour = main_flags.elapsed_sec/3600;
+	int8_t elapsedMin = main_flags.elapsed_sec/60 - elapsedHour*60;
+	int8_t elapsedSec = main_flags.elapsed_sec - elapsedHour*3600 - elapsedMin*60;
+
+	if(main_flags.rtc_enabled || main_flags.fix_valid)
+	{
+		draw_str_by_rows(0, 0, "TIME, LAPS & DIST.", &Font_7x9, CYAN,BLACK);
+//		(sprintf(&string_buffer[row][0], "%02d/%02d/%02d  %02d:%02d:%02d",
+//			day, p_timeData->month, year, hour, p_timeData->minute, p_timeData->second));
+//		(main_flags.fix_valid)?
+//				draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, WHITE,BLACK):
+//				draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, CYAN,BLACK);
+	}else
+	{
+		draw_str_by_rows(0, 0, "RTC IS NOT APPLIED", &Font_7x9, ORANGE,BLACK);
+	}
+
+	sprintf(&string_buffer[line][0], "   %02d:%02d:%02d", hour, p_timeData->minute, p_timeData->second);
+	sprintf(&string_buffer[line][12], "Now");
+	//ElapsedTime
+	line++;
+	sprintf(&string_buffer[line][0], "   %02d:%02d:%02d", startHour, startMinute, startSecond);
+	sprintf(&string_buffer[line][12], "Fix");
+	line++;
+	sprintf(&string_buffer[line][0], "   %02d:%02d:%02d", elapsedHour, elapsedMin, elapsedSec);
+	sprintf(&string_buffer[line][12], "Int");
+	line++;
+	sprintf(&string_buffer[line][0], "       Dist");
+	sprintf(&string_buffer[line][12], "Elapsed");
+	line++;
+	sprintf(&string_buffer[line][0], "       Pace");
+	sprintf(&string_buffer[line][12], "Average");
+	line++;
+	for (uint8_t k = 0; k < line; k++)
+	{
+		if(k%2)
+		{
+			draw_str_by_rows(7, 10+k*19, &string_buffer[k][0], &Font_11x18, GREEN,BLACK);
+			draw_str_by_rows(0, 10+k*19, &string_buffer[k][12], &Font_11x18, DARKGREEN,BLACK);
+		}
+		else
+		{
+			draw_str_by_rows(7, 10+k*19, &string_buffer[k][0], &Font_11x18, LIGHTGREY,BLACK);
+			draw_str_by_rows(0, 10+k*19, &string_buffer[k][12], &Font_11x18, DARKGREY,BLACK);
+		}
+	}
+	if(lapsSaved)
+	{
+		sprintf(&string_buffer[line][0], "  %2d:%02dD%3d", lapsTimeSaved/60, lapsTimeSaved%60, lapsDistSaved);
+		draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, DARKCYAN,BLACK);
+		sprintf(&string_buffer[line][0], "%d", lapsCounter);
+		draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
+		line++;
+		sprintf(&string_buffer[line][0], "  %2d:%02dD%3d", main_flags.lapsTime/60, main_flags.lapsTime%60, main_flags.lapsDist);
+		main_flags.laps_afoot? draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, CYAN,BLACK):
+							draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, DARKCYAN,BLACK);
+		draw_char(3, 10+line*19, *">", &Font_11x18, YELLOW,BLACK);
+	}
+	else
+	{
+		if(lapsCounter > 1)
+		{
+			sprintf(&string_buffer[line][0], "  %2d:%02dD%3d", lapsTimeSaved/60, lapsTimeSaved%60, lapsDistSaved);
+			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, DARKCYAN,BLACK);
+			sprintf(&string_buffer[line][0], "%d", lapsCounter - 1);
+			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
+			line++;
+			sprintf(&string_buffer[line][0], "  %2d:%02dD%3d", main_flags.lapsTime/60, main_flags.lapsTime%60, main_flags.lapsDist);
+			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, CYAN,BLACK);
+			sprintf(&string_buffer[line][0], "%d", lapsCounter);
+			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
+		}
+		else
+		{
+			sprintf(&string_buffer[line][0], "  %2d:%02dD%3d", main_flags.lapsTime/60, main_flags.lapsTime%60, main_flags.lapsDist);
+			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, CYAN,BLACK);
+			sprintf(&string_buffer[line][0], "%d", lapsCounter);
+			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
+			line++;
+			sprintf(&string_buffer[line][0], "-----------");
+			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, DARKGREEN,BLACK);
+		}
+	}
+	line++;
+	sprintf(&string_buffer[line][0], "Pace min/km");
+	draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, GREENYELLOW,BLACK);
+
+//	sprintf(&string_buffer[5][0], "%d", main_flags.laps_counter);
+//	draw_str_by_rows(3, 10+5*19, &string_buffer[5][0], &Font_11x18, YELLOW,BLACK);
+}
+void new_laps(void)
+{
+	main_flags.laps_afoot? (lapsTimeSaved = main_flags.lapsTime-1): (lapsTimeSaved = main_flags.lapsTime);
+	main_flags.laps_afoot = 1;
+	lapsDistSaved = main_flags.lapsDist;
+	lapsSaved = 0;
+	main_flags.lapsTime = 1;					//due to menu delay
+	(lapsCounter < 99)? lapsCounter++: (lapsCounter = 1);
+}
+void continue_laps(void)
+{
+	if(lapsSaved)
+	{
+		if(main_flags.laps_afoot)
+		{
+			main_flags.laps_afoot = 0;
+			main_flags.lapsTime--;
+		}
+		else
+		{
+			lapsSaved = 0;
+			main_flags.lapsTime = 0;
+			lapsCounter = 0;
+		}
+	}
+	else if(main_flags.laps_afoot)
+	{
+		lapsSaved = 1;
+		lapsTimeSaved = main_flags.lapsTime-1;	//-1 if main_flags.pps_synced
+		lapsDistSaved = main_flags.lapsDist;
+	}
+}
+//--------------------------------LAPS MENU END--------------------------------
+//-----------------------------------------------------------------------------------
 //--------------------------------DEVICES MENU----------------------------
 void draw_this_device(void)
 {
@@ -1354,7 +1515,7 @@ void draw_this_device(void)
 	}else day = month = year = hour = 0;
 
 		sprintf(&string_buffer[0][0], " Device: %d ", this_device);
-			if(pp_devices_menu[this_device]->valid_fix_flag) draw_str_by_rows(0, 0, &string_buffer[0][0], &Font_11x18, YELLOW,BLACK);		//if fix valid
+			if(pp_devices_menu[this_device]->valid_fix_flag) draw_str_by_rows(0, 0, &string_buffer[0][0], &Font_11x18, GREENYELLOW,BLACK);		//if fix valid
 			else draw_str_by_rows(0, 0, &string_buffer[0][0], &Font_11x18, MAGENTA,BLACK);
 
 		sprintf(&string_buffer[2][0], "%2d %3d.%03dMHz SF%02d", p_settings_menu->freq_channel,
@@ -1400,6 +1561,8 @@ void draw_this_device(void)
 
 void draw_devices(void)
 {
+	current_menu = M_DEVICES;
+
 	if(main_flags.current_device == this_device) draw_this_device();
 	else
 	{
@@ -1413,7 +1576,7 @@ void draw_devices(void)
 		}
 		else sprintf(&string_buffer[0][0], " NoDevice %d", main_flags.current_device);
 
-		draw_str_by_rows(0, 0, &string_buffer[0][0], &Font_11x18, YELLOW,BLACK);
+		draw_str_by_rows(0, 0, &string_buffer[0][0], &Font_11x18, GREENYELLOW,BLACK);
 
 		//fixType only 2 bits used to transmit, pDop/10 (0...25.5)	buffer[15]/10, buffer[15]%10);
 		sprintf(&string_buffer[2][0], " %5s pDop:%2d.%d", fixType[pp_devices_menu[main_flags.current_device]->fix_type_opt],
@@ -1580,6 +1743,12 @@ void set_subpoint_ok(void) {
 }
 
 void save_start_pos(void) {
+	main_flags.elapsed_sec = 0;
+	startHour = p_timeData->hour + p_settings_menu->time_zone_hour;
+	if(startHour > 23) startHour = startHour - 24;
+	startMinute = p_timeData->minute;
+	startSecond = p_timeData->second;
+
  	fill_screen(BLACK);
 
 	memory_subpoint_ind[START_POS_GROUP] = 1;

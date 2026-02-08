@@ -195,9 +195,10 @@ void init_gnss(void)
 		serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
 		HAL_Delay(400);
 	}
-	//set aggressive 1Hz power mode to RAM:
-	serialPrint(set_aggressive_pm, sizeof(set_aggressive_pm));
-	//set CFG-TP-PERIOD_LOCK_TP1=3.000.000 to manage ADC and UART only ones on period
+/*set aggressive 1Hz power mode to RAM:*/
+//	serialPrint(set_aggressive_pm, sizeof(set_aggressive_pm));
+//	serialPrint(to_ram_bbr_flash, sizeof(to_ram_bbr_flash));
+/*	set CFG-TP-PERIOD_LOCK_TP1=3.000.000 to manage ADC and UART only ones on period*/
 //	if(p_settings_gnss->spreading_factor == 12) serialPrint(set_three_seconds, sizeof(set_three_seconds));
 }
 

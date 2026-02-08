@@ -242,8 +242,8 @@ int main(void)
   			main_flags.buttons_scanned = 0;
   			main_flags.update_screen = 1;
   		}
-
-  		if (main_flags.update_screen)	//buttons processed or on case 3 or if no PPS signal
+/* buttons has processed or on case 3 timeslot_pattern or if no PPS signal */
+  		if (main_flags.update_screen)
   		{
   	  	HAL_IWDG_Refresh(&hiwdg);
   			draw_current_menu();

@@ -152,6 +152,11 @@ struct main_flags_struct
    	int8_t rtc_enabled;
    	int8_t time_saved;
     int8_t current_device;
+    int8_t laps_afoot;
+
+    uint16_t elapsed_sec;
+    uint16_t lapsTime;
+    uint16_t lapsDist;
     uint16_t endRX_2_TX;
     uint32_t settings_address;
 };

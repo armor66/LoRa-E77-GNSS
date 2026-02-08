@@ -129,6 +129,7 @@ void ublox_to_this_device(uint8_t device_number)
 /* save first fix_valid locked position to Start Positions group */
 			if(!main_flags.first_time_locked)
 			{
+				main_flags.elapsed_sec = 0;
 				main_flags.first_time_locked = 1;
 				save_start_pos();
 			}

@@ -45,6 +45,9 @@ void EXTI9_5_IRQHandler(void)		//(PPS_Pin)
 {
 	EXTI->PR1 = EXTI_PR1_PIF8;		//clear interrupt
 	main_flags.pps_synced = 1;
+/* increment here otherwise on case 3 timeslot_pattern*/
+	main_flags.elapsed_sec++;		//zeroed when first_time_locked
+	if(main_flags.laps_afoot) main_flags.lapsTime++;
 
 	struct settings_struct *p_settings;
 	struct devices_struct **pp_devices;
