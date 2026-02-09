@@ -527,6 +527,7 @@ uint16_t range = 30;
 uint8_t range_ind = 0;
 uint8_t range_scale[] = {1, 2, 4, 8, 16, 32, 64};
 
+int8_t previous_menu;		//to return if start point not saved
 int8_t firstFreeStartPoint;	//for save_start_pos()
 int8_t ind = 0;				//out of the function draw_navto_points() to roll up if points > 3
 int8_t startHour;
@@ -1430,7 +1431,7 @@ void draw_laps(void)
 		sprintf(&string_buffer[line][0], "  %2d:%02dD%3d", main_flags.lapsTime/60, main_flags.lapsTime%60, main_flags.lapsDist);
 		main_flags.laps_afoot? draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, CYAN,BLACK):
 							draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, DARKCYAN,BLACK);
-		draw_char(3, 10+line*19, *">", &Font_11x18, YELLOW,BLACK);
+		draw_char(3+5, 10+line*19, *">", &Font_11x18, YELLOW,BLACK);		//+5 due to 2 digit lapsCounter
 	}
 	else
 	{
@@ -1470,7 +1471,7 @@ void new_laps(void)
 	main_flags.laps_afoot = 1;
 	lapsDistSaved = main_flags.lapsDist;
 	lapsSaved = 0;
-	main_flags.lapsTime = 1;					//due to menu delay
+	main_flags.lapsTime = 1;					//1 due to menu delay
 	(lapsCounter < 99)? lapsCounter++: (lapsCounter = 1);
 }
 void continue_laps(void)
@@ -1774,6 +1775,7 @@ void save_start_pos(void) {
 /* set group for Nav2Points menu*/
 	points_group_ind = START_POS_GROUP;
 
+	previous_menu = current_menu;
 	current_menu = M_CONFIRM_SAVEGROUP;
 }
 void draw_save_group(void)
@@ -1824,7 +1826,7 @@ void decline_save_group(void)
 	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS + memory_subpoint_ind[main_flags.current_point_group]]->longitude.as_integer =
 			pp_devices_menu[main_flags.current_device]->longitude.as_integer;
 
-	current_menu = M_NAVTO_POINTS;
+	current_menu = previous_menu;
 }
 void set_subpoint_esc(void) {
 	pp_points_menu[main_flags.current_point_group * MEMORY_SUBPOINTS]->exist_flag = 0;			//clear subpoint 0

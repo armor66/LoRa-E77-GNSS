@@ -253,7 +253,7 @@ void TIM1_UP_IRQHandler(void)
 			while(main_flags.find_nearest_trekpoint_flag);		//wait and __enable_irq(); after that
 /***********************************************************/
 			read_north();
-			if(!main_flags.pps_synced)
+			if(!main_flags.pps_synced)	//before any PPS interrupt occurs
 			{
 				main_flags.elapsed_sec++;
 				if(main_flags.laps_afoot) main_flags.lapsTime++;
