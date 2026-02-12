@@ -49,15 +49,18 @@ struct point_groups_struct **get_point_groups(void)
 	return &p_point_groups[0];
 }
 
-double distance[DEVICES_ON_AIR_MAX + 1];
-double arc_length[DEVICES_ON_AIR_MAX + 1];
-int16_t azimuth_deg_signed[DEVICES_ON_AIR_MAX + 1];
-int16_t azimuth_deg_unsigned[DEVICES_ON_AIR_MAX + 1];
-double azimuth_rad[DEVICES_ON_AIR_MAX + 1];
+//double distance[DEVICES_ON_AIR_MAX + 1];
+//double arc_length[DEVICES_ON_AIR_MAX + 1];
+//int16_t azimuth_deg_signed[DEVICES_ON_AIR_MAX + 1];
+//int16_t azimuth_deg_unsigned[DEVICES_ON_AIR_MAX + 1];
+//double azimuth_rad[DEVICES_ON_AIR_MAX + 1];
 
 struct devices_struct **pp_devices;
 struct point_groups_struct **pp_point_groups;
 struct points_struct **pp_points_lrns;
+
+double lat_prev;
+double lon_prev;
 
 void init_lrns(void)
 {
@@ -101,7 +104,10 @@ void ublox_to_this_device(uint8_t device_number)
 	devices[device_number].latitude.as_array[2] = PVTbuffer[36];
 	devices[device_number].latitude.as_array[3] = PVTbuffer[37];
 
-	devices[device_number].gps_speed = ((PVTbuffer[63+6]<<24)+(PVTbuffer[62+6]<<16)+(PVTbuffer[61+6]<<8)+PVTbuffer[60+6])/278 & 0xFF;		// 0 - 255 km/h
+	uint32_t gnssSpeed = (PVTbuffer[63+6]<<24)+(PVTbuffer[62+6]<<16)+(PVTbuffer[61+6]<<8)+PVTbuffer[60+6];
+	devices[device_number].gps_speed = gnssSpeed/278 & 0xFF;		// 0 - 255 km/h
+	(devices[device_number].gps_speed)? (devices[device_number].gps_pace = 1000000/gnssSpeed): (devices[device_number].gps_pace = 0);	//seconds/km
+
 	devices[device_number].gps_heading = ((PVTbuffer[67+6]<<24)+(PVTbuffer[66+6]<<16)+(PVTbuffer[65+6]<<8)+PVTbuffer[64+6])/100000 & 0x1FF;	// 0 - 511 degrees
 	devices[device_number].p_dop = (PVTbuffer[77+6]<<8)+PVTbuffer[76+6];
 
@@ -132,6 +138,9 @@ void ublox_to_this_device(uint8_t device_number)
 				main_flags.elapsed_sec = 0;
 				main_flags.first_time_locked = 1;
 				save_start_pos();
+
+				lat_prev = (double)devices[device_number].latitude.as_integer / 10000000 * deg_to_rad;
+				lon_prev = (double)devices[device_number].longitude.as_integer / 10000000 * deg_to_rad;
 			}
 
 			shortBeeps(3);					//glad tidings
@@ -142,6 +151,8 @@ void ublox_to_this_device(uint8_t device_number)
 		(main_flags.rtc_enabled)? ds3231_get_time(p_timeStore): (p_timeStore->year = 2000);
 		if(devices[device_number].valid_fix_flag) main_flags.fix_valid++;
 	}
+/* wait for main_flags.first_time_locked */
+	if(main_flags.first_time_locked && devices[device_number].valid_fix_flag) incr_distance();
 }
 void rx_to_devices(uint8_t device_number)
 {
@@ -248,19 +259,31 @@ void clear_fix_data(uint8_t device_number)
 	devices[device_number].p_dop = 0;
 }
 
+void incr_distance(void)	//double lat_prev, double lon_prev,
+{
+	double latitude = (double)devices[p_settings_lrns->device_number].latitude.as_integer / 10000000 * deg_to_rad;
+	double longitude = (double)devices[p_settings_lrns->device_number].longitude.as_integer / 10000000 * deg_to_rad;
+
+//	distance[p_settings_lrns->device_number] += 6371008 * sqrt(pow((lat_prev - latitude), 2) + pow((cos(latitude) * (lon_prev - longitude)), 2));
+/* ignore < 1m & do not exceed 15m/s*/
+	pp_devices[p_settings_lrns->device_number]->distance +=
+			(uint32_t)(6371008 * sqrt(pow((lat_prev - latitude), 2) + pow((cos(latitude) * (lon_prev - longitude)), 2))) & 0xF;
+
+	lat_prev = latitude;
+	lon_prev = longitude;
+/* do not exceed 524288 in menu */
+//	devices[p_settings_lrns->device_number].distance = (uint32_t)distance[p_settings_lrns->device_number] & 0x7FFFF;
+}
+
 void calc_point_position(uint8_t point)		//MEMORY_POINTS_TOTAL = 8 * 28 = 224
 {
-//	pp_points_lrns = get_points();
-	//valid GPS fix - pDop and accuracy
-//	if(PVTbuffer[21+6] & 0x01)
-//	{
 		//my position
-		double Latitude0 = ((double)(PVTbuffer[37]<<24)+(PVTbuffer[36]<<16)+(PVTbuffer[35]<<8)+PVTbuffer[34]) / 10000000 * deg_to_rad;
-		double Longitude0 = ((double)(PVTbuffer[33]<<24)+(PVTbuffer[32]<<16)+(PVTbuffer[31]<<8)+PVTbuffer[30]) /10000000 * deg_to_rad;
+		double Latitude0 = (double)devices[p_settings_lrns->device_number].latitude.as_integer / 10000000 * deg_to_rad;
+		double Longitude0 = (double)devices[p_settings_lrns->device_number].longitude.as_integer / 10000000 * deg_to_rad;
 
 		//position of the device to calculate relative position
-		double Latitude1 = ((double)pp_points_lrns[point]->latitude.as_integer) / 10000000 * deg_to_rad;
-		double Longitude1 = ((double)pp_points_lrns[point]->longitude.as_integer) / 10000000 * deg_to_rad;
+		double Latitude1 = (double)pp_points_lrns[point]->latitude.as_integer / 10000000 * deg_to_rad;
+		double Longitude1 = (double)pp_points_lrns[point]->longitude.as_integer / 10000000 * deg_to_rad;
 //uint32_t distance;          //distance in meters to a device
 		pp_points_lrns[point]->distance = (uint32_t)(6371008 * sqrt(pow((Latitude1 - Latitude0), 2) + pow((cos(Latitude0) * (Longitude1 - Longitude0)), 2)));
 
@@ -273,37 +296,38 @@ void calc_point_position(uint8_t point)		//MEMORY_POINTS_TOTAL = 8 * 28 = 224
 	    if(Longitude1 < Longitude0) {pp_points_lrns[point]->azimuth_rad += 2*M_PI;}
 
 	    if(pp_points_lrns[point]->distance == 0) pp_points_lrns[point]->azimuth_rad = 0;
-//	}
 }
 
 void calc_relative_position(uint8_t another_device)
 {
 		//my position
-		double Latitude0 = ((double)(PVTbuffer[37]<<24)+(PVTbuffer[36]<<16)+(PVTbuffer[35]<<8)+PVTbuffer[34]) / 10000000 * deg_to_rad;
-		double Longitude0 = ((double)(PVTbuffer[33]<<24)+(PVTbuffer[32]<<16)+(PVTbuffer[31]<<8)+PVTbuffer[30]) /10000000 * deg_to_rad;
+		double Latitude0 = (double)devices[p_settings_lrns->device_number].latitude.as_integer / 10000000 * deg_to_rad;
+		double Longitude0 = (double)devices[p_settings_lrns->device_number].longitude.as_integer / 10000000 * deg_to_rad;
 
 		//position of the device to calculate relative position
-		double Latitude1 = ((double)(pp_devices[another_device]->latitude.as_integer)) / 10000000 * deg_to_rad;
-		double Longitude1 = ((double)(pp_devices[another_device]->longitude.as_integer)) / 10000000 * deg_to_rad;
+		double Latitude1 = (double)pp_devices[another_device]->latitude.as_integer / 10000000 * deg_to_rad;
+		double Longitude1 = (double)pp_devices[another_device]->longitude.as_integer / 10000000 * deg_to_rad;
 
-//		if (Latitude0 == Latitude1) Latitude1 += 0.00000001;       //slightly shift the position
-//		if (Longitude0 == Longitude1) Longitude1 += 0.00000001;       //slightly shift the position
 //формула учитывает изменение расстояния между меридианами в зависимости от широты в радианах
-		distance[another_device] = 6371008 * sqrt(pow((Latitude1 - Latitude0), 2) + pow((cos(Latitude0) * (Longitude1 - Longitude0)), 2));
+//ext	distance[another_device] = 6371008 * sqrt(pow((Latitude1 - Latitude0), 2) + pow((cos(Latitude0) * (Longitude1 - Longitude0)), 2));
+		pp_devices[another_device]->distance = (uint32_t)(6371008 * sqrt(pow((Latitude1 - Latitude0), 2) + pow((cos(Latitude0) * (Longitude1 - Longitude0)), 2)));
 //		arc_length[another_device] = (twice_mean_earth_radius * asin( sqrt( pow(sin((Latitude1 - Latitude0) / 2), 2) +
 //		                	cos(Latitude1) * cos(Latitude0) * pow(sin((Longitude1 - Longitude0) / 2), 2))));
 		double X = cos(Latitude1) * sin(Longitude1 - Longitude0);
 		double Y = cos(Latitude0) * sin(Latitude1) - sin(Latitude0) * cos(Latitude1) * cos(Longitude1 - Longitude0);
-		azimuth_rad[another_device] = atan2(X,Y);
+//ext	azimuth_rad[another_device] = atan2(X,Y);
+		pp_devices[another_device]->azimuth_rad = atan2(X,Y);
 //		azimuth_rad[another_device] = (atan((Longitude1 - Longitude0) /
 //		                    log(tan(pi_div_by_4 + Latitude1 / 2) / tan(pi_div_by_4 + Latitude0 / 2))));
-		azimuth_deg_signed[another_device] = (int16_t)(azimuth_rad[another_device] * rad_to_deg);		//convert to deg
+//ext	azimuth_deg_signed[another_device] = (int16_t)(azimuth_rad[another_device] * rad_to_deg);			//convert to deg
+		pp_devices[another_device]->azimuth_deg_signed = (int16_t)(pp_devices[another_device]->azimuth_rad * rad_to_deg);		//convert to deg
 //	    if (Longitude1 > Longitude0)		 {;}
-	    if(Longitude1 < Longitude0) {azimuth_rad[another_device] += 2*M_PI;}
+	    if(Longitude1 < Longitude0) {pp_devices[another_device]->azimuth_rad += 2*M_PI;}		//ext {azimuth_rad[another_device] += 2*M_PI;}
 
-	    if(distance[another_device] == 0) azimuth_rad[another_device] = 0;
+//ext   if(distance[another_device] == 0) azimuth_rad[another_device] = 0;
+	    if(pp_devices[another_device]->distance == 0) pp_devices[another_device]->azimuth_rad = 0;
 
-	    azimuth_deg_unsigned[another_device] = (int16_t)(azimuth_rad[another_device] * rad_to_deg);		//convert to deg
+//ext   azimuth_deg_unsigned[another_device] = (int16_t)(azimuth_rad[another_device] * rad_to_deg);		//convert to deg
 }
 
 void calc_fence(void)		//all devices should be processed before calling this func

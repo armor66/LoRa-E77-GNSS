@@ -150,24 +150,24 @@ void erase_saved_devices(void);
 //Struct with all points info and his device "0"
 struct points_struct
 {
-	uint8_t exist_flag;             //does a device exist?
+	uint8_t exist_flag;         //does a device exist?
 
     //ABSOLUTE COORDINATES
     union
     {
-        int32_t as_integer;             //latitude in decimal degrees (-90...+90)
+        int32_t as_integer;     //latitude in decimal degrees (-90...+90)
         uint8_t as_array[4];
     } latitude;
 
     union
     {
-    	int32_t as_integer;             //longitude in decimal degrees (-180...+180)
+    	int32_t as_integer;     //longitude in decimal degrees (-180...+180)
         uint8_t as_array[4];
     } longitude;
 
     //RELATIVE COORDINATES
     uint32_t distance;          //distance in meters to a device
-    int16_t azimuth_deg_signed;       //heading to a device, degrees
+    int16_t azimuth_deg_signed; //heading to a device, degrees
     double azimuth_rad;			//heading to a device, radians
 };
 //Struct with all devices info

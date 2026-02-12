@@ -15,6 +15,8 @@ void process_all_devices(void);
 void calc_point_position(uint8_t another_device);
 
 void calc_relative_position(uint8_t another_device);
+
+void incr_distance(void);
 //void calc_timeout(uint32_t current_uptime);
 void calc_fence(void);
 uint8_t check_any_alarm_fence_timeout(void);
@@ -74,11 +76,12 @@ struct devices_struct
     } longitude;
 
 	uint8_t gps_speed;
+    uint16_t gps_pace;			//minutes/km/100
 	int16_t gps_heading;
 
     //RELATIVE COORDINATES
     uint32_t distance;          //distance in meters to a device
-    int16_t azimuth_deg_signed;       //heading to a device, degrees
+    int16_t azimuth_deg_signed; //heading to a device, degrees
     double azimuth_rad;			//heading to a device, radians
 
     uint8_t core_voltage;

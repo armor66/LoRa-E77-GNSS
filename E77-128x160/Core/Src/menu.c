@@ -1094,11 +1094,13 @@ void draw_navigation(void)	//int8_t menu)
 
 	pp_devices_menu[dev]->beacon_flag? sprintf(&string_buffer[0][0], "Bcn:%d", dev): sprintf(&string_buffer[0][0], "Dev:%d", dev);	//if is beacon
 
-		azimuth_relative_deg = azimuth_deg_signed[dev] - heading_deg;
+//ext	azimuth_relative_deg = azimuth_deg_signed[dev] - heading_deg;
+		azimuth_relative_deg = pp_devices_menu[dev]->azimuth_deg_signed - heading_deg;
 		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
 		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
 		sprintf(&string_buffer[1][0], "%4d%%", azimuth_relative_deg);
-		sprintf(&string_buffer[2][0], "%4dm", ((uint16_t)distance[dev] & 0x1FFF));
+//ext	sprintf(&string_buffer[2][0], "%4dm", ((uint16_t)distance[dev] & 0x1FFF));
+		sprintf(&string_buffer[2][0], "%4dm", ((uint16_t)pp_devices_menu[dev]->distance & 0x1FFF));
 		sprintf(&string_buffer[3][0], "%4ddB", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
 
 		for (uint8_t k = 0; k < 4; k++) {
@@ -1116,12 +1118,14 @@ void draw_navigation(void)	//int8_t menu)
 
 	pp_devices_menu[dev]->beacon_flag? sprintf(&string_buffer[0][13], "Bcn:%d", dev): sprintf(&string_buffer[0][13], "Dev:%d", dev);	//if is beacon
 
-		azimuth_relative_deg = azimuth_deg_signed[dev] - heading_deg;
+//ext	azimuth_relative_deg = azimuth_deg_signed[dev] - heading_deg;
+		azimuth_relative_deg = pp_devices_menu[dev]->azimuth_deg_signed - heading_deg;
 		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
 		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
 
 		sprintf(&string_buffer[1][13], "%4d%%", azimuth_relative_deg);
-		sprintf(&string_buffer[2][13], "%4dm", ((uint16_t)distance[dev] & 0x1FFF));
+//ext	sprintf(&string_buffer[2][13], "%4dm", ((uint16_t)distance[dev] & 0x1FFF));
+		sprintf(&string_buffer[2][13], "%4dm", ((uint16_t)pp_devices_menu[dev]->distance & 0x1FFF));
 		sprintf(&string_buffer[3][13], "%4dd", pp_devices_menu[dev]->rssi);		//(int8_t)buffer[BUFFER_AIR_SIZE]);
 
 		for (uint8_t k = 0; k < 4; k++) {
@@ -1139,8 +1143,10 @@ void draw_navigation(void)	//int8_t menu)
 			draw_position(63, 97, 0, 0, 7, i, GREEN);
 		}
 		else if (pp_devices_menu[i]->valid_fix_flag) {									//if remote fix valid
-			scaled_dist = ((int16_t)distance[i] & 0x1FFF)*2  / range_scale[range_ind];
-			azimuth_relative_rad = azimuth_rad[i] - heading_rad;
+//ext		scaled_dist = ((int16_t)distance[i] & 0x1FFF)*2  / range_scale[range_ind];
+			scaled_dist = ((int16_t)pp_devices_menu[i]->distance & 0x1FFF)*2  / range_scale[range_ind];
+//ext		azimuth_relative_rad = azimuth_rad[i] - heading_rad;
+			azimuth_relative_rad = pp_devices_menu[i]->azimuth_rad - heading_rad;
 			erase_position(63, 97, distance_old[i], azimuth_relative_rad_old[i], 8);
 			if(scaled_dist > range * 2)
 			{
@@ -1224,18 +1230,22 @@ void draw_beacons(void)
 		//show azimuth and distance to remote
 		if(pp_devices_menu[main_flags.current_device]->valid_fix_flag)
 		{
-			azimuth_relative_deg = azimuth_deg_signed[main_flags.current_device] - heading_deg;
+//ext		azimuth_relative_deg = azimuth_deg_signed[main_flags.current_device] - heading_deg;
+			azimuth_relative_deg = pp_devices_menu[main_flags.current_device]->azimuth_deg_signed - heading_deg;
 		}
 		else
 		{
 			azimuth_relative_deg = pp_points_menu[beacons_group_start + 1]->azimuth_deg_signed - heading_deg;
-			distance[main_flags.current_device] = (pp_points_menu[beacons_group_start + 1]->distance);
+			sprintf(&string_buffer[3][0], "Distance:%5d m", ((uint16_t)pp_points_menu[main_flags.current_device]->distance & 0xFFFF));
+			pp_devices_menu[main_flags.current_device]->distance = (pp_points_menu[beacons_group_start + 1]->distance);
+//ext		distance[main_flags.current_device] = (pp_points_menu[beacons_group_start + 1]->distance);
 		}
 
 		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
 		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
 
-		sprintf(&string_buffer[++row][0], "%4d%%%5dm", azimuth_relative_deg, (uint16_t)distance[main_flags.current_device]);
+//ext	sprintf(&string_buffer[++row][0], "%4d%%%5dm", azimuth_relative_deg, (uint16_t)distance[main_flags.current_device]);
+		sprintf(&string_buffer[++row][0], "%4d%%%5dm", azimuth_relative_deg, (uint16_t)pp_devices_menu[main_flags.current_device]->distance);
 		if(pp_devices_menu[main_flags.current_device]->valid_fix_flag) draw_str_by_rows(0, row*18, &string_buffer[row][0], &Font_11x18, YELLOW,BLACK);		//if remote fix valid (validFixFlag[dev])
 		else draw_str_by_rows(0, row*18, &string_buffer[row][0], &Font_11x18, MAGENTA,BLACK);
 		//draw magnet arrow
@@ -1244,18 +1254,22 @@ void draw_beacons(void)
 		draw_arrow(63, 97, 57, north_rad, 28, CYANB, RED);
 		north_rad_old = north_rad;
 
-		if(distance[main_flags.current_device] > range * range_scale[range_ind])
+//ext	if(distance[main_flags.current_device] > range * range_scale[range_ind])
+		if(pp_devices_menu[main_flags.current_device]->distance > range * range_scale[range_ind])
 		{
 			for(; range_ind < 6; range_ind++)
 			{
-				if(distance[main_flags.current_device] < range * range_scale[range_ind]) break;
+//ext			if(distance[main_flags.current_device] < range * range_scale[range_ind]) break;
+				if(pp_devices_menu[main_flags.current_device]->distance < range * range_scale[range_ind]) break;
 			}
 		}
-		else if(distance[main_flags.current_device] < range * range_scale[range_ind] / 2)
+//ext	else if(distance[main_flags.current_device] < range * range_scale[range_ind] / 2)
+		else if(pp_devices_menu[main_flags.current_device]->distance < range * range_scale[range_ind] / 2)
 		{
 			for(; range_ind > 0; range_ind--)
 			{
-				if(distance[main_flags.current_device] > range * range_scale[range_ind] / 2) break;
+//ext			if(distance[main_flags.current_device] > range * range_scale[range_ind] / 2) break;
+				if(pp_devices_menu[main_flags.current_device]->distance > range * range_scale[range_ind] / 2) break;
 			}
 		}
 	}else
@@ -1315,8 +1329,10 @@ void draw_beacons(void)
 		if(pp_devices_menu[main_flags.current_device]->valid_fix_flag)		//draw current device points
 		{									//if remote fix valid
 			fix_valid = 1;
-			scaled_dist = ((int16_t)distance[main_flags.current_device] & 0x1FFF)*2  / range_scale[range_ind];
-			azimuth_relative_rad = azimuth_rad[main_flags.current_device] - heading_rad;
+//ext		scaled_dist = ((int16_t)distance[main_flags.current_device] & 0x1FFF)*2  / range_scale[range_ind];
+			scaled_dist = ((int16_t)pp_devices_menu[main_flags.current_device]->distance & 0x1FFF)*2  / range_scale[range_ind];
+//ext		azimuth_relative_rad = azimuth_rad[main_flags.current_device] - heading_rad;
+			azimuth_relative_rad = pp_devices_menu[main_flags.current_device]->azimuth_rad - heading_rad;
 			erase_position(63, 97, distance_old[main_flags.current_device], azimuth_relative_rad_old[main_flags.current_device], 7);
 			if(scaled_dist > range * 2)
 			{
@@ -1402,11 +1418,13 @@ void draw_laps(void)
 	sprintf(&string_buffer[line][0], "   %02d:%02d:%02d", elapsedHour, elapsedMin, elapsedSec);
 	sprintf(&string_buffer[line][12], "Int");
 	line++;
-	sprintf(&string_buffer[line][0], "       Dist");
-	sprintf(&string_buffer[line][12], "Elapsed");
+	sprintf(&string_buffer[line][0], "    %2ldk%03ldm", pp_devices_menu[this_device]->distance/1000,
+			pp_devices_menu[this_device]->distance%1000);
+	sprintf(&string_buffer[line][12], "Dist");
 	line++;
-	sprintf(&string_buffer[line][0], "       Pace");
-	sprintf(&string_buffer[line][12], "Average");
+	sprintf(&string_buffer[line][0], "    %3dkm/h", pp_devices_menu[this_device]->gps_speed);
+//			pp_devices_menu[p_settings_menu->device_number]->gps_pace%100);
+	sprintf(&string_buffer[line][12], "Avrg");
 	line++;
 	for (uint8_t k = 0; k < line; k++)
 	{
@@ -1459,7 +1477,9 @@ void draw_laps(void)
 		}
 	}
 	line++;
-	sprintf(&string_buffer[line][0], "Pace min/km");
+	sprintf(&string_buffer[line][0], "P  %2d:%02dm/k", pp_devices_menu[this_device]->gps_pace/60,
+			pp_devices_menu[this_device]->gps_pace%60);
+//	sprintf(&string_buffer[line][12], "Pace");
 	draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, GREENYELLOW,BLACK);
 
 //	sprintf(&string_buffer[5][0], "%d", main_flags.laps_counter);
@@ -1585,8 +1605,11 @@ void draw_devices(void)
 
 //	sprintf(&string_buffer[3][0], "Date../09 %02d:%02d:%02d", pp_devices_menu[main_flags.current_device]->time_hours,
 //			pp_devices_menu[main_flags.current_device]->time_minutes, pp_devices_menu[main_flags.current_device]->time_seconds);
-		sprintf(&string_buffer[3][0], "Distance:%5d m", ((uint16_t)distance[main_flags.current_device] & 0xFFFF));
-		azimuth_relative_deg = azimuth_deg_signed[main_flags.current_device] - heading_deg;
+
+//ext	sprintf(&string_buffer[3][0], "Distance:%5d m", ((uint16_t)distance[main_flags.current_device] & 0xFFFF));
+		sprintf(&string_buffer[3][0], "Distance:%5d m", ((uint16_t)pp_devices_menu[main_flags.current_device]->distance & 0xFFFF));
+//ext	azimuth_relative_deg = azimuth_deg_signed[main_flags.current_device] - heading_deg;
+		azimuth_relative_deg = pp_devices_menu[main_flags.current_device]->azimuth_deg_signed - heading_deg;
 		if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
 		if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
 		sprintf(&string_buffer[4][0], "AzRelative: %03d%%", azimuth_relative_deg);

@@ -74,6 +74,8 @@ void Error_Handler(void);
 #define BTN_2_GPIO_Port GPIOA
 #define BTN_1_Pin GPIO_PIN_4
 #define BTN_1_GPIO_Port GPIOA
+#define SQW_Pin GPIO_PIN_5
+#define SQW_GPIO_Port GPIOA
 #define RF_CTRL1_Pin GPIO_PIN_6
 #define RF_CTRL1_GPIO_Port GPIOA
 #define RF_CTRL2_Pin GPIO_PIN_7
@@ -98,6 +100,7 @@ void Error_Handler(void);
 //#define COMPASS_BLUE	//else #define COMPASS_PINK
 #ifdef COMPASS_BLUE
 #define MUTE_Pin GPIO_PIN_5
+#define SQW_Pin GPIO_PIN_9
 #endif
 //#define COMPASS_085
 #define BUFFER_AIR_SIZE            	13  	/* Define the payload size here */
@@ -174,11 +177,11 @@ extern char string_buffer[20][27];
 extern int16_t heading_deg;			//compass.c
 extern double heading_rad;
 
-extern double distance[];
-extern double arc_length[];
-extern int16_t azimuth_deg_signed[];
-extern int16_t azimuth_deg_unsigned[];
-extern double azimuth_rad[];
+//extern double distance[];
+//extern double arc_length[];
+//extern int16_t azimuth_deg_signed[];
+//extern int16_t azimuth_deg_unsigned[];
+//extern double azimuth_rad[];
 
 extern uint16_t endRX_2_TX;
 extern int8_t RssiValue;
