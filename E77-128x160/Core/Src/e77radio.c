@@ -192,18 +192,25 @@ void set_transmit_data(void)
 void timer1_scanRadio_handle(void)
 {
 	  led_toggle();	//led_red
-	  Radio.SetChannel((433000 + 50 + ((channel_ind+1)*5 + FREQ_CHANNEL_FIRST) * 25) * 1000);	//(RF_FREQUENCY);
-	  Radio.RxBoosted(45);
-	  rssi_by_channel[1][channel_ind] = Radio.Rssi(MODEM_LORA);
-	  sprintf(&string_buffer[channel_ind + 1][0], "Ch %02d RSSI %04ddBm", (channel_ind*5 + FREQ_CHANNEL_FIRST), Radio.Rssi(MODEM_LORA));
-	  channel_ind++;
-	  if(((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5 - 1) < channel_ind) timer1_stop();	// 12 < channel_ind
+
+	  if(channel_ind) rssi_by_channel[1][channel_ind-1] = Radio.Rssi(MODEM_LORA);	//do not read on first interrupt
+
+	  Radio.Standby();
+
+	  if(((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5) > channel_ind)				//channel_ind 0...12 -> ch3...ch63
+	  {
+		  Radio.SetChannel((433000 + 50 + (channel_ind*5 + FREQ_CHANNEL_FIRST) * 25) * 1000);	//(RF_FREQUENCY);
+		  Radio.Rx(0);
+		  channel_ind++;
+	  }
+	  else timer1_stop();
+//	  sprintf(&string_buffer[channel_ind + 1][0], "Ch %02d RSSI %04ddBm", (channel_ind*5 + FREQ_CHANNEL_FIRST), Radio.Rssi(MODEM_LORA));
 }
 
 void scanChannels(void)
 {
 	fill_screen(BLACK);
-	lptim1_start(16, 11);	//main_flags.brightness
+	lptim1_start(16, 16);	//main_flags.brightness
 	while (1)//(GPIOA->IDR & BTN_2_Pin)		//wait for OK click to start cal
 	{
 		draw_str_by_rows(3, 33, "     TO SCAN", &Font_7x9, YELLOW,BLACK);
@@ -217,28 +224,28 @@ void scanChannels(void)
 		{
 			if (!(GPIOA->IDR & BTN_3_Pin))	//ECS for scan
 			{
-				for(int8_t i = 0; i < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); i++)		// j < 13
+				for(int8_t i = 0; i < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); i++)		// 0...12
 				{
 					rssi_by_channel[0][i] = -127;
 				}
 				fill_screen(BLACK);
-//				sprintf(&Lines[0][0], "pressPWR to reboot");
-//				sprintf(&Lines[1][0], "pressESC to rescan");
-				for(int8_t i = 0; i < 7; i++)
+
+				for(int8_t i = 0; i < 10; i++)
 				{
 					channel_ind = 0;
+				    led_red_off();
 					timer1_start();
 					HAL_Delay(999);
 //					timer1_stop();
 					sprintf(&string_buffer[0][0], "channels = %2d", channel_ind);
 					draw_str_by_rows(0, 4+0*11, &string_buffer[0][0], &Font_7x9, CYAN,BLACK);
 
-					for (uint8_t j = 0; j < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); j++)		// j < 13
+					for (int8_t j = 0; j < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); j++)	// 0...12
 					{
 						if(rssi_by_channel[0][j] < rssi_by_channel[1][j]) rssi_by_channel[0][j] = rssi_by_channel[1][j];
 						sprintf(&string_buffer[j + 1][0], "Ch %02d RSSI %04ddBm", (j*5 + FREQ_CHANNEL_FIRST), rssi_by_channel[0][j]);
 
-						if(rssi_by_channel[0][j] > -60) draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, RED,BLACK);
+						if(rssi_by_channel[0][j] > -50) draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, RED,BLACK);
 						else if(rssi_by_channel[0][j] < -80) draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, GREEN,BLACK);
 						else draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, YELLOW,BLACK);
 					}

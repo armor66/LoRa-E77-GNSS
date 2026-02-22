@@ -675,7 +675,7 @@ void change_menu(uint8_t button_code)
 				timer16_stop();		//stop before IRQ and clear current_point_group
 
 				if(!pp_devices_menu[this_device]->valid_fix_flag) {
-					shortBeeps(2);				//if no valid_fix_flag when attempt to save point
+					shortBeeps(2);			//if no valid_fix_flag when attempt to save point
 					main_flags.current_point_group = 0;
 //					led_blue_off();		//main_flags.current_point_group has reseted
 					break;		//leave case BTN_OK

@@ -61,6 +61,7 @@ struct points_struct **pp_points_lrns;
 
 double lat_prev;
 double lon_prev;
+double distance;
 
 void init_lrns(void)
 {
@@ -264,10 +265,9 @@ void incr_distance(void)	//double lat_prev, double lon_prev,
 	double latitude = (double)devices[p_settings_lrns->device_number].latitude.as_integer / 10000000 * deg_to_rad;
 	double longitude = (double)devices[p_settings_lrns->device_number].longitude.as_integer / 10000000 * deg_to_rad;
 
-//	distance[p_settings_lrns->device_number] += 6371008 * sqrt(pow((lat_prev - latitude), 2) + pow((cos(latitude) * (lon_prev - longitude)), 2));
-/* ignore < 1m & do not exceed 15m/s*/
-	pp_devices[p_settings_lrns->device_number]->distance +=
-			(uint32_t)(6371008 * sqrt(pow((lat_prev - latitude), 2) + pow((cos(latitude) * (lon_prev - longitude)), 2))) & 0xF;
+	distance += (6371008 * sqrt(pow((lat_prev - latitude), 2) + pow((cos(latitude) * (lon_prev - longitude)), 2)));
+/* ignore < 1m & do not exceed 15m/s  (& 0xF)*/
+	pp_devices[p_settings_lrns->device_number]->distance = (uint32_t)distance;
 
 	lat_prev = latitude;
 	lon_prev = longitude;
