@@ -121,8 +121,11 @@ void rx_to_devices(uint8_t device_number)
 	devices[device_number].beacon_flag = buffer[0] >> 7;
 //	flags_to_transmit((buffer[0] & 0x70) >> 4) == 3 and beeper_flag((buffer[0] & 0x8) >> 3) == 0
 	/*anti theft flag received (no beacon + antitheft_flag + no beep flag)*/
-	if(((buffer[0] & 0xF8) >> 3) == 0x0C) main_flags.antitheft_flag_received = 1;
-
+	if(((buffer[0] & 0xF8) >> 3) == 0x0C)
+	{
+		main_flags.antitheft_flag_received = 1;
+		shortBeeps(1);
+	}
 	/*beacon to halt flag received (no beacon + bcntohalt_flag + no beep flag)*/
 	if(((buffer[0] & 0xF8) >> 3) == 0x0A)
 	{
@@ -137,7 +140,7 @@ void rx_to_devices(uint8_t device_number)
 
 	devices[device_number].fix_type_opt = (buffer[1] & 0x60) >> 5;			//only 2 bits used to transmit
 	devices[device_number].valid_fix_flag = ((buffer[1] & 0x10) >> 4);		//bit0 only
-	devices[device_number].batt_voltage = (buffer[1] & 0x0F)+27;			//in decimal volts
+	devices[device_number].batt_voltage = (buffer[1] & 0x0F)+27;			//in decimal volts 0...15 -> 27...42
 	devices[device_number].p_dop = buffer[2];								//0...25.5
 
 	devices[device_number].longitude.as_array[0] = buffer[3];

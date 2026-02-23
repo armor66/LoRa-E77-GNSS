@@ -43,9 +43,10 @@ void interrupt_init(void);
 void enable_buttons_interrupts(void);
 void disable_buttons_interrupts(void);
 
-void led_toggle(void);
+void led_toggle_r(void);
 void led_red_on(void);
 void led_red_off(void);
+void led_toggle_g(void);
 void led_green_on(void);
 void led_green_off(void);
 void led_blue_on(void);

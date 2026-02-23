@@ -28,6 +28,6 @@
 void radio_init(void);
 void set_transmit_data(void);
 void timer1_scanRadio_handle(void);
-
+void timer16_scanRadio_handle(void);
 
 #endif /*RADIO_HEADER*/

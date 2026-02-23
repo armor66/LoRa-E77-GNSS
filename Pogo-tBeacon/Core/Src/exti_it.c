@@ -103,6 +103,8 @@ void EXTI4_IRQHandler(void)		//(PPS_Pin)
 		lcd_off();
 		main_flags.display_status = 0;
 //for TPS7330 Vthresold=2.64V, for TPS7333 Vthresold=2.87V(287-270=17), 0==270(2.70V) (actually ~2.95V)
+/* LM3671 has minimum input 2.7V,  batt_voltage < 5 means < 2.75V (270+5)*/
+		(pp_devices[p_settings->device_number]->batt_voltage < 30)? (main_flags.battery_low = 1): (main_flags.battery_low = 0);
 		if(pp_devices[p_settings->device_number]->batt_voltage < 5)	//2.75V
 		{
 			led_w_on();		//long beep to prevent silent shutdown

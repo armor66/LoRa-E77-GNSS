@@ -145,6 +145,7 @@ void TIM1_UP_IRQHandler(void)
 //						main_flags.endRX_2_TX = (uint16_t)TIM17->CNT;		//save interval from RX-end to TX-start
 //						timer17_stop();
 //					}
+					if(main_flags.binding) shortBeeps(1);
 					main_flags.permit_actions = 0;
 					led_red_on();					//start transmitting, end by case 3 (OnTxDone)
 					set_transmit_data();			//State = TX_START;

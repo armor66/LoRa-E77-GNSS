@@ -186,7 +186,7 @@ void disable_buttons_interrupts(void)
 //	EXTI->IMR1 &= ~EXTI_IMR1_IM0;
 }
 
-void led_toggle(void){
+void led_toggle_r(void){
 	GPIOA->ODR ^= GPIO_ODR_OD5;
 }
 void led_red_on(void){
@@ -194,6 +194,10 @@ void led_red_on(void){
 }
 void led_red_off(void){
 	GPIOA->BSRR = GPIO_BSRR_BS5;
+}
+void led_toggle_g(void)
+{
+	GPIOB->ODR ^= GPIO_ODR_OD8;
 }
 void led_green_on(void){
 	GPIOB->BSRR = GPIO_BSRR_BR8;

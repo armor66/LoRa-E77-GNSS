@@ -294,6 +294,7 @@ void settings_load(void)
     }
     else if(settings.spreading_factor == 11)
    	{
+    	settings.coding_rate_opt = 3;
     	settings.preamble = 12;	//settings.coding_rate_opt = 3
     	settings.crc_on = 0;
     }

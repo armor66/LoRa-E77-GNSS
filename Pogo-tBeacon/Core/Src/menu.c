@@ -706,7 +706,7 @@ void draw_main(void)
 	{
 		sprintf(&string_buffer[row][0], "!set device 1 or 2");
 		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, ORANGE,BLACK);
-	}else if(pp_devices_menu[this_device]->batt_voltage < 30)		// U < 3.0volt (!pp_devices_menu[this_device]->batt_voltage)
+	}else if(pp_devices_menu[this_device]->batt_voltage < 30)		// U < 3.0volt 0...150 -> 270...420
 	{
 		sprintf(&string_buffer[row][0], "DevID:%d  Batt low!", this_device);
 		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, ORANGE,BLACK);
@@ -995,16 +995,18 @@ void draw_devices(void)	//int8_t menu)
 //	sprintf(&string_buffer[7][0], "Azimuth_u : %03d%%", azimuth_deg_unsigned[current_device]);
 		sprintf(&string_buffer[7][0], "                  ");
 
-		if(pp_devices_menu[main_flags.current_device]->batt_voltage < 32)
+		if(pp_devices_menu[main_flags.current_device]->batt_voltage < 30)		//27...42 from rx_to_devices()
 		{
-			sprintf(&string_buffer[8][0], "Battery :  low    ");		//<=3.2 volt
+			sprintf(&string_buffer[8][0], "Battery :  low    ");		//<=3.0 volt
 		} else sprintf(&string_buffer[8][0], "Battery: %d.%d Volt ", pp_devices_menu[main_flags.current_device]->batt_voltage/10, pp_devices_menu[main_flags.current_device]->batt_voltage%10);
 
 		sprintf(&string_buffer[9][0], "RSSI: %ddBm", pp_devices_menu[main_flags.current_device]->rssi);
 		sprintf(&string_buffer[10][0], " SNR: %02ddB", pp_devices_menu[main_flags.current_device]->snr);
 
-		(p_settings_menu->spreading_factor == 12)? sprintf(&string_buffer[11][0], "RX3 to TX%d: %4dmS",	main_flags.time_slot, main_flags.endRX_2_TX):
-		sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS", pp_devices_menu[main_flags.current_device]->device_received, this_device, main_flags.endRX_2_TX);
+		(p_settings_menu->spreading_factor == 12)?
+				sprintf(&string_buffer[11][0], "RX3 to TX%d: %4dmS", main_flags.time_slot, main_flags.endRX_2_TX):
+				sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS",
+						pp_devices_menu[main_flags.current_device]->device_received, this_device, main_flags.endRX_2_TX);
 
 		sprintf(&string_buffer[12][0], "Latit : %ld", pp_devices_menu[main_flags.current_device]->latitude.as_integer);
 		sprintf(&string_buffer[13][0], "Longit: %ld", pp_devices_menu[main_flags.current_device]->longitude.as_integer);

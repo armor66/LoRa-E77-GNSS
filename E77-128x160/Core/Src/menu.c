@@ -128,6 +128,13 @@ void actions_ok(void);
 void actions_esc(void);
 void draw_erase_points(void);
 void draw_restore_defaults(void);
+
+void draw_binding(void);
+void confirm_binding(void);
+void exit_binding(void);
+void device_up(void);
+void device_down(void);
+
 void set_brightness(void);
 
 //ALL MENUS HERE
@@ -163,7 +170,8 @@ enum    //menu number starts from 1, because 0 is used as "end marker" in menu s
 
 	M_ACTIONS,
 	M_ERASE_POINTS,
-	M_CONFIRM_RESTORING
+	M_CONFIRM_RESTORING,
+	M_BINDING
 };
 
 //ALL MENU ITEMS HERE (for each menu separately)
@@ -338,6 +346,10 @@ const struct
 //
 	{M_ERASE_POINTS,			BTN_OK,					confirm_erase_points},
 	{M_CONFIRM_RESTORING,		BTN_OK,					confirm_settings_restore},
+	{M_BINDING,					BTN_UP,					device_up},
+	{M_BINDING,					BTN_DOWN,				device_down},
+	{M_BINDING,					BTN_OK,					confirm_binding},
+	{M_BINDING,					BTN_ESC,				exit_binding},
     {0, 0, 0}   //end marker
 };
 
@@ -427,6 +439,7 @@ const struct
 
 	{M_ERASE_POINTS,			M_ACTIONS},
 	{M_CONFIRM_RESTORING,		M_ACTIONS},
+	{M_BINDING,					M_ACTIONS},
     {0, 0}      //end marker
 };
 //Structure with list of menus and real-time values of current item in current menu. Last Item is needed for scroll function
@@ -486,6 +499,7 @@ const struct
 	{M_ACTIONS,					draw_actions},
 	{M_ERASE_POINTS,			draw_erase_points},
 	{M_CONFIRM_RESTORING,		draw_restore_defaults},
+	{M_BINDING,					draw_binding},
     {0, 0}      //end mark
 };
 
@@ -557,7 +571,7 @@ void init_menu(void)
 	//Load settings and create a local copy
 	p_settings_menu = get_settings();
 	settings_copy_menu = *p_settings_menu;
-	main_flags.current_device = this_device = p_settings_menu->device_number;
+	main_flags.binding_device = main_flags.current_device = this_device = p_settings_menu->device_number;
 
 	p_coding_rate_values = get_coding_rate_values();
 	p_tx_power_values = get_tx_power_values();
@@ -2460,7 +2474,8 @@ void draw_actions(void)
 	sprintf(&string_buffer[5][0], " Del points");
 	sprintf(&string_buffer[6][0], " SetDefault");
 
-	(pp_devices_menu[this_device]->flwtrek_flag)?   sprintf(&string_buffer[7][0], " FlwTrek on"): sprintf(&string_buffer[7][0], " FlwTrekOff");
+	sprintf(&string_buffer[7][0], " BindingBcn");
+//	(pp_devices_menu[this_device]->flwtrek_flag)? sprintf(&string_buffer[7][0], " FlwTrek on"): sprintf(&string_buffer[7][0], " FlwTrekOff");
 
 	row = get_current_item();
 	for (uint8_t k = 0; k < 8; k++)
@@ -2570,22 +2585,6 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 
 		case M_ACTIONS_I_ERASE_POINTS:
 			current_menu = M_ERASE_POINTS;
-//			erase_point_groups();
-//			erase_saved_devices();
-//
-//	    	for(uint8_t i = 0; i < 96; i++)	//<56 for groups only, +40 for devices
-//	    	{
-//	    	   	pp_points_menu[i]->exist_flag = 0;
-//	    	}
-////			memset(pp_points_menu, 0, 184);
-////			for(uint8_t i = 0; i < MEMORY_POINT_GROUPS; i++)
-////			{
-////		    	saved_group_load(i);
-////			}
-////			for(uint8_t i = 1; i < (DEVICES_ON_AIR_MAX+1); i++)
-////			{
-////				lost_device_load(i);
-////			}
 			break;
 
 		case M_ACTIONS_I_SET_DEFAULTS:
@@ -2593,9 +2592,10 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 			break;
 
 		case M_ACTIONS_I_FLWTREK:	//initial set in init_gnss() of gnss.c
-			(pp_devices_menu[this_device]->flwtrek_flag == 0)?
-					(pp_devices_menu[this_device]->flwtrek_flag = 1):
-					(pp_devices_menu[this_device]->flwtrek_flag = 0);
+			current_menu = M_BINDING;
+//			(pp_devices_menu[this_device]->flwtrek_flag == 0)?
+//					(pp_devices_menu[this_device]->flwtrek_flag = 1):
+//					(pp_devices_menu[this_device]->flwtrek_flag = 0);
 			break;
 		default:
 			break;
@@ -2668,4 +2668,66 @@ void confirm_settings_restore(void)
 
     HAL_Delay(1000);
     NVIC_SystemReset();
+}
+
+void draw_binding(void)
+{
+	if(main_flags.fix_valid == p_settings_menu->devices_on_air)
+	{
+		draw_str_by_rows(36, 15, "BIND", &Font_11x18, CYAN,BLACK);
+
+		sprintf(&string_buffer[0][0], "DEVICE <%d>", main_flags.binding_device);
+		if(this_device == main_flags.binding_device)
+		{
+			draw_str_by_rows(8, 2*19, &string_buffer[0][0], &Font_11x18, ORANGE,BLACK);		//if sub-point already exist
+			draw_str_by_rows(3, 3*19, "THIS DEVICE", &Font_11x18, ORANGE,BLACK);
+		}
+		else draw_str_by_rows(8, 2*19, &string_buffer[0][0], &Font_11x18, YELLOW,BLACK);		//active points group
+
+		if(main_flags.binding)
+		{
+			draw_str_by_rows(3, 4*19, "<=BINDING=>", &Font_11x18, ORANGE,BLACK);
+		}
+		else
+		{
+			draw_str_by_rows(5, 4*19, "    OK  ", &Font_11x18, YELLOW,BLACK);
+			draw_str_by_rows(5, 5*19, "    or", &Font_11x18, CYAN,BLACK);
+		}
+	}
+	else
+	{
+		draw_str_by_rows(25, 3*19, "NO GNSS", &Font_11x18, ORANGE,BLACK);
+		draw_str_by_rows(36, 4*19, "FIXED", &Font_11x18, ORANGE,BLACK);
+	}
+
+	draw_str_by_rows(0, 6*19+4, "    ESC", &Font_11x18, GREEN,BLACK);
+//	sprintf(&string_buffer[1][0], "LEFT AS %d", firstFreeStartPoint);
+//	draw_str_by_rows(14, 5*19+7, &string_buffer[1][0], &Font_11x18, GREEN,BLACK);
+//	draw_str_by_rows(8, 6*19+7, "IN THE RAM", &Font_11x18, CYAN,BLACK);
+//	draw_str_by_rows(0, 7*19+7, "    ESC", &Font_11x18, GREEN,BLACK);
+}
+void confirm_binding(void)
+{
+	(main_flags.fix_valid == p_settings_menu->devices_on_air)? (main_flags.binding = 1): (current_menu = M_ACTIONS);
+}
+void exit_binding(void)
+{
+	main_flags.binding = 0;
+	current_menu = M_ACTIONS;
+}
+void device_up(void)
+{
+    if (main_flags.binding_device == p_settings_menu->devices_on_air)
+     {
+    	main_flags.binding_device = 1;
+     }
+    else main_flags.binding_device++;
+}
+void device_down(void)
+{
+    if (main_flags.binding_device == 1)
+    {
+    	main_flags.binding_device = p_settings_menu->devices_on_air;
+    }
+    else main_flags.binding_device--;
 }

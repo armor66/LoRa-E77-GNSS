@@ -169,6 +169,11 @@ int main(void)
   		TIM1->SR &= ~TIM_SR_UIF;        //clear update interrupt
   		TIM1->DIER |= TIM_DIER_UIE;     //update interrupt enable
   	    NVIC_EnableIRQ(TIM1_UP_IRQn);
+
+  	    TIM16->SR &= ~TIM_SR_UIF;       //clear update interrupt
+  	    TIM16->DIER |= TIM_DIER_UIE;    //update interrupt enable
+  	   	NVIC_EnableIRQ(TIM16_IRQn);
+
 		main_flags.scanRadioFlag = 1;	//if OK button is pressed and DOWN button is released upon power up
 		radio_init();
 	}

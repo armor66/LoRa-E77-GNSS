@@ -68,6 +68,7 @@ static void restartPattern(void)
 	main_flags.pps_synced = 0;
 	led_blue_on();			//led_blue_off on case 1 (50ms)
 	led_red_on();			//as pattern_started on PPS
+	(pp_devices_tim[p_settings_tim->device_number]->batt_voltage < 30)? (main_flags.battery_low = 1): (main_flags.battery_low = 0);
 	if(((p_settings_tim->spreading_factor == 12) && (p_settings_tim->device_number > 2)) || !main_flags.nav_pvt_ram_flag)
 	{
 		shortBeeps(2);
@@ -145,7 +146,7 @@ void TIM1_UP_IRQHandler(void)
 			if(main_flags.time_slot == p_settings_tim->device_number)	//this device:
 			{	//if this device doesn't get gnss fix via uart 100mS after PPS, delay for full pattern time
 				if(!pp_devices_tim[p_settings_tim->device_number]->valid_fix_flag)	main_flags.fix_valid--;
-				if(main_flags.fix_valid > 0)	//do not transmit if no GNSS FIX
+				if((main_flags.fix_valid > 0) && !main_flags.battery_low)	//do not transmit if no GNSS FIX or battery_low
 				{
 					main_flags.permit_actions = 0;
 					led_red_on();					//start transmitting, end by OnTxDone
@@ -308,8 +309,16 @@ void TIM2_IRQHandler(void)					//Scan buttons interval	void TIM3_IRQHandler(void
 void TIM16_IRQHandler(void)
 {
 	TIM16->SR &= ~TIM_SR_UIF;               //clear interrupt
-	timer16_stop();
-	restartPattern();
+//	timer16_stop();
+	if(main_flags.scanRadioFlag)
+	{
+		timer16_scanRadio_handle();
+	}
+	else
+	{
+		timer16_stop();
+		restartPattern();
+	}
 	//	main_flags.current_point_group = 0;
 }
 

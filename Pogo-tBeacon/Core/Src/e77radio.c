@@ -20,9 +20,10 @@ uint8_t bufferRx[BUFFER_RX];
 uint8_t *p_tx_power_values_rf;
 
 int8_t rssi_by_channel[2][FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST + 1];
-int8_t channel_ind = 0;
+int8_t channel_ind = 0;		//3...68 -> 0...13
 
-static void scanChannels(void);
+//static void scanChannels(void);
+static void binding(void);
 static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraSnr_FskCfo);
 static void OnTxDone(void);
 static void OnRxError(void);
@@ -61,7 +62,7 @@ void radio_init(void)
 
     HAL_Delay(Radio.GetWakeupTime());	// + TCXO_WORKAROUND_TIME_MARGIN);
 
-	if(main_flags.scanRadioFlag) scanChannels();
+	if(main_flags.scanRadioFlag) binding();	//scanChannels();
 }
 
 static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraSnr_FskCfo)
@@ -72,7 +73,7 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 	memcpy(bufferRx, payload, BUFFER_AIR_SIZE);		//BufferAirSize
 	bufferRx[BUFFER_AIR_SIZE] = (int8_t)rssi;		//BufferAirSize + 1
 	bufferRx[BUFFER_AIR_SIZE + 1] = LoraSnr_FskCfo;	//BufferAirSize + 2
-/* if it was a Time Out transmit*/
+/* if it was a Time Out transmit (no bufferRx[1] and bufferRx[2] data*/
 	if(!main_flags.fix_valid && !main_flags.pps_synced && !bufferRx[1] && !bufferRx[2])
 	{
 /* received in continuous mode call restartPattern() to synchronize with HandHeld module PPS timing */
@@ -184,15 +185,98 @@ void set_transmit_data(void)
 	  Radio.Send(bufferTx, BUFFER_AIR_SIZE); 	// to be filled by attendee BufferAirSize
 }
 
+int8_t divisor;
+int8_t toggles;
 void timer1_scanRadio_handle(void)
 {
-	  led_toggle();	//led_red
-	  Radio.SetChannel((433000 + 50 + ((channel_ind+1)*5 + FREQ_CHANNEL_FIRST) * 25) * 1000);	//(RF_FREQUENCY);
-	  Radio.RxBoosted(45);
-	  rssi_by_channel[1][channel_ind] = Radio.Rssi(MODEM_LORA);
-	  sprintf(&string_buffer[channel_ind + 1][0], "Ch %02d RSSI %04ddBm", (channel_ind*5 + FREQ_CHANNEL_FIRST), Radio.Rssi(MODEM_LORA));
-	  channel_ind++;
-	  if(((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5 - 1) < channel_ind) timer1_stop();	// 12 < channel_ind
+//	static int8_t toggles;
+
+	if(divisor == 3)
+	{
+//		led_toggle_r();
+		if(toggles < 2*channel_ind)
+		{
+			led_toggle_r();
+			toggles++;
+		}
+		else timer1_stop();
+
+		divisor = 0;
+	}
+	else divisor++;
+}
+void timer16_scanRadio_handle(void)	//every 5000mS
+{
+	if((channel_ind) && (Radio.Rssi(MODEM_LORA) > -40))	//do not read on first interrupt
+	{
+		uint8_t *buffer = bufferRx;
+
+		if(buffer[0] == CA)
+
+		p_settings_rf->devices_on_air = 5;
+		p_settings_rf->spreading_factor = 11;
+/*		p_settings_rf->freq_channel already set */
+		p_settings_rf->tx_power_opt = TX_POWER_LAST_OPTION;
+		p_settings_rf->time_zone_hour = 5;
+		flag_settings_changed = 1;
+	}
+
+	Radio.Standby();
+
+	if(((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5 + 1) > channel_ind)				//channel_ind 0...12 -> ch3...ch63
+	{
+		p_settings_rf->freq_channel = channel_ind*5 + FREQ_CHANNEL_FIRST;
+		Radio.SetChannel((433000 + 50 + p_settings_rf->freq_channel * 25) * 1000);	//(RF_FREQUENCY);
+	    Radio.Rx(0);
+	    toggles = 0;
+	    channel_ind++;
+	    led_red_off();
+	    led_toggle_g();
+	    timer1_start();
+	}
+	else
+	{
+		timer16_stop();
+		led_blue_off();
+		channel_ind = 0;
+	}
+
+//	(channel_ind < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5))? (channel_ind++): (channel_ind=0);		// < 13
+}
+void binding(void)
+{
+	channel_ind = 0;
+	led_red_off();
+	led_green_off();
+	led_blue_on();
+	timer16_start(6000);
+
+//	uint8_t flag_settings_changed = 0;
+//
+//	for (uint8_t j = 0; j < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); j++)		// j < 13
+//	{
+//		timer16_start(5000);
+//		if(Radio.Rssi(MODEM_LORA) > -40)
+//		{
+//			p_settings_rf->devices_on_air = 5;
+//			p_settings_rf->spreading_factor = 11;
+//			p_settings_rf->freq_channel = j*5 + FREQ_CHANNEL_FIRST;
+//			p_settings_rf->tx_power_opt = TX_POWER_LAST_OPTION;
+//			p_settings_rf->time_zone_hour = 5;
+//			flag_settings_changed = 1;
+//		}
+//
+//	}
+//	p_settings_rf->device_number = 1;
+//	Radio.Rx(0);
+//
+//    if (flag_settings_changed)
+//    {
+//        flag_settings_changed = 0;
+//       	settings_save(p_settings_rf);
+//        HAL_Delay(1000);
+//        NVIC_SystemReset();
+//    }
 }
 
 void scanChannels(void)
@@ -217,11 +301,11 @@ void scanChannels(void)
 					rssi_by_channel[0][i] = -127;
 				}
 				fill_screen(BLACK);
-//				sprintf(&string_buffers[0][0], "pressPWR to reboot");
-//				sprintf(&string_buffers[1][0], "pressESC to rescan");
+
 				for(int8_t i = 0; i < 7; i++)
 				{
 					channel_ind = 0;
+				    led_red_off();
 					timer1_start();
 					HAL_Delay(999);
 //					timer1_stop();
