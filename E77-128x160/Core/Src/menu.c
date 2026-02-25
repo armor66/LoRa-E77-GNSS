@@ -2518,7 +2518,7 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 				if(flag_group_has_changed[i])	points_group_save(i);
 			}
 			led_w_on();
-			HAL_Delay(20);
+			HAL_Delay(50);
 			release_power();
 
 			break;
@@ -2677,12 +2677,19 @@ void draw_binding(void)
 		draw_str_by_rows(36, 15, "BIND", &Font_11x18, CYAN,BLACK);
 
 		sprintf(&string_buffer[0][0], "DEVICE <%d>", main_flags.binding_device);
+		sprintf(&string_buffer[1][0], "CH%02d <SF%2d>",
+				p_settings_menu->freq_channel, p_settings_menu->spreading_factor);
+
 		if(this_device == main_flags.binding_device)
 		{
-			draw_str_by_rows(8, 2*19, &string_buffer[0][0], &Font_11x18, ORANGE,BLACK);		//if sub-point already exist
+			draw_str_by_rows(8, 2*19, &string_buffer[0][0], &Font_11x18, ORANGE,BLACK);
 			draw_str_by_rows(3, 3*19, "THIS DEVICE", &Font_11x18, ORANGE,BLACK);
 		}
-		else draw_str_by_rows(8, 2*19, &string_buffer[0][0], &Font_11x18, YELLOW,BLACK);		//active points group
+		else
+		{
+			draw_str_by_rows(8, 2*19, &string_buffer[0][0], &Font_11x18, YELLOW,BLACK);
+			draw_str_by_rows(3, 3*19, &string_buffer[1][0], &Font_11x18, YELLOW,BLACK);
+		}
 
 		if(main_flags.binding)
 		{
@@ -2701,10 +2708,6 @@ void draw_binding(void)
 	}
 
 	draw_str_by_rows(0, 6*19+4, "    ESC", &Font_11x18, GREEN,BLACK);
-//	sprintf(&string_buffer[1][0], "LEFT AS %d", firstFreeStartPoint);
-//	draw_str_by_rows(14, 5*19+7, &string_buffer[1][0], &Font_11x18, GREEN,BLACK);
-//	draw_str_by_rows(8, 6*19+7, "IN THE RAM", &Font_11x18, CYAN,BLACK);
-//	draw_str_by_rows(0, 7*19+7, "    ESC", &Font_11x18, GREEN,BLACK);
 }
 void confirm_binding(void)
 {

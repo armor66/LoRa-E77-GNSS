@@ -186,7 +186,16 @@ void set_transmit_data(void)
 	}
 	else bufferTx[12] = bufferTx[11] = 0;
 
-	  Radio.Send(bufferTx, buffer_to_transmit); 	// to be filled by attendee BufferAirSize
+	if(main_flags.binding)
+	{
+		bufferTx[0] = 0xCA;
+		bufferTx[1] = (p_settings_rf->spreading_factor << 6) +		//'11' for SF11 and '00' for SF12
+				(p_settings_rf->devices_on_air << 3) + main_flags.binding_device;
+		bufferTx[2] = p_settings_rf->freq_channel;
+		bufferTx[3] = 0xCA;
+		Radio.Send(bufferTx, 4);
+	}
+	else Radio.Send(bufferTx, buffer_to_transmit); 	// to be filled by attendee BufferAirSize
 }
 
 void timer1_scanRadio_handle(void)

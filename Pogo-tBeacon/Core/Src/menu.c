@@ -1459,7 +1459,7 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 //			if(!(CHARGE_GPIO_Port->IDR & CHARGE_Pin))		//and no charge connected
 //			{
 				led_w_on();
-				HAL_Delay(100);
+				HAL_Delay(50);
 				release_power();
 //			}
 			break;

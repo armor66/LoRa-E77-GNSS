@@ -278,7 +278,7 @@ restart_configuration:
 			draw_str_by_rows(0, (row+=1)*14+5, "  SET BAUD RATE   ", &Font_7x9, ORANGE,BLACK);
 		}
 		//both OK and ESC pressed
-		if((new_options_flag != 1) && !(GPIOA->IDR & BTN_2_Pin) && !(GPIOA->IDR & BTN_3_Pin))
+		if((new_options_flag != 1) && !(GPIOA->IDR & BTN_2_Pin) && !(GPIOB->IDR & BTN_3_Pin))
 		{
 			new_options_flag = 1;
 			serialPrint(revert_to_default, sizeof(revert_to_default));
@@ -288,7 +288,7 @@ restart_configuration:
 //			HAL_Delay(100);
     		goto restart_configuration;
 		}
-		if ((new_options_flag != 2) && !(GPIOA->IDR & BTN_2_Pin) && (GPIOA->IDR & BTN_3_Pin))	//OK to set values
+		if ((new_options_flag != 2) && !(GPIOA->IDR & BTN_2_Pin) && (GPIOB->IDR & BTN_3_Pin))	//OK to set values
 	    {
 			new_options_flag = 2;
 //			while(HAL_UART_GetState(&huart2) == HAL_UART_STATE_BUSY_RX)	//if gps module does not transmit
@@ -301,7 +301,7 @@ restart_configuration:
 			HAL_Delay(100);
 			goto restart_configuration;
 	    }
-		if ((new_options_flag != 3) && !(GPIOA->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin) && (baudRateInd != GPS_BAUDRATE_38400))
+		if ((new_options_flag != 3) && !(GPIOB->IDR & BTN_3_Pin) && (GPIOA->IDR & BTN_2_Pin) && (baudRateInd != GPS_BAUDRATE_38400))
     	{
 			new_options_flag = 3;
 			serialPrint(revert_baudrate, sizeof(revert_baudrate));
@@ -320,3 +320,8 @@ restart_configuration:
 	}
 }
 
+void set_gnss_pvt(void)
+{
+	restart_uart(GPS_BAUDRATE_38400);
+	serialPrint(set_crucial_opts, sizeof(set_crucial_opts));
+}

@@ -44,7 +44,7 @@ typedef enum {
 } gpsBaudRate_e;
 
 void init_gnss(void);
-
+void set_gnss_pvt(void);
 //void find_nearest_trekpoint(void);
 
 //void manage_trekpoints(uint8_t range_ind);

@@ -11,6 +11,7 @@
 #include "spi.h"
 #include "tim.h"
 #include "lcd_display.h"
+#include "gnss.h"
 
 static RadioEvents_t RadioEvents;
 
@@ -20,7 +21,10 @@ uint8_t bufferRx[BUFFER_RX];
 uint8_t *p_tx_power_values_rf;
 
 int8_t rssi_by_channel[2][FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST + 1];
-int8_t channel_ind = 0;		//3...68 -> 0...13
+int8_t channel_ind;		//3...68 -> 0...13
+int8_t toggles;
+int8_t rx_done;
+int8_t binded;
 
 //static void scanChannels(void);
 static void binding(void);
@@ -62,7 +66,17 @@ void radio_init(void)
 
     HAL_Delay(Radio.GetWakeupTime());	// + TCXO_WORKAROUND_TIME_MARGIN);
 
-	if(main_flags.scanRadioFlag) binding();	//scanChannels();
+	if(main_flags.scanRadioFlag)
+	{	// SF11, payloadLen = 3, RX continuous mode
+		(Radio.SetRxConfig(MODEM_LORA, LORA_BANDWIDTH, 11,
+				p_settings_rf->coding_rate_opt, 0, p_settings_rf->preamble, LORA_SYMBOL_TIMEOUT,
+				LORA_FIX_LENGTH_PAYLOAD_ON,	4, p_settings_rf->crc_on, 0, 0, LORA_IQ_NORMAL, true));
+
+		binded = 0;
+		lcd_on();
+		led_blue_on();
+		binding();	//scanChannels();
+	}
 }
 
 static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraSnr_FskCfo)
@@ -93,6 +107,30 @@ static void OnRxDone(uint8_t *payload, uint16_t size, int16_t rssi, int8_t LoraS
 	//host device valid GPS fix - pDop and accuracy
 	if(main_flags.fix_valid && !main_flags.rx_crc_error) calc_relative_position(main_flags.time_slot);
 //	if(pp_devices_rf[p_settings_rf->device_number]->valid_fix_flag)	calc_relative_position(main_flags.time_slot);
+
+	if(channel_ind && (bufferRx[BUFFER_AIR_SIZE] > -30))
+	{
+		rx_done = 1;
+		rssi_by_channel[1][channel_ind-1] = bufferRx[BUFFER_AIR_SIZE];	//Radio.Rssi(MODEM_LORA);
+		if((bufferRx[0] == 0xCA) && (bufferRx[3] == 0xCA))
+		{
+			p_settings_rf->device_number = bufferRx[1] & 0x07;
+			p_settings_rf->devices_on_air = (bufferRx[1] >> 3) & 0x07;
+			if((bufferRx[1] & 0xC0) == 0xC0)
+			{
+				p_settings_rf->spreading_factor = 11;
+			}
+			else if((bufferRx[1] & 0xC0) == 0x00) p_settings_rf->spreading_factor = 12;
+			p_settings_rf->freq_channel = bufferRx[2];			//sometimes not matched
+			p_settings_rf->tx_power_opt = TX_POWER_LAST_OPTION-1;
+			/* p_settings_rf->time_zone_hour does not matter */
+			settings_save(p_settings_rf);
+			/* configure GNSS here */
+			set_gnss_pvt();
+			led_green_on();
+			binded = 1;
+		}
+	}
 
 	memset(bufferRx, 0, BUFFER_RX);
 }
@@ -185,15 +223,12 @@ void set_transmit_data(void)
 	  Radio.Send(bufferTx, BUFFER_AIR_SIZE); 	// to be filled by attendee BufferAirSize
 }
 
-int8_t divisor;
-int8_t toggles;
 void timer1_scanRadio_handle(void)
 {
-//	static int8_t toggles;
+	static int8_t divisor;
 
-	if(divisor == 3)
+	if(divisor == 2)
 	{
-//		led_toggle_r();
 		if(toggles < 2*channel_ind)
 		{
 			led_toggle_r();
@@ -207,123 +242,113 @@ void timer1_scanRadio_handle(void)
 }
 void timer16_scanRadio_handle(void)	//every 5000mS
 {
-	if((channel_ind) && (Radio.Rssi(MODEM_LORA) > -40))	//do not read on first interrupt
-	{
-		uint8_t *buffer = bufferRx;
-
-		if(buffer[0] == CA)
-
-		p_settings_rf->devices_on_air = 5;
-		p_settings_rf->spreading_factor = 11;
-/*		p_settings_rf->freq_channel already set */
-		p_settings_rf->tx_power_opt = TX_POWER_LAST_OPTION;
-		p_settings_rf->time_zone_hour = 5;
-		flag_settings_changed = 1;
-	}
-
 	Radio.Standby();
+
+	if(channel_ind)	//do not read on first interrupt
+	{
+		if(!rx_done)
+		{
+			if(binded) led_blue_off();			//led_green_off();
+			rssi_by_channel[1][channel_ind-1] = Radio.Rssi(MODEM_LORA);
+		}
+
+		for (int8_t j = 0; j < channel_ind; j++)	// 0...13
+		{
+			if(rssi_by_channel[0][j] < rssi_by_channel[1][j]) rssi_by_channel[0][j] = rssi_by_channel[1][j];
+			sprintf(&string_buffer[j][0], "Ch %02d RSSI %04ddBm", (j*5 + FREQ_CHANNEL_FIRST), rssi_by_channel[0][j]);
+
+			if(rssi_by_channel[0][j] > -50) draw_str_by_rows(0, 4+j*11, &string_buffer[j][0], &Font_7x9, RED,BLACK);
+			else if(rssi_by_channel[0][j] < -80) draw_str_by_rows(0, 4+j*11, &string_buffer[j][0], &Font_7x9, GREEN,BLACK);
+			else draw_str_by_rows(0, 4+j*11, &string_buffer[j][0], &Font_7x9, YELLOW,BLACK);
+
+			if(j < 13) draw_str_by_rows(0, 4+(j+1)*11, "    scanning...   ", &Font_7x9, DARKGREY,BLACK);
+		}
+	}
 
 	if(((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5 + 1) > channel_ind)				//channel_ind 0...12 -> ch3...ch63
 	{
 		p_settings_rf->freq_channel = channel_ind*5 + FREQ_CHANNEL_FIRST;
-		Radio.SetChannel((433000 + 50 + p_settings_rf->freq_channel * 25) * 1000);	//(RF_FREQUENCY);
+		Radio.SetChannel((433000 + 50 + (channel_ind*5 + FREQ_CHANNEL_FIRST) * 25) * 1000);	//(RF_FREQUENCY);
 	    Radio.Rx(0);
 	    toggles = 0;
+	    rx_done = 0;
 	    channel_ind++;
 	    led_red_off();
-	    led_toggle_g();
 	    timer1_start();
 	}
 	else
 	{
 		timer16_stop();
-		led_blue_off();
-		channel_ind = 0;
+		led_w_on();
+		binding();
 	}
-
-//	(channel_ind < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5))? (channel_ind++): (channel_ind=0);		// < 13
 }
 void binding(void)
 {
+	for (int8_t j = 0; j < channel_ind; j++)	// 0...13
+	{
+		draw_str_by_rows(0, 4+j*11, &string_buffer[j][0], &Font_7x9, DARKGREEN,BLACK);
+	}
+	draw_str_by_rows(0, 4, "    scanning...   ", &Font_7x9, DARKGREY,BLACK);
+
+	for(int8_t i = 0; i < 1 + ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); i++)		// 0...13
+	{
+		rssi_by_channel[0][i] = -127;
+	}
+
 	channel_ind = 0;
+	led_w_off();
 	led_red_off();
 	led_green_off();
-	led_blue_on();
-	timer16_start(6000);
+	if(binded) release_power();		//NVIC_SystemReset();
+	timer16_start(5000);
+}
 
-//	uint8_t flag_settings_changed = 0;
-//
-//	for (uint8_t j = 0; j < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); j++)		// j < 13
+//void scanChannels(void)
+//{
+//	fill_screen(BLACK);
+//	lcd_on();
+//	while (1)//(GPIOA->IDR & BTN_2_Pin)		//wait for OK click to start cal
 //	{
-//		timer16_start(5000);
-//		if(Radio.Rssi(MODEM_LORA) > -40)
+//		draw_str_by_rows(3, 33, "     TO SCAN", &Font_7x9, YELLOW,BLACK);
+//		draw_str_by_rows(3, 44, "    FREQUENCY", &Font_7x9, YELLOW,BLACK);
+//		draw_str_by_rows(0, 55, "     CHANNELS", &Font_7x9, YELLOW,BLACK);
+//		draw_str_by_rows(0, 77, "  Click ESC/DOWN", &Font_7x9, GREEN,BLACK);
+//		draw_str_by_rows(0, 99, "        OR", &Font_7x9, YELLOW,BLACK);
+//		draw_str_by_rows(3, 121, " POWER FOR REBOOT", &Font_7x9, GREEN,BLACK);
+//
+//		while (GPIOA->IDR & BTN_1_Pin)
 //		{
-//			p_settings_rf->devices_on_air = 5;
-//			p_settings_rf->spreading_factor = 11;
-//			p_settings_rf->freq_channel = j*5 + FREQ_CHANNEL_FIRST;
-//			p_settings_rf->tx_power_opt = TX_POWER_LAST_OPTION;
-//			p_settings_rf->time_zone_hour = 5;
-//			flag_settings_changed = 1;
+//			if (!(GPIOB->IDR & BTN_3_Pin))	//ECS for scan
+//			{
+//				for(int8_t i = 0; i < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); i++)		// j < 13
+//				{
+//					rssi_by_channel[0][i] = -127;
+//				}
+//				fill_screen(BLACK);
+//
+//				for(int8_t i = 0; i < 7; i++)
+//				{
+//					channel_ind = 0;
+//				    led_red_off();
+//					timer1_start();
+//					HAL_Delay(999);
+////					timer1_stop();
+//					sprintf(&string_buffer[0][0], "channels = %02d", channel_ind);
+//					draw_str_by_rows(0, 4+0*11, &string_buffer[0][0], &Font_7x9, CYAN,BLACK);
+//
+//					for (uint8_t j = 0; j < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); j++)		// j < 13
+//					{
+//						if(rssi_by_channel[0][j] < rssi_by_channel[1][j]) rssi_by_channel[0][j] = rssi_by_channel[1][j];
+//						sprintf(&string_buffer[j + 1][0], "Ch %02d RSSI %04ddBm", (j*5 + FREQ_CHANNEL_FIRST), rssi_by_channel[0][j]);
+//
+//						if(rssi_by_channel[0][j] > -60) draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, RED,BLACK);
+//						else if(rssi_by_channel[0][j] < -80) draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, GREEN,BLACK);
+//						else draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, YELLOW,BLACK);
+//					}
+//				}
+//			}
 //		}
-//
+//		NVIC_SystemReset();
 //	}
-//	p_settings_rf->device_number = 1;
-//	Radio.Rx(0);
-//
-//    if (flag_settings_changed)
-//    {
-//        flag_settings_changed = 0;
-//       	settings_save(p_settings_rf);
-//        HAL_Delay(1000);
-//        NVIC_SystemReset();
-//    }
-}
-
-void scanChannels(void)
-{
-	fill_screen(BLACK);
-	lcd_on();
-	while (1)//(GPIOA->IDR & BTN_2_Pin)		//wait for OK click to start cal
-	{
-		draw_str_by_rows(3, 33, "     TO SCAN", &Font_7x9, YELLOW,BLACK);
-		draw_str_by_rows(3, 44, "    FREQUENCY", &Font_7x9, YELLOW,BLACK);
-		draw_str_by_rows(0, 55, "     CHANNELS", &Font_7x9, YELLOW,BLACK);
-		draw_str_by_rows(0, 77, "  Click ESC/DOWN", &Font_7x9, GREEN,BLACK);
-		draw_str_by_rows(0, 99, "        OR", &Font_7x9, YELLOW,BLACK);
-		draw_str_by_rows(3, 121, " POWER FOR REBOOT", &Font_7x9, GREEN,BLACK);
-
-		while (GPIOA->IDR & BTN_1_Pin)
-		{
-			if (!(GPIOB->IDR & BTN_3_Pin))	//ECS for scan
-			{
-				for(int8_t i = 0; i < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); i++)		// j < 13
-				{
-					rssi_by_channel[0][i] = -127;
-				}
-				fill_screen(BLACK);
-
-				for(int8_t i = 0; i < 7; i++)
-				{
-					channel_ind = 0;
-				    led_red_off();
-					timer1_start();
-					HAL_Delay(999);
-//					timer1_stop();
-					sprintf(&string_buffer[0][0], "channels = %02d", channel_ind);
-					draw_str_by_rows(0, 4+0*11, &string_buffer[0][0], &Font_7x9, CYAN,BLACK);
-
-					for (uint8_t j = 0; j < ((FREQ_CHANNEL_LAST - FREQ_CHANNEL_FIRST)/5); j++)		// j < 13
-					{
-						if(rssi_by_channel[0][j] < rssi_by_channel[1][j]) rssi_by_channel[0][j] = rssi_by_channel[1][j];
-						sprintf(&string_buffer[j + 1][0], "Ch %02d RSSI %04ddBm", (j*5 + FREQ_CHANNEL_FIRST), rssi_by_channel[0][j]);
-
-						if(rssi_by_channel[0][j] > -60) draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, RED,BLACK);
-						else if(rssi_by_channel[0][j] < -80) draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, GREEN,BLACK);
-						else draw_str_by_rows(0, 4+(j+1)*11, &string_buffer[j+1][0], &Font_7x9, YELLOW,BLACK);
-					}
-				}
-			}
-		}
-		NVIC_SystemReset();
-	}
-}
+//}

@@ -295,7 +295,7 @@ void TIM1_UP_IRQHandler(void)
 void TIM2_IRQHandler(void)					//Scan buttons interval	void TIM3_IRQHandler(void)
 {
 	TIM2->SR &= ~TIM_SR_UIF;                //clear interrupt
-//	led_red_on();
+
 	if (main_flags.buttons_scanned == 0)	//if not scanned yet
 	{
 		main_flags.button_code = scan_button(main_flags.processing_button);
@@ -309,7 +309,7 @@ void TIM2_IRQHandler(void)					//Scan buttons interval	void TIM3_IRQHandler(void
 void TIM16_IRQHandler(void)
 {
 	TIM16->SR &= ~TIM_SR_UIF;               //clear interrupt
-//	timer16_stop();
+
 	if(main_flags.scanRadioFlag)
 	{
 		timer16_scanRadio_handle();
