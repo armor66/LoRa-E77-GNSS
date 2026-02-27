@@ -1001,7 +1001,7 @@ void draw_devices(void)	//int8_t menu)
 		sprintf(&string_buffer[10][0], " SNR: %02ddB", pp_devices_menu[current_device]->snr);
 
 		(p_settings_menu->spreading_factor == 12)?
-				sprintf(&string_buffer[11][0], "RX3 to TX%d: %4dmS",	main_flags.time_slot, main_flags.endRX_2_TX):
+				sprintf(&string_buffer[11][0], "RX3 to TX%d: %4dmS", main_flags.time_slot, main_flags.endRX_2_TX):
 				sprintf(&string_buffer[11][0], "RX%d to TX%d: %4dmS",
 						pp_devices_menu[current_device]->device_received, this_device, main_flags.endRX_2_TX);
 

@@ -227,18 +227,30 @@ void timer1_scanRadio_handle(void)
 {
 	static int8_t divisor;
 
-	if(divisor == 2)
+	if(binded)
 	{
-		if(toggles < 2*channel_ind)
+		if(toggles < 6)
 		{
-			led_toggle_r();
+			buzzer_toggle();
 			toggles++;
 		}
-		else timer1_stop();
-
-		divisor = 0;
+		else led_w_off();
 	}
-	else divisor++;
+	else
+	{
+		if(divisor == 2)
+		{
+			if(toggles < 2*channel_ind)
+			{
+				led_toggle_r();
+				toggles++;
+			}
+			else timer1_stop();
+
+			divisor = 0;
+		}
+		else divisor++;
+	}
 }
 void timer16_scanRadio_handle(void)	//every 5000mS
 {

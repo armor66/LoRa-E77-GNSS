@@ -65,22 +65,22 @@ struct devices_struct
     //ABSOLUTE COORDINATES
     union
     {
-    	int32_t as_integer;             //latitude in decimal degrees (-90...+90)
+    	int32_t as_integer;     //latitude in decimal degrees (-90...+90)
         uint8_t as_array[4];
     } latitude;
 
     union
     {
-    	int32_t as_integer;             //longitude in decimal degrees (-180...+180)
+    	int32_t as_integer;     //longitude in decimal degrees (-180...+180)
         uint8_t as_array[4];
     } longitude;
 
-	uint8_t gps_speed;
-    uint16_t gps_pace;			//minutes/km/100
+	uint8_t gps_speed;			// 0 - 255 km/h
+    uint32_t gps_pace;			// seconds/kilometer
 	int16_t gps_heading;
 
     //RELATIVE COORDINATES
-    uint32_t distance;          //distance in meters to a device
+    uint32_t distance;          //distance in meters to a device, including own distance
     int16_t azimuth_deg_signed; //heading to a device, degrees
     double azimuth_rad;			//heading to a device, radians
 

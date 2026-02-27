@@ -289,11 +289,12 @@ void settings_load(void)
     	//device number should be beacon1 or beacon2
     	settings.devices_on_air = 3;
     	settings.coding_rate_opt = 3;
-    	settings.preamble = 8;		//(the hardware adds 4 more symbols) actually not!
+    	settings.preamble = 7;		//(the hardware adds 4 more symbols) actually not!
     	settings.crc_on = 1;
     }
     else if(settings.spreading_factor == 11)
    	{
+    	settings.coding_rate_opt = 3;
     	settings.preamble = 12;	//settings.coding_rate_opt = 3
     	settings.crc_on = 0;
     }

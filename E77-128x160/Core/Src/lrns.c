@@ -62,6 +62,7 @@ struct points_struct **pp_points_lrns;
 double lat_prev;
 double lon_prev;
 double distance;
+//double lap_path;
 
 void init_lrns(void)
 {
@@ -105,9 +106,9 @@ void ublox_to_this_device(uint8_t device_number)
 	devices[device_number].latitude.as_array[2] = PVTbuffer[36];
 	devices[device_number].latitude.as_array[3] = PVTbuffer[37];
 
-	uint32_t gnssSpeed = (PVTbuffer[63+6]<<24)+(PVTbuffer[62+6]<<16)+(PVTbuffer[61+6]<<8)+PVTbuffer[60+6];
-	devices[device_number].gps_speed = gnssSpeed/278 & 0xFF;		// 0 - 255 km/h
-	(devices[device_number].gps_speed)? (devices[device_number].gps_pace = 1000000/gnssSpeed): (devices[device_number].gps_pace = 0);	//seconds/km
+	uint32_t gnssSpeed = (PVTbuffer[63+6]<<24)+(PVTbuffer[62+6]<<16)+(PVTbuffer[61+6]<<8)+PVTbuffer[60+6];		// mm/S
+	devices[device_number].gps_speed = gnssSpeed/278 & 0xFF;													// 0 - 255 km/h
+	(devices[device_number].gps_speed)? (devices[device_number].gps_pace = 1000000/gnssSpeed): (devices[device_number].gps_pace = 0);	// seconds/km
 
 	devices[device_number].gps_heading = ((PVTbuffer[67+6]<<24)+(PVTbuffer[66+6]<<16)+(PVTbuffer[65+6]<<8)+PVTbuffer[64+6])/100000 & 0x1FF;	// 0 - 511 degrees
 	devices[device_number].p_dop = (PVTbuffer[77+6]<<8)+PVTbuffer[76+6];
@@ -264,13 +265,18 @@ void incr_distance(void)	//double lat_prev, double lon_prev,
 {
 	double latitude = (double)devices[p_settings_lrns->device_number].latitude.as_integer / 10000000 * deg_to_rad;
 	double longitude = (double)devices[p_settings_lrns->device_number].longitude.as_integer / 10000000 * deg_to_rad;
+	double segment;
 
 	if(pp_devices[p_settings_lrns->device_number]->gps_speed)	// at least 1km/h
 	{
-		distance += (6371008 * sqrt(pow((lat_prev - latitude), 2) + pow((cos(latitude) * (lon_prev - longitude)), 2)));
+		segment = (6371008 * sqrt(pow((lat_prev - latitude), 2) + pow((cos(latitude) * (lon_prev - longitude)), 2)));
+		distance += segment;
+		if(main_flags.laps_afoot) p_settings_lrns->lap_path += segment;
 	}
 /* ignore < 1m & do not exceed 15m/s  (& 0xF)*/
 	pp_devices[p_settings_lrns->device_number]->distance = (uint32_t)distance;
+	main_flags.lapsDist = (uint16_t)p_settings_lrns->lap_path;
+	main_flags.lapsDist = (main_flags.lapsDist < 1000)? main_flags.lapsDist: (main_flags.lapsDist%1000);
 
 	lat_prev = latitude;
 	lon_prev = longitude;

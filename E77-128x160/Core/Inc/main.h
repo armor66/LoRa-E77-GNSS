@@ -159,7 +159,7 @@ struct main_flags_struct
     int8_t binding;
     int8_t binding_device;
 
-    uint16_t elapsed_sec;
+    uint32_t elapsed_sec;
     uint16_t lapsTime;
     uint16_t lapsDist;
     uint16_t endRX_2_TX;

@@ -329,6 +329,7 @@ const struct
 
 	{M_MAIN,					BTN_PWR_LONG,			power_long},
 	{M_NAVIGATION,				BTN_PWR_LONG,			power_long},
+	{M_LAPS,					BTN_PWR_LONG,			power_long},
 	{M_BEACONS,					BTN_PWR_LONG,			power_long},
 	{M_DEVICES,					BTN_PWR_LONG,			power_long},
 	{M_NAVTO_POINTS,			BTN_PWR_LONG,			power_long},
@@ -1408,94 +1409,98 @@ void draw_laps(void)
 	int8_t elapsedHour = main_flags.elapsed_sec/3600;
 	int8_t elapsedMin = main_flags.elapsed_sec/60 - elapsedHour*60;
 	int8_t elapsedSec = main_flags.elapsed_sec - elapsedHour*3600 - elapsedMin*60;
+	uint32_t averagePace = (main_flags.elapsed_sec/pp_devices_menu[this_device]->distance < 3)?	//seconds/m *1000/60 < 50min/km
+			(1000*main_flags.elapsed_sec/pp_devices_menu[this_device]->distance): 0;			//seconds/kilometer
 
 	if(main_flags.rtc_enabled || main_flags.fix_valid)
 	{
 		draw_str_by_rows(0, 0, "TIME, LAPS & DIST.", &Font_7x9, CYAN,BLACK);
-//		(sprintf(&string_buffer[row][0], "%02d/%02d/%02d  %02d:%02d:%02d",
-//			day, p_timeData->month, year, hour, p_timeData->minute, p_timeData->second));
-//		(main_flags.fix_valid)?
-//				draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, WHITE,BLACK):
-//				draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, CYAN,BLACK);
+		sprintf(&string_buffer[line][0], "%02d:%02d:%02d", hour, p_timeData->minute, p_timeData->second);
+		sprintf(&string_buffer[line][9], " TIME");
 	}else
 	{
 		draw_str_by_rows(0, 0, "RTC IS NOT APPLIED", &Font_7x9, ORANGE,BLACK);
+		sprintf(&string_buffer[line][0], " ");
+		sprintf(&string_buffer[line][9], "  TIME UNDEFINED");
 	}
 
-	sprintf(&string_buffer[line][0], "   %02d:%02d:%02d", hour, p_timeData->minute, p_timeData->second);
-	sprintf(&string_buffer[line][12], "Now");
-	//ElapsedTime
+//	sprintf(&string_buffer[line][0], "%02d:%02d:%02d", hour, p_timeData->minute, p_timeData->second);
+//	sprintf(&string_buffer[line][9], " TIME");
 	line++;
-	sprintf(&string_buffer[line][0], "   %02d:%02d:%02d", startHour, startMinute, startSecond);
-	sprintf(&string_buffer[line][12], "Fix");
+	sprintf(&string_buffer[line][0], " ");//   %02d:%02d:%02d", startHour, startMinute, startSecond);
+	sprintf(&string_buffer[line][9], "GNSS fix %02d:%02d:%02d", startHour, startMinute, startSecond);
 	line++;
-	sprintf(&string_buffer[line][0], "   %02d:%02d:%02d", elapsedHour, elapsedMin, elapsedSec);
-	sprintf(&string_buffer[line][12], "Int");
+	sprintf(&string_buffer[line][0], " %01d:%02d:%02d", elapsedHour, elapsedMin, elapsedSec);
+	sprintf(&string_buffer[line][9], "ELAPSED");
 	line++;
-	sprintf(&string_buffer[line][0], "    %2ldk%03ldm", pp_devices_menu[this_device]->distance/1000,
+	sprintf(&string_buffer[line][0], " %2ldk%03ldm", pp_devices_menu[this_device]->distance/1000,
 			pp_devices_menu[this_device]->distance%1000);
-	sprintf(&string_buffer[line][12], "Dist");
+	sprintf(&string_buffer[line][9], " DIST");
 	line++;
-	sprintf(&string_buffer[line][0], "    %3dkm/h", pp_devices_menu[this_device]->gps_speed);
-//			pp_devices_menu[p_settings_menu->device_number]->gps_pace%100);
-	sprintf(&string_buffer[line][12], "Avrg");
+	sprintf(&string_buffer[line][0], "%2ld:%02ldm/k", averagePace/60, averagePace%60);
+//	sprintf(&string_buffer[line][0], "    %3dkm/h", pp_devices_menu[this_device]->gps_speed);
+	sprintf(&string_buffer[line][9], "AVRGE");
 	line++;
 	for (uint8_t k = 0; k < line; k++)
 	{
 		if(k%2)
 		{
-			draw_str_by_rows(7, 10+k*19, &string_buffer[k][0], &Font_11x18, GREEN,BLACK);
-			draw_str_by_rows(0, 10+k*19, &string_buffer[k][12], &Font_11x18, DARKGREEN,BLACK);
+			draw_str_by_rows(40, 10+k*19, &string_buffer[k][0], &Font_11x18, GREEN,BLACK);
+			draw_str_by_rows(4, 16+k*19, &string_buffer[k][9], &Font_7x9, GREEN,BLACK);
+//			draw_str_by_rows(0, 10+k*19, &string_buffer[k][12], &Font_11x18, DARKGREEN,BLACK);
 		}
 		else
 		{
-			draw_str_by_rows(7, 10+k*19, &string_buffer[k][0], &Font_11x18, LIGHTGREY,BLACK);
-			draw_str_by_rows(0, 10+k*19, &string_buffer[k][12], &Font_11x18, DARKGREY,BLACK);
+			draw_str_by_rows(40, 10+k*19, &string_buffer[k][0], &Font_11x18, LIGHTGREY,BLACK);
+			draw_str_by_rows(0, 16+k*19, &string_buffer[k][9], &Font_7x9, LIGHTGREY,BLACK);
+//			draw_str_by_rows(0, 10+k*19, &string_buffer[k][12], &Font_11x18, DARKGREY,BLACK);
 		}
 	}
+//	draw_str_by_rows(2, 16+(line-1)*19, "AVRG", &Font_7x9, LIGHTGREY,BLACK);
+
 	if(lapsSaved)
 	{
-		sprintf(&string_buffer[line][0], "  %2d:%02dD%3d", lapsTimeSaved/60, lapsTimeSaved%60, lapsDistSaved);
+		sprintf(&string_buffer[line][0], " %2d:%02d/%3dm", lapsTimeSaved/60, lapsTimeSaved%60, lapsDistSaved);
 		draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, DARKCYAN,BLACK);
 		sprintf(&string_buffer[line][0], "%d", lapsCounter);
-		draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
+		draw_str_by_rows(1, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
 		line++;
-		sprintf(&string_buffer[line][0], "  %2d:%02dD%3d", main_flags.lapsTime/60, main_flags.lapsTime%60, main_flags.lapsDist);
+		sprintf(&string_buffer[line][0], " %2d:%02d/%3dm", main_flags.lapsTime/60, main_flags.lapsTime%60, main_flags.lapsDist);
 		main_flags.laps_afoot? draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, CYAN,BLACK):
 							draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, DARKCYAN,BLACK);
-		draw_char(3+5, 10+line*19, *">", &Font_11x18, YELLOW,BLACK);		//+5 due to 2 digit lapsCounter
+		draw_char(3, 10+line*19, *">", &Font_11x18, YELLOW,BLACK);		//+5 due to 2 digit lapsCounter
 	}
 	else
 	{
 		if(lapsCounter > 1)
 		{
-			sprintf(&string_buffer[line][0], "  %2d:%02dD%3d", lapsTimeSaved/60, lapsTimeSaved%60, lapsDistSaved);
+			sprintf(&string_buffer[line][0], " %2d:%02d/%3dm", lapsTimeSaved/60, lapsTimeSaved%60, lapsDistSaved);
 			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, DARKCYAN,BLACK);
 			sprintf(&string_buffer[line][0], "%d", lapsCounter - 1);
-			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
+			draw_str_by_rows(1, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
 			line++;
-			sprintf(&string_buffer[line][0], "  %2d:%02dD%3d", main_flags.lapsTime/60, main_flags.lapsTime%60, main_flags.lapsDist);
+			sprintf(&string_buffer[line][0], " %2d:%02d/%3dm", main_flags.lapsTime/60, main_flags.lapsTime%60, main_flags.lapsDist);
 			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, CYAN,BLACK);
 			sprintf(&string_buffer[line][0], "%d", lapsCounter);
-			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
+			draw_str_by_rows(1, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
 		}
 		else
 		{
-			sprintf(&string_buffer[line][0], "  %2d:%02dD%3d", main_flags.lapsTime/60, main_flags.lapsTime%60, main_flags.lapsDist);
+			sprintf(&string_buffer[line][0], " %2d:%02d/%3dm", main_flags.lapsTime/60, main_flags.lapsTime%60, main_flags.lapsDist);
 			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, CYAN,BLACK);
 			sprintf(&string_buffer[line][0], "%d", lapsCounter);
-			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
+			draw_str_by_rows(1, 10+line*19, &string_buffer[line][0], &Font_11x18, YELLOW,BLACK);
 			line++;
 			sprintf(&string_buffer[line][0], "-----------");
 			draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, DARKGREEN,BLACK);
 		}
 	}
 	line++;
-	sprintf(&string_buffer[line][0], "P  %2d:%02dm/k", pp_devices_menu[this_device]->gps_pace/60,
+	sprintf(&string_buffer[line][0], "   %2ld:%02ldm/k", pp_devices_menu[this_device]->gps_pace/60,
 			pp_devices_menu[this_device]->gps_pace%60);
 //	sprintf(&string_buffer[line][12], "Pace");
 	draw_str_by_rows(3, 10+line*19, &string_buffer[line][0], &Font_11x18, GREENYELLOW,BLACK);
-
+	draw_str_by_rows(2, 16+line*19, "PACE", &Font_7x9, GREEN,BLACK);
 //	sprintf(&string_buffer[5][0], "%d", main_flags.laps_counter);
 //	draw_str_by_rows(3, 10+5*19, &string_buffer[5][0], &Font_11x18, YELLOW,BLACK);
 }
@@ -1504,6 +1509,7 @@ void new_laps(void)
 	main_flags.laps_afoot? (lapsTimeSaved = main_flags.lapsTime-1): (lapsTimeSaved = main_flags.lapsTime);
 	main_flags.laps_afoot = 1;
 	lapsDistSaved = main_flags.lapsDist;
+	main_flags.lapsDist = p_settings_menu->lap_path = 0;
 	lapsSaved = 0;
 	main_flags.lapsTime = 1;					//1 due to menu delay
 	(lapsCounter < 99)? lapsCounter++: (lapsCounter = 1);
@@ -1521,6 +1527,7 @@ void continue_laps(void)
 		{
 			lapsSaved = 0;
 			main_flags.lapsTime = 0;
+			main_flags.lapsDist = 0;
 			lapsCounter = 0;
 		}
 	}

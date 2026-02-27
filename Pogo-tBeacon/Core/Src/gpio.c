@@ -212,6 +212,10 @@ void led_blue_off(void){
 	GPIOB->BSRR = GPIO_BSRR_BS4;
 }
 
+void buzzer_toggle(void)
+{
+	GPIOB->ODR ^= GPIO_ODR_OD5;
+}
 void led_w_on(void){
 	GPIOA->BSRR = GPIO_BSRR_BS9;	//LED
 	GPIOB->BSRR = GPIO_BSRR_BS5;	//BUZZ

@@ -52,6 +52,7 @@ void led_green_off(void);
 void led_blue_on(void);
 void led_blue_off(void);
 
+void buzzer_toggle(void);
 void led_w_on(void);
 void led_w_off(void);
 

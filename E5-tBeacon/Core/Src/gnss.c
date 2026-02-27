@@ -15,27 +15,9 @@ const double deg_2_rad = 0.00000000174532925199433;       //deg to rad multiplye
 
 double host_lat_lon_rad[2];
 
-uint32_t min_distance;
-
 struct settings_struct *p_settings_gnss;
 struct devices_struct **pp_devices_gnss;
-#ifndef BEACON
-volatile int16_t nearest_trekpoint_idx;
 
-struct trekpoints_struct trekpoints[TREKPOINTS_TOTAL];        //structures array for
-struct trekpoints_struct *p_trekpoints[TREKPOINTS_TOTAL];		//structure pointers array
-
-struct trekpoints_struct **get_trekpoints(void)
-{
-	for (uint8_t idx = 0; idx < TREKPOINTS_TOTAL; idx++)	//TREKPOINTS_TOTAL < 256
-	{
-		p_trekpoints[idx] = &trekpoints[idx];
-	}
-
-	return &p_trekpoints[0];
-}
-struct trekpoints_struct **pp_trekpoints;
-#endif
 void configure_gps(void);
 
 uint8_t UBLOX_verify_checksum(volatile uint8_t *buffer, uint8_t len)
@@ -164,13 +146,7 @@ void init_gnss(void)
 //	HAL_UART_Transmit(&huart2, ubx_nav_pvt, sizeof(ubx_nav_pvt), 1000);
 	p_settings_gnss = get_settings();
 	pp_devices_gnss = get_devices();
-#ifndef BEACON
-	pp_trekpoints = get_trekpoints();
-	if(TREKPOINTS_TOTAL > 1)
-	{
-		pp_devices_gnss[p_settings_gnss->device_number]->flwtrek_flag = 1;
-	}
-#endif
+
 	if(main_flags.GPSconfigureFlag)
 	{
 		configure_gps();
@@ -195,9 +171,10 @@ void init_gnss(void)
 		serialPrint(req_nav_pvt_ram, sizeof(req_nav_pvt_ram));
 		HAL_Delay(400);
 	}
-	//set aggressive 1Hz power mode to RAM:
-	serialPrint(set_aggressive_pm, sizeof(set_aggressive_pm));
-	//set CFG-TP-PERIOD_LOCK_TP1=3.000.000 to manage ADC and UART only ones on period
+/*set aggressive 1Hz power mode to RAM:*/
+//	serialPrint(set_aggressive_pm, sizeof(set_aggressive_pm));
+//	serialPrint(to_ram_bbr_flash, sizeof(to_ram_bbr_flash));
+/*set CFG-TP-PERIOD_LOCK_TP1=3.000.000 to manage ADC and UART only ones on period*/
 //	if(p_settings_gnss->spreading_factor == 12) serialPrint(set_three_seconds, sizeof(set_three_seconds));
 }
 
@@ -342,96 +319,4 @@ restart_configuration:
 		HAL_Delay(200);
 	}
 }
-#ifndef BEACON
-void calc_trekpoint_position(uint16_t idx, double *lat_lon)
-{
-	//my position
-//	double Latitude0 = lat_lon[0];			//((double)pp_devices_gnss[p_settings_gnss->device_number]->latitude.as_integer) * deg_2_rad;		//7 digit
-//	double Longitude0 = lat_lon[1];	//((double)pp_devices_gnss[p_settings_gnss->device_number]->longitude.as_integer) * deg_2_rad;	//7 digit
 
-	//position of the trek point to calculate relative position
-//	double Latitude1 = ((double)latitude_array[idx]);	// * deg_2_rad;
-//	double Longitude1 = ((double)longitude_array[idx]);	// * deg_2_rad;
-	//distance in meters to a device
-							 //(uint32_t)(6371008 * sqrt(pow((Latitude1 		  - Latitude0) , 2) + pow((cos(Latitude0) *  (Longitude1		   - Longitude0)), 2)))
-	trekpoints[idx].distance = (uint32_t)(6371008 * sqrt(pow((latitude_array[idx] - lat_lon[0]), 2) + pow((cos(lat_lon[0]) * (longitude_array[idx] - lat_lon[1])), 2)));
-	if(trekpoints[idx].distance)	//if distance != 0
-	{			 //cos(Latitude1) 			* sin(Longitude1 		   - Longitude0)
-		double X = cos(latitude_array[idx]) * sin(longitude_array[idx] - lat_lon[1]);
-				 //cos(Latitude0) *  sin(Latitude1) 		  - sin(Latitude0) *  cos(Latitude1)		   * cos(Longitude1 		  - Longitude0)
-		double Y = cos(lat_lon[0]) * sin(latitude_array[idx]) - sin(lat_lon[0]) * cos(latitude_array[idx]) * cos(longitude_array[idx] - lat_lon[1]);
-		trekpoints[idx].azimuth_rad = atan2(X,Y);
-//int16_t azimuth_deg_signed;       //heading to a device, degrees
-		trekpoints[idx].azimuth_deg_signed = (int16_t)(trekpoints[idx].azimuth_rad * rad_2_deg);		//convert to degree
-
-	    if(longitude_array[idx] < lat_lon[1]) {trekpoints[idx].azimuth_rad += 2*M_PI;}
-	    trekpoints[idx].azimuth_relative_rad = trekpoints[idx].azimuth_rad - heading_rad;
-	}else		//if distance == 0)
-	{
-	     trekpoints[idx].azimuth_rad = 0;
-	     trekpoints[idx].azimuth_deg_signed = 0;
-	}
-}
-
-void find_nearest_trekpoint(void)		//in main menu: case M_MAIN_I_NAVIGATION
-{
-	uint32_t distance;
-	min_distance = 0xFFFFFFFF;
-	//my position
-	double Latitude0 = ((double)pp_devices_gnss[p_settings_gnss->device_number]->latitude.as_integer) * deg_2_rad;		//7 digit
-	double Longitude0 = ((double)pp_devices_gnss[p_settings_gnss->device_number]->longitude.as_integer) * deg_2_rad;		//7 digit
-
-	for(uint16_t i = 0; i < TREKPOINTS_TOTAL; i++)	//sizeof(latitude_array)
-	{
-		//position of the trek point to calculate relative position
-//		double Latitude1 = ((double)latitude_array[i]);		// * deg_2_rad;
-//		double Longitude1 = ((double)longitude_array[i]);	// * deg_2_rad;
-		//distance in meters to trek point
-//		distance = (uint32_t)(6371008 * sqrt(pow((Latitude1 		- Latitude0), 2) + pow((cos(Latitude0) * (Longitude1 		 - Longitude0)), 2)));
-		distance = (uint32_t)(6371008 * sqrt(pow((latitude_array[i] - Latitude0), 2) + pow((cos(Latitude0) * (longitude_array[i] - Longitude0)), 2)));
-		if(distance < min_distance)
-		{
-			min_distance = distance;
-			nearest_trekpoint_idx = i;
-		}
-	}
-
-	main_flags.find_nearest_trekpoint_flag = 0;
-	shortBeeps(1);								//find_nearest_trekpoint is complete
-	__enable_irq();
-}
-
-int8_t is_point_ahead(uint16_t idx)
-{
-	int16_t azimuth_relative_deg;
-
-//	calc_trekpoint_position(idx);
-	azimuth_relative_deg = pp_trekpoints[idx]->azimuth_deg_signed - heading_deg;
-	if(azimuth_relative_deg > 180) azimuth_relative_deg -= 360;
-	if(azimuth_relative_deg < -180) azimuth_relative_deg += 360;
-	//get absolute value:
-	if((azimuth_relative_deg > -90) && (azimuth_relative_deg < 90))
-	{
-		return 1;
-	}else return 0;
-}
-
-int16_t trekpoint_scaled_dist;
-int16_t trekpoint_distance_old[10];
-uint16_t trekpoint_range = 30;
-uint8_t trekpoint_range_scale[] = {1, 2, 4, 8, 16, 32, 64};
-
-double trekpoint_azimuth_relative_rad_old[TREKPOINTS_ON_DISPLAY];
-
-void draw_trekpoints(uint16_t idx, uint8_t trekpoint_range_ind)	//, uint16_t color)
-{
-
-}
-
-volatile double trek_direction_old;
-
-void manage_trekpoints(uint8_t range_ind)	//	if(pp_trekpoints[nearest_trekpoint_idx]->distance < 2000)
-{
-
-}
-#endif

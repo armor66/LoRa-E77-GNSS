@@ -289,7 +289,7 @@ void settings_load(void)
     	settings.device_number = 3;	//RX only (slot1 and slot2), Radio.SetRxConfig IQ inverted, TX on demand
     	settings.devices_on_air = 3;
     	settings.coding_rate_opt = 3;
-    	settings.preamble = 8;		//(the hardware adds 4 more symbols) actually not!
+    	settings.preamble = 7;		//(the hardware adds 4 more symbols) actually not!
     	settings.crc_on = 1;
     }
     else if(settings.spreading_factor == 11)
