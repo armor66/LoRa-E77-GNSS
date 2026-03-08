@@ -1,8 +1,8 @@
 E77-128x160 contains st7735 1.8" and nv3023 2.08" lcd screen options, 
 so you can uncomment #define ST7735 or #define NV3023 in the main.h respectively.
 
-#define ST7735 implements bno055 "blue" board and PA5 as MUTE pin, whereas
-#define NV3023 implements bno055 "pink" board and PA9 as MUTE pin.
+Also #define COMPASS_BLUE if use bno055 "blue" board with LDO
+or comment it if use "pink" bno055 board without LDO.
 
 PCB/Schematic_nv3023_PogoPins.pdf provides new pogo pins design.
 PCB and CASE folders contain corresponding st7735 and nv3023 files.

@@ -154,7 +154,8 @@ void set_transmit_data(void)
    	  bufferTx[0] =	(IS_BEACON << 7) + (flags_to_transmit << 4) +
 			  (beeper_flag_to_transmit << 3) + device_number;
 
-   	  (pp_devices_rf[p_settings_rf->device_number]->gps_speed > GPS_SPEED_THRS)? (bufferTx[1] |= 1 << 7): (bufferTx[1] &= ~(1 << 7));	//if device is moving
+   	  (pp_devices_rf[p_settings_rf->device_number]->gps_speed > GPS_SPEED_THRS)?
+   			  (bufferTx[1] |= 1 << 7): (bufferTx[1] &= ~(1 << 7));	//if device is moving
    	  bufferTx[1] = ((PVTbuffer[20+6] & 0x03) << 5) +				//fix type, 2 bits only to transmit	//mask 0b0000 0011
    			  	  	 ((PVTbuffer[21+6] & 0x01) << 4) +				//fix valid, bit0 only				//mask 0b0000 0001
    					 (pp_devices_rf[p_settings_rf->device_number]->batt_voltage/10 & 0x0F);			//mask 0b0000 1111 (0-:150 -> 0-:-15)s
@@ -169,14 +170,6 @@ void set_transmit_data(void)
 	  bufferTx[8] = PVTbuffer[35];	//(uint8_t) ((UBLOX_Handle.lat >> 16) & 0xFF);
 	  bufferTx[9] = PVTbuffer[36];	//(uint8_t) ((UBLOX_Handle.lat >> 8) & 0xFF);
 	  bufferTx[10] = PVTbuffer[37];	//(uint8_t) ((UBLOX_Handle.lat >> 0) & 0xFF);
-
-//	  daylight_hour = PVTbuffer[14] + p_settings_phy->time_zone_hour;
-//	  if(daylight_hour > 24) daylight_hour = daylight_hour - 24;
-//	  (daylight_hour > 8)? (daylight_hour = daylight_hour - 8): (daylight_hour = 0);	//9-:_23
-//	  bufferTx[11] = (daylight_hour << 4) +				//часы	  mask 0b00011111	  0-:-15
-//	  	   	  	  	 ((PVTbuffer[15] & 0x3F) >> 2);		//минуты  mask 0b00111111
-//	  bufferTx[12] = ((PVTbuffer[15] & 0x03) << 6) +	//минуты  mask 0b00000011
-//			  	  	  (PVTbuffer[16] & 0x3F);			//секунды mask 0b00111111
 
 	if(pp_devices_rf[p_settings_rf->device_number]->gps_speed > GPS_SPEED_THRS)
 	{
