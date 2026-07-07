@@ -182,7 +182,8 @@ void set_transmit_data(void)
 	if(main_flags.binding)
 	{
 		bufferTx[0] = 0xCA;
-		bufferTx[1] = (p_settings_rf->spreading_factor << 6) +		//'11' for SF11 and '00' for SF12
+//		bufferTx[1] = (p_settings_rf->spreading_factor << 6) +
+		bufferTx[1] = (main_flags.binding_sf << 6) +	//'11' for SF11 and '00' for SF12
 				(p_settings_rf->devices_on_air << 3) + main_flags.binding_device;
 		bufferTx[2] = p_settings_rf->freq_channel;
 		bufferTx[3] = 0xCA;

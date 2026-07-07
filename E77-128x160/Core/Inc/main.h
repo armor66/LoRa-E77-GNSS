@@ -153,6 +153,7 @@ struct main_flags_struct
     int8_t laps_afoot;
     int8_t binding;
     int8_t binding_device;
+    int8_t binding_sf;
 
     uint32_t elapsed_sec;
     uint16_t lapsTime;

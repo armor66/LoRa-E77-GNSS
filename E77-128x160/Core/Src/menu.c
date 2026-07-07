@@ -589,6 +589,7 @@ void init_menu(void)
 	lptim1_start(16, main_flags.brightness);
 /* first position to save when first_time_locked after power on */
 	memory_subpoint_ind[START_POS_GROUP] = 1;
+	main_flags.binding_sf = p_settings_menu->spreading_factor;
 }
 
 void set_brightness(void)
@@ -2685,7 +2686,8 @@ void draw_binding(void)
 
 		sprintf(&string_buffer[0][0], "DEVICE <%d>", main_flags.binding_device);
 		sprintf(&string_buffer[1][0], "CH%02d <SF%2d>",
-				p_settings_menu->freq_channel, p_settings_menu->spreading_factor);
+//				p_settings_menu->freq_channel, p_settings_menu->spreading_factor);
+				p_settings_menu->freq_channel, main_flags.binding_sf);
 
 		if(this_device == main_flags.binding_device)
 		{
@@ -2719,6 +2721,7 @@ void draw_binding(void)
 void confirm_binding(void)
 {
 	(main_flags.fix_valid == p_settings_menu->devices_on_air)? (main_flags.binding = 1): (current_menu = M_ACTIONS);
+	if(this_device == main_flags.binding_device) main_flags.binding = 0;
 }
 void exit_binding(void)
 {
@@ -2733,11 +2736,12 @@ void device_up(void)
      }
     else main_flags.binding_device++;
 }
-void device_down(void)
+void device_down(void)	//change to main_flags.binding_sf
 {
-    if (main_flags.binding_device == 1)
-    {
-    	main_flags.binding_device = p_settings_menu->devices_on_air;
-    }
-    else main_flags.binding_device--;
+	(main_flags.binding_sf == 11)? (main_flags.binding_sf = 12): (main_flags.binding_sf = 11);
+//    if (main_flags.binding_device == 1)
+//    {
+//    	main_flags.binding_device = p_settings_menu->devices_on_air;
+//    }
+//    else main_flags.binding_device--;
 }
