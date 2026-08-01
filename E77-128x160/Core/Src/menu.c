@@ -2548,9 +2548,9 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 				}
 				else
 				{
-					(pp_devices_menu[main_flags.current_device]->antitheft_flag == 0)?
-					(pp_devices_menu[main_flags.current_device]->antitheft_flag = 1):
-					(pp_devices_menu[main_flags.current_device]->antitheft_flag = 0);
+					(pp_devices_menu[this_device]->antitheft_flag == 0)?
+					(pp_devices_menu[this_device]->antitheft_flag = 1):
+					(pp_devices_menu[this_device]->antitheft_flag = 0);
 				}
 			}
 			break;
@@ -2566,9 +2566,9 @@ void actions_ok(void)	//non standard implementation: switch the current item and
 				}
 				else
 				{
-					(pp_devices_menu[main_flags.current_device]->bcntohalt_flag == 0)?
-					(pp_devices_menu[main_flags.current_device]->bcntohalt_flag = 1):
-					(pp_devices_menu[main_flags.current_device]->bcntohalt_flag = 0);
+					(pp_devices_menu[this_device]->bcntohalt_flag == 0)?
+					(pp_devices_menu[this_device]->bcntohalt_flag = 1):
+					(pp_devices_menu[this_device]->bcntohalt_flag = 0);
 				}
 			}
 			break;
@@ -2682,6 +2682,8 @@ void draw_binding(void)
 {
 	if(main_flags.fix_valid == p_settings_menu->devices_on_air)
 	{
+		if(main_flags.binding_sf == 12 && main_flags.binding_device > 2) main_flags.binding_device = 1;
+
 		draw_str_by_rows(36, 15, "BIND", &Font_11x18, CYAN,BLACK);
 
 		sprintf(&string_buffer[0][0], "DEVICE <%d>", main_flags.binding_device);
