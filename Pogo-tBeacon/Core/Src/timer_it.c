@@ -188,7 +188,7 @@ void TIM1_UP_IRQHandler(void)
 			else if(reg_status & (1 << D5))//(main_flags.adxl_doubletap_flag)
 			{
 //				main_flags.adxl_doubletap_flag = 0;			//if EXTI9_5_IRQHandler
-				main_flags.adxl_device_id = 0xDD;			//show on the main screen
+				main_flags.adxl_device_id = 0xDD;			//show on the device screen
 				if(main_flags.bcntohalt_flag_received)		//and no charge connected
 				{
 					main_flags.button_code = BTN_OK;
@@ -198,7 +198,7 @@ void TIM1_UP_IRQHandler(void)
 			else if((reg_status & (1 << D4)) && main_flags.antitheft_flag_received)	//(main_flags.adxl_activity_flag)
 			{
 //				main_flags.adxl_activity_flag = 0;	//if EXTI9_5_IRQHandler
-				main_flags.adxl_device_id = 0xAA;	//show on the main screen
+				main_flags.adxl_device_id = 0xAA;	//show on the device screen
 				main_flags.emergency_flag = 1;
 				shortBeeps(3);
 			}

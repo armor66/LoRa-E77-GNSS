@@ -44,3 +44,7 @@ st7735 1.8" and nv3023 2.08" modules
 
 Two tBeacons and st7735 PCB
 ![beacon photo](Photos/pcb.png)
+
+Beacon with PogoPins design
+![beacon photo](PogoBeaconPCB.png)
+![beacon photo](PogoBeaconCase.png)
