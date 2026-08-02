@@ -46,5 +46,5 @@ Two tBeacons and st7735 PCB
 ![beacon photo](Photos/pcb.png)
 
 Beacon with PogoPins design
-![beacon photo](Photos/PogoBeaconPCB.png)
-![beacon photo](Photos/PogoBeaconCase.png)
+![beacon photo](Photos/PogoBeaconPCB.jpg)
+![beacon photo](Photos/PogoBeaconCase.jpg)
