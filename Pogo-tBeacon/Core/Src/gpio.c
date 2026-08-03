@@ -205,6 +205,7 @@ void led_green_on(void){
 void led_green_off(void){
 	GPIOB->BSRR = GPIO_BSRR_BS8;
 }
+
 void led_blue_on(void){
 	GPIOB->BSRR = GPIO_BSRR_BR4;
 }

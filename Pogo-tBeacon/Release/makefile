@@ -65,8 +65,8 @@ all: main-build
 main-build: Pogo-tBeacon.elf secondary-outputs
 
 # Tool invocations
-Pogo-tBeacon.elf Pogo-tBeacon.map: $(OBJS) $(USER_OBJS) /home/z/STM32Cube/NewModule/Pogo-tBeacon/STM32WLE5CCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Pogo-tBeacon.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/z/STM32Cube/NewModule/Pogo-tBeacon/STM32WLE5CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Pogo-tBeacon.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Pogo-tBeacon.elf Pogo-tBeacon.map: $(OBJS) $(USER_OBJS) C:\Users\z\CubeIDE\NewModule\Pogo-tBeacon\STM32WLE5CCUX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Pogo-tBeacon.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\z\CubeIDE\NewModule\Pogo-tBeacon\STM32WLE5CCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Pogo-tBeacon.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

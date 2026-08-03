@@ -98,8 +98,7 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 #define BEACON
 #define ST7735
-#define ST7735_IS_160X128_BLUE
-//#define ST7735_IS_160X128_RED
+#define ST7735_IS_160X128_BLUE				//else #define ST7735_IS_160X128_RED
 #define BUFFER_AIR_SIZE            	13  	/* Define the payload size here */
 #define BUFFER_RX                  	15		//BUFFER_SIZE + 2 rssi and snr
 
@@ -149,12 +148,12 @@ struct main_flags_struct
 	uint8_t bcntohalt_flag_confurmed;
 
 	uint8_t adxl_status;
-	uint8_t adxl_doubletap_flag;
+/*	uint8_t adxl_doubletap_flag;
 	uint8_t adxl_activity_flag;
 	uint8_t adxl_device_id;
 	uint8_t adxl_activity;
 	uint8_t adxl_fault;
-
+*/
 	int8_t current_device;
     uint16_t endRX_2_TX;
     uint32_t settings_address;

@@ -928,7 +928,7 @@ void draw_this_device(void)
  	  	  	  	  	  	  	  	   	   	   	   	    (pp_devices_menu[this_device]->batt_voltage+270)%100);
 		sprintf(&string_buffer[6][0], "0x%lX Flag%02X%02d",
 						main_flags.settings_address, p_settings_menu->settings_init_flag, main_flags.settings_index);
-		sprintf(&string_buffer[7][0], "ADXL:0x%02X ADC %3d", main_flags.adxl_device_id, main_flags.adc_calibration_factor);
+		sprintf(&string_buffer[7][0], "ADXL:0x%02X ADC %3d", main_flags.adxl_status, main_flags.adc_calibration_factor);
 
 		for (uint8_t k = 2; k < 8; k++)
 		{
@@ -1438,13 +1438,13 @@ void draw_actions(void)
 
 void power_long(void)
 {
-#ifndef BEACON
-	if(current_menu == M_ACTIONS)
-	{
-		main_flags.emergency_flag = 1;
-		set_current_item(1);
-	}
-#endif
+//#ifndef BEACON
+//	if(current_menu == M_ACTIONS)
+//	{
+//		main_flags.emergency_flag = 1;
+//		set_current_item(1);
+//	}
+//#endif
 	return_from_power_menu = current_menu;
 	current_menu = M_ACTIONS;
 
@@ -1519,7 +1519,7 @@ void confirm_settings_restore(void)
 void to_halt(void)
 {
 	main_flags.display_status = 1;		//allows to apply OK button
-	fill_screen(BLACK);
+//	fill_screen(BLACK);					//do not lead any delay
 	current_menu = M_ACTIONS;
 	return_from_power_menu = current_menu;
 	set_current_item(0);

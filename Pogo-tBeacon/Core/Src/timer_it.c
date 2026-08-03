@@ -99,10 +99,6 @@ void TIM1_UP_IRQHandler(void)
 			if(p_settings_tim->device_number != main_flags.time_slot)
 			{
 				clear_fix_data(main_flags.time_slot);
-				//if(!main_flags.antitheft_flag_confurmed)
-					main_flags.antitheft_flag_received = 0;
-				//if(!main_flags.bcntohalt_flag_confurmed)
-					main_flags.bcntohalt_flag_received = 0;
 			}
 			if(p_settings_tim->spreading_factor == 12)
 			{
@@ -173,9 +169,9 @@ void TIM1_UP_IRQHandler(void)
 			break;
 
 		case 3:				//check if remote devices on the air, draw menu items
-			led_red_off();	//650ms after OnRxDone
-//			adxl_device_id();
-			uint8_t reg_status = 0;
+			led_red_off();	//650ms (if OnRxDone and led_red_on)
+			
+/*			uint8_t reg_status = 0;
 			adxl_readData(0x30, (uint8_t*)&reg_status, 1);	//bits, and the corresponding interrupts, are cleared by reading
 
 			if(main_flags.adxl_fault)
@@ -203,34 +199,13 @@ void TIM1_UP_IRQHandler(void)
 				shortBeeps(3);
 			}
 			else		//if reg_status == 0
-			{	/*DEVID register holds a fixed device ID code of 0xE5*/
+			{	// DEVID register holds a fixed device ID code of 0xE5
 				adxl_readData(0x00, (uint8_t*)&main_flags.adxl_device_id, 1);
-				/*emergency flag ones set remains active while antitheft_flag has received*/
+				// emergency flag ones set remains active while antitheft_flag has received
 				if(!main_flags.antitheft_flag_received) main_flags.emergency_flag = 0;
 			}
-
-//			switch (main_flags.adxl_status)
-//			{
-//				case ADXL_FAULT:
-//					I2C1->CR1 |= I2C_CR1_PE;	//enable i2c1
-//					main_flags.adxl_status = 0xEE;
-//					shortBeeps(1);
-//					break;
-//				case ADXL_DBL_TAP:
-//					main_flags.adxl_status = 0xDD;
-//					shortBeeps(2);
-//					break;
-//				case ADXL_ACTIVE:
-//					main_flags.adxl_status = 0xAA;
-//					shortBeeps(3);
-//					break;
-//				default:	//DEVID register holds a fixed device ID code of 0xE5
-//					adxl_readData(0x00, (uint8_t*)&main_flags.adxl_status, 1);
-//					break;
-//			}
-
+*/
 /*******************IF THERE IS ANY OF BEEP FLAGS****************************************/
-//			(p_settings_tim->timeout_threshold || p_settings_tim->fence_threshold)? mute_off(): mute_on();
 			if(main_flags.short_beeps && !main_flags.short_beeps_flag)	// && !main_flags.long_beeps)
 			{
 				main_flags.short_beeps_flag = 1;
@@ -241,26 +216,15 @@ void TIM1_UP_IRQHandler(void)
 				led_w_off();
 				long_beep_ones = 0;
 			}
-//			if(main_flags.long_beeps && main_flags.long_beeps_flag)
-//			{
-//				main_flags.long_beeps--;
-//				led_w_off();
-//			}
-
-
-
-
-
-
-
 /***********************************************************/
-//			main_flags.short_beeps? led_w_on(): (
 			main_flags.update_screen = 1;
 			main_flags.permit_actions = 1;		//process buttons here after
+			
+			adxl_device_status();
 			break;
 
 		case 4:
-			if(main_flags.short_beeps_flag && main_flags.short_beeps)
+			if(main_flags.short_beeps && main_flags.short_beeps_flag)
 			{
 				led_w_off();
 				main_flags.short_beeps--;
@@ -281,7 +245,7 @@ void TIM1_UP_IRQHandler(void)
 				pp_devices_tim[main_flags.time_slot]->beeper_flag = 0;
 				long_beep_ones = 1;
 
-				main_flags.adxl_device_id = 0;
+				main_flags.adxl_status = 0;
 			}
 			break;
 

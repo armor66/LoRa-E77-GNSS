@@ -166,6 +166,8 @@ void rx_to_devices(uint8_t device_number)
 	(((buffer[0] & 0x78) >> 3) == 0x6)? (devices[device_number].emergency_flag = 1): (devices[device_number].emergency_flag = 0);
 //	anti theft from beacon confirmed (is_beacon + antitheft_flag + no beep flag)
 	(((buffer[0] & 0xF8) >> 3) == 0x1C)? (devices[device_number].antitheft_flag = 1): (devices[device_number].antitheft_flag = 0);
+//	beacon to halt from beacon confirmed
+	(((buffer[0] & 0xF8) >> 3) == 0x1A)? (devices[device_number].bcntohalt_flag = 1): (devices[device_number].bcntohalt_flag = 0);
 
 	devices[device_number].beeper_flag = (buffer[0] & 0x8) >> 3;
 //	main_flags.beeper_flag_received = (buffer[0] & 0x8) >> 3;

@@ -924,13 +924,13 @@ void draw_current_menu(void)
 			{
 				if(pp_devices_menu[i]->emergency_flag)	// || pp_devices_menu[i]->antitheft_flag)
 				{
-					fill_screen(BLACK);
+//					fill_screen(BLACK);
 					lptim1_start(16, main_flags.brightness);
 					main_flags.display_status = 1;
 //todo go to alarm point while display_status==0
-					points_group_ind = 0;
-					draw_navto_points();			//to draw immediately
-					current_menu = M_NAVTO_POINTS;	//do not return previous menu
+//					points_group_ind = 0;
+//					draw_navto_points();			//to draw immediately
+//					current_menu = M_NAVTO_POINTS;	//do not return previous menu
 				}
 			}
 		}
@@ -1017,6 +1017,10 @@ void draw_main(void)
 			{
 				break;
 			}
+			else if(pp_devices_menu[dev]->bcntohalt_flag)
+			{
+				break;
+			}
 		}
 		if(dev == p_settings_menu->devices_on_air)		//do not exceed devices_max and if this_device
 		{
@@ -1033,6 +1037,11 @@ void draw_main(void)
 	else if(pp_devices_menu[dev]->antitheft_flag)
 	{
 		sprintf(&string_buffer[row][0], "Bcn%d AntiTheftMode", dev);
+		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, CYAN,BLACK);
+	}
+	else if(pp_devices_menu[dev]->bcntohalt_flag)
+	{
+		sprintf(&string_buffer[row][0], "Bcn%d HaltModeReady", dev);
 		draw_str_by_rows(0, 1+row*11, &string_buffer[row][0], &Font_7x9, CYAN,BLACK);
 	}
 	else

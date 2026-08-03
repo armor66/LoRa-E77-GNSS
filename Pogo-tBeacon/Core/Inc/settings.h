@@ -139,44 +139,44 @@ void settings_load(void);
 void settings_save(struct settings_struct *settings);
 void settings_save_default(struct settings_struct *settings);
 
-#ifndef BEACON
-void saved_group_load(uint8_t group);
-void points_group_save(uint8_t group);
-void lost_device_load(uint8_t device);
-void lost_device_save(uint8_t device);
-void erase_point_groups(void);
-void erase_saved_devices(void);
-
-//Struct with all points info and his device "0"
-struct points_struct
-{
-	uint8_t exist_flag;             //does a device exist?
-
-    //ABSOLUTE COORDINATES
-    union
-    {
-        int32_t as_integer;             //latitude in decimal degrees (-90...+90)
-        uint8_t as_array[4];
-    } latitude;
-
-    union
-    {
-    	int32_t as_integer;             //longitude in decimal degrees (-180...+180)
-        uint8_t as_array[4];
-    } longitude;
-
-    //RELATIVE COORDINATES
-    uint32_t distance;          //distance in meters to a device
-    int16_t azimuth_deg_signed;       //heading to a device, degrees
-    double azimuth_rad;			//heading to a device, radians
-};
-//Struct with all devices info
-struct points_struct **get_points(void);
-
-void save_one_point(int8_t point_absolute_index);
-void clear_points_group(int8_t group);
-
-char *get_points_group_name(uint8_t group_number);
-char *get_points_group_short(uint8_t group_number);
-#endif
+//#ifndef BEACON
+//void saved_group_load(uint8_t group);
+//void points_group_save(uint8_t group);
+//void lost_device_load(uint8_t device);
+//void lost_device_save(uint8_t device);
+//void erase_point_groups(void);
+//void erase_saved_devices(void);
+//
+////Struct with all points info and his device "0"
+//struct points_struct
+//{
+//	uint8_t exist_flag;             //does a device exist?
+//
+//    //ABSOLUTE COORDINATES
+//    union
+//    {
+//        int32_t as_integer;             //latitude in decimal degrees (-90...+90)
+//        uint8_t as_array[4];
+//    } latitude;
+//
+//    union
+//    {
+//    	int32_t as_integer;             //longitude in decimal degrees (-180...+180)
+//        uint8_t as_array[4];
+//    } longitude;
+//
+//    //RELATIVE COORDINATES
+//    uint32_t distance;          //distance in meters to a device
+//    int16_t azimuth_deg_signed;       //heading to a device, degrees
+//    double azimuth_rad;			//heading to a device, radians
+//};
+////Struct with all devices info
+//struct points_struct **get_points(void);
+//
+//void save_one_point(int8_t point_absolute_index);
+//void clear_points_group(int8_t group);
+//
+//char *get_points_group_name(uint8_t group_number);
+//char *get_points_group_short(uint8_t group_number);
+//#endif
 #endif /*SETTINGS_HEADER*/

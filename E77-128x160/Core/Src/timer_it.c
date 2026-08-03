@@ -101,6 +101,7 @@ void TIM1_UP_IRQHandler(void)
 				clear_fix_data(main_flags.time_slot);
 
 				pp_devices_tim[main_flags.time_slot]->antitheft_flag = 0;
+				pp_devices_tim[main_flags.time_slot]->bcntohalt_flag = 0;
 			}
 
 //set receive LORA_IQ_NORMAL in other time slot whilst transmitting with LORA_IQ_INVERTED has occurred

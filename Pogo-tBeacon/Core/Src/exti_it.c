@@ -19,14 +19,10 @@ __inline static void manage_uart(void)
 void EXTI3_IRQHandler(void)	//(BTN_3_Pin)
 {
 	EXTI->PR1 = EXTI_PR1_PIF3;		//clear interrupt
-
-//	if(!(GPIOB->IDR & BTN_3_Pin))
-//	{
 		disable_buttons_interrupts();
 		main_flags.pps_counter = 0;//    	pp_devices_phy[p_settings_phy->device_number]->lcd_timeout = 0;
 		main_flags.processing_button = BUTTON_DOWN_ESC;
 		timer2_start();
-//	}
 }
 
 void EXTI1_IRQHandler(void)		//(BTN_2_Pin)

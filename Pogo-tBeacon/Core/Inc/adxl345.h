@@ -4,8 +4,8 @@
 #include "i2c.h"
 
 void i2c_init(void);
-void i2c_clock_disable(void);
-void i2c_clock_enable(void);
+//void i2c_clock_disable(void);
+//void i2c_clock_enable(void);
 //uint8_t i2c_poll(uint8_t i2c_addr);
 //void i2c_write(uint8_t i2c_addr, uint8_t reg_addr, uint8_t data);
 //uint8_t i2c_read(uint8_t i2c_addr, uint8_t reg_addr);
@@ -76,15 +76,18 @@ struct AdxlData
 /* ADXL345 I2C address */
 #define ADXL_ADR (0x53 << 1)
 
-void adxl_init(void);
-void adxl_readData(uint8_t reg, uint8_t *data, uint8_t len);
+void adxl_init(void);	//DOUBLE TAP & ACTIVITY
+// void adxl_readData(uint8_t reg, uint8_t *data, uint8_t len);
 /* ACTIVITY */
-void adxl_activity_init(void);
+// void adxl_activity_init(void);
 
 /* DOUBLE TAP */
-void adxl_doubletap_init(void);
+// void adxl_doubletap_init(void);
 
 /* DEVICE ID */
-void adxl_device_id(void);
+// void adxl_device_id(void);
+
+/* DEVICE STATUS */
+void adxl_device_status(void);
 
 #endif /*__ADXL_H*/

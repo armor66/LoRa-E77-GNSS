@@ -125,14 +125,14 @@ void rx_to_devices(uint8_t device_number)
 	{
 		main_flags.antitheft_flag_received = 1;
 		shortBeeps(1);
-	}
+	}else main_flags.antitheft_flag_received = 0;
 	/*beacon to halt flag received (no beacon + bcntohalt_flag + no beep flag)*/
 	if(((buffer[0] & 0xF8) >> 3) == 0x0A)
 	{
 		main_flags.bcntohalt_flag_received = 1;
 		shortBeeps(2);
 		to_halt();
-	}
+	}else main_flags.bcntohalt_flag_received = 0;
 
 	devices[device_number].beeper_flag = (buffer[0] & 0x8) >> 3;
 //	main_flags.beeper_flag_received = (buffer[0] & 0x8) >> 3;
@@ -162,103 +162,103 @@ void rx_to_devices(uint8_t device_number)
 
 	devices[device_number].rssi = buffer[BUFFER_AIR_SIZE];
 	devices[device_number].snr = buffer[BUFFER_AIR_SIZE + 1];
-#ifndef BEACON
-	if(pp_devices[p_settings_lrns->device_number]->valid_fix_flag)
-	{							// ignore 7 point groups to get 7, 8, 9 ,10, 11 - 5 device groups
-		int8_t group_start_index = (MEMORY_POINT_GROUPS + device_number - 1) * MEMORY_SUBPOINTS;
-
-		if(buffer[1] & 0x80)		//round robin if remote device is moving
-		{
-			for(int8_t ind = 6; ind > 0; ind--)	//6->7, 5->6, 4->5, 3->4, 2->3, 1->2
-			{
-				pp_points_lrns[group_start_index + ind + 1]->exist_flag = pp_points_lrns[group_start_index + ind]->exist_flag;
-				pp_points_lrns[group_start_index + ind + 1]->latitude.as_integer = pp_points_lrns[group_start_index + ind]->latitude.as_integer;
-				pp_points_lrns[group_start_index + ind + 1]->longitude.as_integer = pp_points_lrns[group_start_index + ind]->longitude.as_integer;
-			}
-		}		//fill subpoint1 new data in any case
-/*		pp_lost_device_lrns[device_number][0].exist_flag = 1;
-		pp_lost_device_lrns[device_number][0].latitude.as_integer = devices[device_number].latitude.as_integer;
-		pp_lost_device_lrns[device_number][0].longitude.as_integer = devices[device_number].longitude.as_integer;
-*/
-		pp_points_lrns[group_start_index + 1]->exist_flag = 1;
-		pp_points_lrns[group_start_index + 1]->latitude.as_integer = devices[device_number].latitude.as_integer;
-		pp_points_lrns[group_start_index + 1]->longitude.as_integer = devices[device_number].longitude.as_integer;
-
-/*beacon_traced always zero if timeout_threshold=0*/
-		devices[device_number].beacon_traced = p_settings_lrns->timeout_threshold / p_settings_lrns->devices_on_air;		//!validFixFlag[time_slot] delay
-		if(devices[device_number].beacon_flag) devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
-		devices[device_number].beacon_lost = 0;
-
-		if(devices[device_number].emergency_flag)
-		{	//Alarms group = 0, sub point 1
-			pp_points_lrns[0 + device_number]->exist_flag = 1;	//3
-			pp_points_lrns[0 + device_number]->latitude.as_integer = devices[device_number].latitude.as_integer;
-			pp_points_lrns[0 + device_number]->longitude.as_integer = devices[device_number].longitude.as_integer;
-			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
-			if(!main_flags.display_status) shortBeeps(device_number);				//emergency_flag received
-		}
-		if(devices[device_number].alarm_flag)
-		{	//Alarms group = 0, sub point 1
-			pp_points_lrns[0 + device_number]->exist_flag = 1;	//5
-			pp_points_lrns[0 + device_number]->latitude.as_integer = devices[device_number].latitude.as_integer;
-			pp_points_lrns[0 + device_number]->longitude.as_integer = devices[device_number].longitude.as_integer;
-			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
-		}
-		if(devices[device_number].gather_flag)
-		{	//Alarms group = 0, sub point 1
-			pp_points_lrns[0 + device_number]->exist_flag = 1;	//9
-			pp_points_lrns[0 + device_number]->latitude.as_integer = devices[device_number].latitude.as_integer;
-			pp_points_lrns[0 + device_number]->longitude.as_integer = devices[device_number].longitude.as_integer;
-			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
-		}
-	}
-#endif
+//#ifndef BEACON
+//	if(pp_devices[p_settings_lrns->device_number]->valid_fix_flag)
+//	{							// ignore 7 point groups to get 7, 8, 9 ,10, 11 - 5 device groups
+//		int8_t group_start_index = (MEMORY_POINT_GROUPS + device_number - 1) * MEMORY_SUBPOINTS;
+//
+//		if(buffer[1] & 0x80)		//round robin if remote device is moving
+//		{
+//			for(int8_t ind = 6; ind > 0; ind--)	//6->7, 5->6, 4->5, 3->4, 2->3, 1->2
+//			{
+//				pp_points_lrns[group_start_index + ind + 1]->exist_flag = pp_points_lrns[group_start_index + ind]->exist_flag;
+//				pp_points_lrns[group_start_index + ind + 1]->latitude.as_integer = pp_points_lrns[group_start_index + ind]->latitude.as_integer;
+//				pp_points_lrns[group_start_index + ind + 1]->longitude.as_integer = pp_points_lrns[group_start_index + ind]->longitude.as_integer;
+//			}
+//		}		//fill subpoint1 new data in any case
+///*		pp_lost_device_lrns[device_number][0].exist_flag = 1;
+//		pp_lost_device_lrns[device_number][0].latitude.as_integer = devices[device_number].latitude.as_integer;
+//		pp_lost_device_lrns[device_number][0].longitude.as_integer = devices[device_number].longitude.as_integer;
+//*/
+//		pp_points_lrns[group_start_index + 1]->exist_flag = 1;
+//		pp_points_lrns[group_start_index + 1]->latitude.as_integer = devices[device_number].latitude.as_integer;
+//		pp_points_lrns[group_start_index + 1]->longitude.as_integer = devices[device_number].longitude.as_integer;
+//
+///*beacon_traced always zero if timeout_threshold=0*/
+//		devices[device_number].beacon_traced = p_settings_lrns->timeout_threshold / p_settings_lrns->devices_on_air;		//!validFixFlag[time_slot] delay
+//		if(devices[device_number].beacon_flag) devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
+//		devices[device_number].beacon_lost = 0;
+//
+//		if(devices[device_number].emergency_flag)
+//		{	//Alarms group = 0, sub point 1
+//			pp_points_lrns[0 + device_number]->exist_flag = 1;	//3
+//			pp_points_lrns[0 + device_number]->latitude.as_integer = devices[device_number].latitude.as_integer;
+//			pp_points_lrns[0 + device_number]->longitude.as_integer = devices[device_number].longitude.as_integer;
+//			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
+//			if(!main_flags.display_status) shortBeeps(device_number);				//emergency_flag received
+//		}
+//		if(devices[device_number].alarm_flag)
+//		{	//Alarms group = 0, sub point 1
+//			pp_points_lrns[0 + device_number]->exist_flag = 1;	//5
+//			pp_points_lrns[0 + device_number]->latitude.as_integer = devices[device_number].latitude.as_integer;
+//			pp_points_lrns[0 + device_number]->longitude.as_integer = devices[device_number].longitude.as_integer;
+//			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
+//		}
+//		if(devices[device_number].gather_flag)
+//		{	//Alarms group = 0, sub point 1
+//			pp_points_lrns[0 + device_number]->exist_flag = 1;	//9
+//			pp_points_lrns[0 + device_number]->latitude.as_integer = devices[device_number].latitude.as_integer;
+//			pp_points_lrns[0 + device_number]->longitude.as_integer = devices[device_number].longitude.as_integer;
+//			devices[device_number].beacon_traced = 30 / p_settings_lrns->devices_on_air;	//always 30 seconds before save it
+//		}
+//	}
+//#endif
 }
-#ifndef BEACON
-void check_traced(uint8_t device_number)
-{
-	if(--devices[device_number].beacon_traced <= 0)	//may be decremented below 0
-	{
-		devices[device_number].beacon_traced = 0;
-		devices[device_number].beacon_lost = 1;
-	}
-}
-#endif
+//#ifndef BEACON
+//void check_traced(uint8_t device_number)
+//{
+//	if(--devices[device_number].beacon_traced <= 0)	//may be decremented below 0
+//	{
+//		devices[device_number].beacon_traced = 0;
+//		devices[device_number].beacon_lost = 1;
+//	}
+//}
+//#endif
 void clear_fix_data(uint8_t device_number)
 {
 	devices[device_number].fix_type_opt = 0;			//only 2 bits used to transmit
 	devices[device_number].valid_fix_flag = 0;			//bit0 only
 	devices[device_number].p_dop = 0;
 }
-#ifndef BEACON
-void calc_point_position(uint8_t point)		//MEMORY_POINTS_TOTAL = 8 * 28 = 224
-{
-//	pp_points_lrns = get_points();
-	//valid GPS fix - pDop and accuracy
-//	if(PVTbuffer[21+6] & 0x01)
-//	{
-		//my position
-		double Latitude0 = ((double)(PVTbuffer[37]<<24)+(PVTbuffer[36]<<16)+(PVTbuffer[35]<<8)+PVTbuffer[34]) / 10000000 * deg_to_rad;
-		double Longitude0 = ((double)(PVTbuffer[33]<<24)+(PVTbuffer[32]<<16)+(PVTbuffer[31]<<8)+PVTbuffer[30]) /10000000 * deg_to_rad;
-
-		//position of the device to calculate relative position
-		double Latitude1 = ((double)pp_points_lrns[point]->latitude.as_integer) / 10000000 * deg_to_rad;
-		double Longitude1 = ((double)pp_points_lrns[point]->longitude.as_integer) / 10000000 * deg_to_rad;
-//uint32_t distance;          //distance in meters to a device
-		pp_points_lrns[point]->distance = (uint32_t)(6371008 * sqrt(pow((Latitude1 - Latitude0), 2) + pow((cos(Latitude0) * (Longitude1 - Longitude0)), 2)));
-
-		double X = cos(Latitude1) * sin(Longitude1 - Longitude0);
-		double Y = cos(Latitude0) * sin(Latitude1) - sin(Latitude0) * cos(Latitude1) * cos(Longitude1 - Longitude0);
-		pp_points_lrns[point]->azimuth_rad = atan2(X,Y);
-//int16_t azimuth_deg_signed;       //heading to a device, degrees
-		pp_points_lrns[point]->azimuth_deg_signed = (int16_t)(pp_points_lrns[point]->azimuth_rad * rad_to_deg);		//convert to deg
-
-	    if(Longitude1 < Longitude0) {pp_points_lrns[point]->azimuth_rad += 2*M_PI;}
-
-	    if(pp_points_lrns[point]->distance == 0) pp_points_lrns[point]->azimuth_rad = 0;
-//	}
-}
-#endif
+//#ifndef BEACON
+//void calc_point_position(uint8_t point)		//MEMORY_POINTS_TOTAL = 8 * 28 = 224
+//{
+////	pp_points_lrns = get_points();
+//	//valid GPS fix - pDop and accuracy
+////	if(PVTbuffer[21+6] & 0x01)
+////	{
+//		//my position
+//		double Latitude0 = ((double)(PVTbuffer[37]<<24)+(PVTbuffer[36]<<16)+(PVTbuffer[35]<<8)+PVTbuffer[34]) / 10000000 * deg_to_rad;
+//		double Longitude0 = ((double)(PVTbuffer[33]<<24)+(PVTbuffer[32]<<16)+(PVTbuffer[31]<<8)+PVTbuffer[30]) /10000000 * deg_to_rad;
+//
+//		//position of the device to calculate relative position
+//		double Latitude1 = ((double)pp_points_lrns[point]->latitude.as_integer) / 10000000 * deg_to_rad;
+//		double Longitude1 = ((double)pp_points_lrns[point]->longitude.as_integer) / 10000000 * deg_to_rad;
+////uint32_t distance;          //distance in meters to a device
+//		pp_points_lrns[point]->distance = (uint32_t)(6371008 * sqrt(pow((Latitude1 - Latitude0), 2) + pow((cos(Latitude0) * (Longitude1 - Longitude0)), 2)));
+//
+//		double X = cos(Latitude1) * sin(Longitude1 - Longitude0);
+//		double Y = cos(Latitude0) * sin(Latitude1) - sin(Latitude0) * cos(Latitude1) * cos(Longitude1 - Longitude0);
+//		pp_points_lrns[point]->azimuth_rad = atan2(X,Y);
+////int16_t azimuth_deg_signed;       //heading to a device, degrees
+//		pp_points_lrns[point]->azimuth_deg_signed = (int16_t)(pp_points_lrns[point]->azimuth_rad * rad_to_deg);		//convert to deg
+//
+//	    if(Longitude1 < Longitude0) {pp_points_lrns[point]->azimuth_rad += 2*M_PI;}
+//
+//	    if(pp_points_lrns[point]->distance == 0) pp_points_lrns[point]->azimuth_rad = 0;
+////	}
+//}
+//#endif
 void calc_relative_position(uint8_t another_device)
 {
 		//my position

@@ -1,12 +1,15 @@
 #include "adxl345.h"
 #include "bit_band.h"
 
+uint8_t adxl_fault;
+//uint8_t i2c_tx[2];
+
 //__inline:
 //static void adxl_delay(uint32_t ms);
 static uint8_t adxl_timeout(uint32_t start, uint32_t ms);
 static void adxl_writeData(uint8_t reg, uint8_t data);
 
-//void adxl_readData(uint8_t reg, uint8_t *data, uint8_t len);
+static void adxl_readData(uint8_t reg, uint8_t *data, uint8_t len);
 
 void i2c_init(void)
 {
@@ -44,7 +47,7 @@ void i2c_init(void)
 
 //    i2c_clock_disable();
 }
-
+/*
 void i2c_clock_disable(void)
 {
 	BIT_BAND_PERI(RCC->APB1ENR1, RCC_APB1ENR1_I2C1EN) = 0;
@@ -55,7 +58,7 @@ void i2c_clock_enable(void)
 	BIT_BAND_PERI(RCC->APB1ENR1, RCC_APB1ENR1_I2C1EN) = 1;
 //	delay_cyc(10);
 }
-
+*/
 struct AdxlCommands AdxlReg = {0x00, 0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22,
 	0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D,
 	0x2E, 0x2F, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39};
@@ -80,10 +83,70 @@ struct AdxlCommands AdxlReg = {0x00, 0x1D, 0x1E, 0x1F, 0x20, 0x21, 0x22,
 void adxl_device_id(void)
 {
 HAL_I2C_Master_Transmit(&hi2c1, ADXL_ADR, &AdxlReg.DEVID, 1, 100);
-HAL_I2C_Master_Receive(&hi2c1, ADXL_ADR, (uint8_t*)&main_flags.adxl_device_id, 1, 100);
+HAL_I2C_Master_Receive(&hi2c1, ADXL_ADR, (uint8_t*)&main_flags.adxl_status, 1, 100);
 }
+#include "buttons.h"
+/* DEVICE STATUS */
+void adxl_device_status(void)
+{
+	uint8_t reg_status = 0;
+	adxl_readData(0x30, (uint8_t*)&reg_status, 1);	//bits, and the corresponding interrupts, are cleared by reading
 
-uint8_t i2c_tx[2];
+	if(adxl_fault)									//adxl_timeout occurred
+	{
+		I2C1->CR1 |= I2C_CR1_PE;					//enable i2c1
+		adxl_fault = 0;
+		main_flags.adxl_status = 0xEE;
+		shortBeeps(1);
+	}
+	else if(reg_status & (1 << D5))					//doubletap
+	{
+		main_flags.adxl_status = 0xDD;				//show on the device screen
+		if(main_flags.bcntohalt_flag_received)		//and no charge connected
+		{
+			main_flags.display_status = 1;			//allows to apply OK button
+			main_flags.button_code = BTN_OK;
+			main_flags.buttons_scanned = 1;			//to force change_menu and release power
+		}	//else shortBeeps(2);
+	}
+	else if((reg_status & (1 << D4)) && main_flags.antitheft_flag_received)	//activity
+	{
+		main_flags.adxl_status = 0xAA;				//show on the device screen
+//		if(main_flags.antitheft_flag_received)
+//		{
+			main_flags.emergency_flag = 1;
+			//shortBeeps(3);
+//		}
+	}
+	else											//if reg_status == 0
+	{	/*DEVID register holds a fixed device ID code of 0xE5*/
+		adxl_readData(0x00, (uint8_t*)&main_flags.adxl_status, 1);
+		/*emergency flag ones set remains active while antitheft_flag has received*/
+		if(!main_flags.antitheft_flag_received) main_flags.emergency_flag = 0;
+	}
+
+/*	switch (main_flags.adxl_status)
+	{
+		case ADXL_FAULT:				//adxl_timeout occurred
+			I2C1->CR1 |= I2C_CR1_PE;	//enable i2c1
+			main_flags.adxl_fault = 0;
+			main_flags.adxl_status = 0xEE;
+			shortBeeps(1);
+			break;
+		case ADXL_DBL_TAP:
+			main_flags.adxl_status = 0xDD;
+			shortBeeps(2);
+			break;
+		case ADXL_ACTIVE:
+			main_flags.adxl_status = 0xAA;
+			shortBeeps(3);
+			break;
+		default:	//DEVID register holds a fixed device ID code of 0xE5
+			adxl_readData(0x00, (uint8_t*)&main_flags.adxl_status, 1);
+			break;
+	}
+*/
+}
 
 /* ACTIVITY */
 void adxl_activity_init(void)
@@ -165,8 +228,8 @@ __inline static uint8_t adxl_timeout(uint32_t start, uint32_t ms)
 {
 	if((HAL_GetTick() - start) > ms) {
 		I2C1->CR1 &= ~I2C_CR1_PE;	//disable i2c1
-		main_flags.adxl_fault = 1;
-		main_flags.adxl_status = ADXL_FAULT;
+		adxl_fault = 1;
+//		main_flags.adxl_status = ADXL_FAULT;
 		return 1;
 	}else return 0;
 }
@@ -203,7 +266,7 @@ __inline static void adxl_writeData(uint8_t reg, uint8_t data)
     I2C1->ICR |= I2C_ICR_STOPCF;
 }
 
-void adxl_readData(uint8_t reg, uint8_t *data, uint8_t len)
+__inline static void adxl_readData(uint8_t reg, uint8_t *data, uint8_t len)
 {
 	uint8_t timeout_ms = 10;
 	uint32_t tickstart = HAL_GetTick();
